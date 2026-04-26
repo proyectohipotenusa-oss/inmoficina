@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 const LOGO_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png";
-const HERO_IMG_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/9452536f-198f-4e52-bc6d-bf06589f74c8-u1_d1156373-97c1-44f1-aa6a-0bb509624a9f.png";
+const HERO_IMG_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/1777235529301-019dcb7d-a185-7894-8e9f-05d821ff0562.png";
 const TEMPORARY_LEGAL_URL = "https://www.ejemplo.com";
 
 export default function Landing() {
