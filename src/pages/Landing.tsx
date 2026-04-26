@@ -1,21 +1,33 @@
+import { useState } from 'react';
 import { Link } from 'wouter';
 import { 
-  Building2, ChevronRight, BarChart3, Sparkles, QrCode, Smartphone, 
-  ShieldCheck, ArrowRight, CheckCircle2, Star, Zap, Globe
+  Globe, BarChart3, Sparkles, QrCode, Smartphone, 
+  ShieldCheck, ArrowRight, CheckCircle2, Star, Zap, X, Loader2
 } from 'lucide-react';
 
 export default function Landing() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formStatus, setFormStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormStatus('loading');
+    // Simulamos un envío elegante. Aquí en el futuro se conectaría con Supabase para crear la "cuenta en revisión".
+    setTimeout(() => setFormStatus('success'), 2000);
+  };
+
   return (
     <div className="min-h-screen bg-ink-950 text-white font-sans selection:bg-brand-500/30 overflow-x-hidden">
       
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-ink-950/80 backdrop-blur-xl border-b border-white/5">
+      <nav className="fixed top-0 left-0 right-0 z-40 bg-ink-950/80 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center border border-brand-500/20">
-              <Building2 className="text-brand-400" size={20} />
+            {/* EL LOGO CUADRADO EXACTAMENTE COMO LO PEDISTE (50x50) */}
+            <div className="w-[50px] h-[50px] rounded-xl flex items-center justify-center overflow-hidden shrink-0">
+              <img src="https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png" alt="Inmoficina Logo" className="w-full h-full object-contain bg-transparent" />
             </div>
-            <span className="text-xl font-black tracking-tight">INMOFICINA<span className="text-brand-400">.</span></span>
+            <span className="text-xl font-black tracking-tight hidden sm:block">INMOFICINA<span className="text-brand-400">.</span></span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-white/60">
             <a href="#caracteristicas" className="hover:text-white transition">Características</a>
@@ -24,9 +36,9 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm font-bold hover:text-brand-400 transition hidden sm:block">Iniciar Sesión</Link>
-            <Link href="/login" className="px-5 py-2.5 rounded-xl bg-brand-500 text-white text-sm font-bold hover:bg-brand-400 transition shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+            <button onClick={() => setIsModalOpen(true)} className="px-5 py-2.5 rounded-xl bg-brand-500 text-white text-sm font-bold hover:bg-brand-400 transition shadow-[0_0_20px_rgba(59,130,246,0.3)]">
               Probar Gratis
-            </Link>
+            </button>
           </div>
         </div>
       </nav>
@@ -46,9 +58,9 @@ export default function Landing() {
             El único CRM Inmobiliario que convierte cada casa en una obra maestra digital. Fichas públicas interactivas, Informes CMA automáticos y redacción con Inteligencia Artificial.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/login" className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-brand-500 text-white font-bold text-lg hover:bg-brand-400 transition shadow-[0_0_30px_rgba(59,130,246,0.4)] flex items-center justify-center gap-2">
+            <button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-brand-500 text-white font-bold text-lg hover:bg-brand-400 transition shadow-[0_0_30px_rgba(59,130,246,0.4)] flex items-center justify-center gap-2">
               Comienza tus 14 días gratis <ArrowRight size={20} />
-            </Link>
+            </button>
             <span className="text-sm text-white/40 flex items-center gap-1.5"><ShieldCheck size={16}/> Sin tarjeta de crédito</span>
           </div>
         </div>
@@ -126,9 +138,9 @@ export default function Landing() {
                 <div className="text-xs text-white/40 mt-2">A partir del tercer mes: 59€/mes.</div>
               </div>
 
-              <Link href="/login" className="block w-full py-4 rounded-xl bg-white text-ink-950 font-black hover:bg-brand-50 transition">
+              <button onClick={() => setIsModalOpen(true)} className="block w-full py-4 rounded-xl bg-white text-ink-950 font-black hover:bg-brand-50 transition">
                 Empezar Ahora
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -162,8 +174,8 @@ export default function Landing() {
       {/* FOOTER */}
       <footer className="py-12 px-6 border-t border-white/5 bg-ink-950 text-center">
         <div className="max-w-7xl mx-auto flex flex-col items-center">
-          <div className="flex items-center gap-2 mb-6 opacity-50">
-            <Building2 size={24} /> <span className="text-xl font-black tracking-tight">INMOFICINA<span className="text-brand-400">.</span></span>
+          <div className="w-[40px] h-[40px] mb-4 opacity-50 grayscale hover:grayscale-0 transition duration-500">
+            <img src="https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png" alt="Inmoficina Logo" className="w-full h-full object-contain bg-transparent" />
           </div>
           <p className="text-sm text-white/40 mb-6">El software que redefine la venta inmobiliaria. Diseñado con precisión y elegancia.</p>
           <div className="flex items-center justify-center gap-6 text-xs font-bold text-white/30 uppercase tracking-widest">
@@ -173,6 +185,83 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+
+      {/* MODAL DE REGISTRO PREMIUM */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-fade-in">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => formStatus !== 'loading' && setIsModalOpen(false)} />
+          
+          <div className="relative w-full max-w-md bg-ink-950 border border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
+            <div className="p-6 sm:p-8">
+              
+              <button 
+                onClick={() => setIsModalOpen(false)} 
+                disabled={formStatus === 'loading'}
+                className="absolute top-4 right-4 text-white/40 hover:text-white transition bg-white/5 rounded-full p-2"
+              >
+                <X size={20} />
+              </button>
+
+              {formStatus === 'success' ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
+                    <CheckCircle2 size={32} className="text-emerald-400" />
+                  </div>
+                  <h3 className="text-2xl font-black text-white mb-2">¡Solicitud Recibida!</h3>
+                  <p className="text-white/60 mb-6">Estamos preparando tu entorno de agencia. Nos pondremos en contacto contigo en breve para darte acceso a tus 14 días gratuitos.</p>
+                  <button onClick={() => setIsModalOpen(false)} className="btn-primary w-full py-3">Cerrar</button>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-8">
+                    <h3 className="text-2xl font-black text-white mb-2">Comienza tu viaje.</h3>
+                    <p className="text-sm text-white/50">Déjanos los datos de tu agencia y prepararemos tu espacio exclusivo en Inmoficina.</p>
+                  </div>
+
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                      <label className="text-[11px] font-bold text-white/40 uppercase tracking-widest mb-1.5 block">Nombre de la Agencia *</label>
+                      <input required type="text" className="w-full bg-ink-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors" placeholder="Ej. Inmobiliaria Monedita" />
+                    </div>
+                    
+                    <div>
+                      <label className="text-[11px] font-bold text-white/40 uppercase tracking-widest mb-1.5 block">Dirección Física</label>
+                      <input type="text" className="w-full bg-ink-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors" placeholder="Calle, Ciudad, Código Postal..." />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-white/40 uppercase tracking-widest mb-1.5 block">Persona de Contacto *</label>
+                      <input required type="text" className="w-full bg-ink-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors" placeholder="Tu nombre completo" />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[11px] font-bold text-white/40 uppercase tracking-widest mb-1.5 block">Teléfono *</label>
+                        <input required type="tel" className="w-full bg-ink-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors" placeholder="+34 600..." />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-white/40 uppercase tracking-widest mb-1.5 block">Email *</label>
+                        <input required type="email" className="w-full bg-ink-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors" placeholder="hola@agencia.com" />
+                      </div>
+                    </div>
+
+                    <div className="pt-4 mt-6 border-t border-white/5">
+                      <button 
+                        type="submit" 
+                        disabled={formStatus === 'loading'}
+                        className="w-full py-4 rounded-xl bg-brand-500 text-white font-bold hover:bg-brand-400 transition shadow-[0_0_20px_rgba(59,130,246,0.2)] flex items-center justify-center gap-2"
+                      >
+                        {formStatus === 'loading' ? <><Loader2 size={18} className="animate-spin" /> Procesando solicitud...</> : 'Solicitar Acceso Gratuito'}
+                      </button>
+                      <p className="text-[10px] text-center text-white/30 mt-4">Al registrarte, aceptas nuestros Términos de Servicio y Política de Privacidad.</p>
+                    </div>
+                  </form>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

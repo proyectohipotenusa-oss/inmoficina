@@ -95,7 +95,7 @@ function InvestmentReport({ propiedad, onClose }: { propiedad: any, onClose: () 
   const ingresosNetosAnuales = (ingresosAlquilerMes * 12) - gastosAnuales;
   const yieldNeto = (ingresosNetosAnuales / inversionTotal) * 100;
 
-  // URL PARA EL CÓDIGO QR DEL PDF
+  // TU AGENCIA COMO TÍTULO
   const nombreAgenciaFijo = propiedad.nombre_agencia || perfil?.agencia || perfil?.nombre_agencia || 'TU INMOBILIARIA';
   const agenteNombre = perfil?.nombre || '';
   const agenteTelf = perfil?.telefono || '';
@@ -119,7 +119,8 @@ function InvestmentReport({ propiedad, onClose }: { propiedad: any, onClose: () 
       <div className="max-w-[800px] mx-auto p-8 print:p-0 print:max-w-none">
         <div className="flex justify-between items-end border-b border-white/10 pb-4 mb-6 print:border-slate-300">
           <div>
-            <div className="text-brand-400 font-black text-2xl tracking-tighter">INMOFICINA</div>
+            {/* EL NOMBRE DE TU AGENCIA AHORA AQUÍ */}
+            <div className="text-brand-400 font-black text-2xl tracking-tighter uppercase">{nombreAgenciaFijo}</div>
             <div className="text-[8px] uppercase tracking-[0.2em] text-white/40 font-bold print:text-[10px] print:text-slate-500">Investment & Financial Report • {displayId}</div>
           </div>
           <div className="text-right">
@@ -180,12 +181,11 @@ function InvestmentReport({ propiedad, onClose }: { propiedad: any, onClose: () 
           <p className="text-white/60 italic text-[11px] print:text-xs print:text-slate-700">"Activo con perfil de riesgo bajo y rentabilidad estable. Ideal para diversificación patrimonial."</p>
         </div>
 
-        {/* SECCIÓN QR PARA EL PDF */}
         <div className="mt-8 p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-6 print:bg-slate-50 print:border-slate-300 print:break-inside-avoid">
            <img src={qrUrl} alt="QR Ficha VIP" className="w-20 h-20 rounded-lg print:border print:border-slate-200" />
            <div>
              <h4 className="text-sm font-bold text-white print:text-black flex items-center gap-1.5"><QrCode size={16} className="text-brand-400 print:text-brand-600"/> Ficha Interactiva VIP</h4>
-             <p className="text-[11px] text-white/60 print:text-slate-600 mt-1 max-w-sm">Escanea este código con la cámara de tu móvil para acceder a la galería completa, detalles inmersivos y contacto directo con el agente.</p>
+             <p className="text-[11px] text-white/60 print:text-slate-600 mt-1 max-w-sm">Escanea este código con la cámara de tu móvil para acceder a la galería completa, detalles inmersivos y contacto directo con la agencia.</p>
            </div>
         </div>
 
