@@ -36,7 +36,6 @@ export default function Propiedades() {
   const [editingProp, setEditingProp] = useState<any | null>(null);
   const [viewingProp, setViewingProp] = useState<any | null>(null);
 
-  // AHORA USA TU NOMBRE REAL O UN TEXTO ESTÁNDAR LIMPIO (Cero adivinanzas)
   const nombreAgenciaFijo = perfil?.agencia || perfil?.nombre_agencia || perfil?.empresa || 'Agencia Inmobiliaria';
 
   const load = async () => {
@@ -112,7 +111,7 @@ export default function Propiedades() {
                       <div className="flex items-center gap-1"><Square size={10} className="text-white/20" /><span className="text-[10px] font-medium text-white/60">{p.metros_cuadrados || 0}m²</span></div>
                     </div>
                     <div className="flex items-center gap-2 mt-2">
-                      <button onClick={(e) => { e.stopPropagation(); setViewingProp(p); }} className="flex-1 py-2 rounded-lg bg-white/5 text-white/60 text-[10px] font-medium hover:bg-brand-500 hover:text-white transition flex items-center justify-center gap-1.5">Ficha Interna <ChevronRight size={12} /></button>
+                      <button onClick={(e) => { e.stopPropagation(); setViewingProp(p); }} className="flex-1 py-2 rounded-lg bg-white/5 text-white/60 text-[10px] font-medium hover:bg-brand-50 hover:text-white transition flex items-center justify-center gap-1.5">Ficha Interna <ChevronRight size={12} /></button>
                       <button onClick={(e) => abrirFichaPublica(p, e)} className="w-9 h-9 shrink-0 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-white/60 hover:bg-white/20 hover:text-white transition" title="Compartir y ver ficha VIP"><ArrowUpRight size={16} /></button>
                     </div>
                   </div>
@@ -352,15 +351,12 @@ function PropertyDialog({ lead, agenciaFija, onClose, onSaved }: { lead?: any, a
           <button onClick={onClose} className="text-white/40 hover:text-white transition"><X size={18} /></button>
         </div>
         <form id="prop-form" onSubmit={onSubmit} className="p-5 space-y-4 overflow-y-auto custom-scrollbar bg-ink-900/50">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><label className="label">Título *</label><input required className="input bg-ink-950 border-white/10 text-sm" value={titulo} onChange={(e) => setTitulo(e.target.value)} /></div>
-            <div>
-              <label className="label text-brand-400">Agencia (Automático)</label>
-              <select disabled className="input bg-brand-500/10 border-brand-500/30 text-brand-400 font-bold text-sm cursor-not-allowed opacity-80">
-                <option>{agenciaFija}</option>
-              </select>
-            </div>
+          
+          <div>
+            <label className="label">Título *</label>
+            <input required className="input bg-ink-950 border-white/10 text-sm" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
           </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div><label className="label">Tipo</label><select className="input bg-ink-950 border-white/10 text-sm" value={tipo} onChange={(e) => setTipo(e.target.value)}>{TIPOS.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
             <div><label className="label">Transacción</label><select className="input bg-ink-950 border-white/10 text-sm" value={transaccion} onChange={(e) => setTransaccion(e.target.value)}>{TRANSACCIONES.map(t => <option key={t} value={t}>{t}</option>)}</select></div>

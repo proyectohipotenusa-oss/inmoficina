@@ -14,6 +14,11 @@ const generarIdVisual = (id: any) => {
   return `ID-${String(id).substring(0, 5).toUpperCase()}`;
 };
 
+const formatAgencyName = (slug?: string) => {
+  if (!slug) return 'Agencia Inmobiliaria';
+  return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
+
 export default function Inversion() {
   const { perfil } = useAuth();
   const [propiedades, setPropiedades] = useState<any[]>([]);
@@ -95,8 +100,8 @@ function InvestmentReport({ propiedad, onClose }: { propiedad: any, onClose: () 
   const ingresosNetosAnuales = (ingresosAlquilerMes * 12) - gastosAnuales;
   const yieldNeto = (ingresosNetosAnuales / inversionTotal) * 100;
 
-  // TU AGENCIA COMO TÍTULO
-  const nombreAgenciaFijo = propiedad.nombre_agencia || perfil?.agencia || perfil?.nombre_agencia || 'TU INMOBILIARIA';
+  // LÓGICA INFALIBLE PARA EL TÍTULO DEL DOCUMENTO
+  const nombreAgenciaFijo = propiedad.nombre_agencia || perfil?.agencia || perfil?.nombre_agencia || perfil?.empresa || formatAgencyName(perfil?.agencia_id);
   const agenteNombre = perfil?.nombre || '';
   const agenteTelf = perfil?.telefono || '';
   const publicUrl = `${window.location.origin}/p/${propiedad.id}?an=${encodeURIComponent(nombreAgenciaFijo)}&un=${encodeURIComponent(agenteNombre)}&t=${encodeURIComponent(agenteTelf)}`;

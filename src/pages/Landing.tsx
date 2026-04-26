@@ -12,7 +12,6 @@ export default function Landing() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus('loading');
-    // Simulamos un envío elegante. Aquí en el futuro se conectaría con Supabase para crear la "cuenta en revisión".
     setTimeout(() => setFormStatus('success'), 2000);
   };
 
@@ -23,7 +22,6 @@ export default function Landing() {
       <nav className="fixed top-0 left-0 right-0 z-40 bg-ink-950/80 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* EL LOGO CUADRADO EXACTAMENTE COMO LO PEDISTE (50x50) */}
             <div className="w-[50px] h-[50px] rounded-xl flex items-center justify-center overflow-hidden shrink-0">
               <img src="https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png" alt="Inmoficina Logo" className="w-full h-full object-contain bg-transparent" />
             </div>
@@ -95,7 +93,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* PRICING SECTION */}
+      {/* PRICING SECTION LIMPIO */}
       <section id="precios" className="py-24 px-6">
         <div className="max-w-5xl mx-auto text-center">
           <h2 className="text-3xl md:text-5xl font-black mb-4">Un Precio. Todo Incluido.</h2>
@@ -104,7 +102,7 @@ export default function Landing() {
           <div className="relative p-1 rounded-3xl bg-gradient-to-b from-brand-500/30 to-transparent max-w-md mx-auto">
             <div className="p-8 md:p-12 rounded-[22px] bg-ink-950 border border-white/10 relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 py-1.5 bg-brand-500 text-[10px] font-black uppercase tracking-widest text-center">
-                Oferta de Lanzamiento
+                Plan Único
               </div>
               
               <div className="mt-6 mb-8">
@@ -129,13 +127,12 @@ export default function Landing() {
                 ))}
               </div>
 
+              {/* AQUÍ ESTÁ EL PRECIO SIMPLIFICADO QUE PEDISTE */}
               <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 mb-8 text-left">
                 <div className="text-sm text-white/60 mb-1">Tras la prueba gratuita:</div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-3xl font-black text-white">49€</span><span className="text-white/40">/mes</span>
-                  <span className="text-xs text-brand-400 font-bold ml-2">(Los primeros 2 meses)</span>
                 </div>
-                <div className="text-xs text-white/40 mt-2">A partir del tercer mes: 59€/mes.</div>
               </div>
 
               <button onClick={() => setIsModalOpen(true)} className="block w-full py-4 rounded-xl bg-white text-ink-950 font-black hover:bg-brand-50 transition">

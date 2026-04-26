@@ -44,6 +44,11 @@ const generarIdVisual = (id: any) => {
   return `ID-${String(id).substring(0, 5).toUpperCase()}`;
 };
 
+const formatAgencyName = (slug?: string) => {
+  if (!slug) return 'Agencia Inmobiliaria';
+  return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
+
 export default function Informes() {
   const { perfil } = useAuth();
   const [propiedades, setPropiedades] = useState<any[]>([]);
@@ -122,8 +127,8 @@ function CMAReport({ propiedad, onClose }: { propiedad: any, onClose: () => void
   const impuestosAprox = valorEstimado * 0.08; 
   const netoPropietario = valorEstimado - comisionAgencia - impuestosAprox;
 
-  // AHORA USAMOS TU AGENCIA COMO TÍTULO PRINCIPAL
-  const nombreAgenciaFijo = propiedad.nombre_agencia || perfil?.agencia || perfil?.nombre_agencia || 'TU INMOBILIARIA';
+  // LÓGICA INFALIBLE PARA EL TÍTULO DEL DOCUMENTO
+  const nombreAgenciaFijo = propiedad.nombre_agencia || perfil?.agencia || perfil?.nombre_agencia || perfil?.empresa || formatAgencyName(perfil?.agencia_id);
   const agenteNombre = perfil?.nombre || '';
   const agenteTelf = perfil?.telefono || '';
   const publicUrl = `${window.location.origin}/p/${propiedad.id}?an=${encodeURIComponent(nombreAgenciaFijo)}&un=${encodeURIComponent(agenteNombre)}&t=${encodeURIComponent(agenteTelf)}`;
