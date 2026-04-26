@@ -17,8 +17,22 @@ export default function CatalogoPublico() {
   useEffect(() => {
     if (!match || !params?.agencia_id) return;
     
-    const fetchProps = async () => {
+    const fetchData = async () => {
       try {
+        // SOLUCIÓN PERMANENTE: Consultar directo a la tabla de agencias
+        const { data: agenciaData } = await supabase
+          .from('agencias')
+          .select('nombre')
+          .eq('id', params.agencia_id)
+          .single();
+
+        if (agenciaData?.nombre) {
+          setNombreAgenciaPublico(agenciaData.nombre);
+        } else {
+          setNombreAgenciaPublico(searchParams.get('an') || 'Catálogo Exclusivo');
+        }
+
+        // Cargar propiedades
         const { data, error } = await supabase
           .from('propiedades')
           .select('*')
@@ -30,28 +44,6 @@ export default function CatalogoPublico() {
         const disponibles = (data || []).filter(p => !['Vendida', 'Alquilada'].includes(p.transaccion));
         setPropiedades(disponibles);
 
-        // BLINDAJE EXTREMO DE AGENCIA
-        let nombre = searchParams.get('an');
-        
-        // Intentar sacarlo de alguna propiedad del listado que sí lo tenga guardado
-        if (!nombre && data && data.length > 0) {
-            nombre = data.find(p => p.nombre_agencia)?.nombre_agencia;
-        }
-        
-        // Si todo falla, ir directamente a buscar el perfil a la base de datos
-        if (!nombre) {
-            const { data: pData } = await supabase.from('perfiles')
-              .select('agencia, nombre_agencia, empresa')
-              .eq('agencia_id', params.agencia_id)
-              .limit(1);
-              
-            if (pData && pData.length > 0) {
-               nombre = pData[0].agencia || pData[0].nombre_agencia || pData[0].empresa;
-            }
-        }
-
-        setNombreAgenciaPublico(nombre || 'Catálogo Exclusivo');
-
       } catch (err) {
         console.error('Error cargando catálogo:', err);
       } finally {
@@ -59,7 +51,7 @@ export default function CatalogoPublico() {
       }
     };
     
-    fetchProps();
+    fetchData();
   }, [match, params?.agencia_id]);
 
   const abrirPropiedad = (id: string) => {
@@ -72,7 +64,6 @@ export default function CatalogoPublico() {
   return (
     <div className="min-h-screen bg-ink-950 text-white font-sans selection:bg-brand-500/30">
       
-      {/* HEADER DEL CATÁLOGO */}
       <div className="relative pt-16 pb-12 px-6 border-b border-white/5 bg-ink-900/50">
         <div className="max-w-6xl mx-auto flex flex-col items-center text-center">
           <div className="w-[80px] h-[80px] rounded-2xl flex items-center justify-center overflow-hidden drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)] mb-6">
@@ -90,7 +81,6 @@ export default function CatalogoPublico() {
         </div>
       </div>
 
-      {/* GRID DE PROPIEDADES */}
       <div className="max-w-6xl mx-auto p-6 sm:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {propiedades.map((p) => {

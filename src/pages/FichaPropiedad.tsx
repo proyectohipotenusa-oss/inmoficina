@@ -22,8 +22,6 @@ export default function FichaPropiedad() {
   const [propiedad, setPropiedad] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [fotoIndex, setFotoIndex] = useState(0);
-  
-  // ESTADO QUE GUARDARÁ EL NOMBRE REAL
   const [agenciaFinal, setAgenciaFinal] = useState('Cargando...');
 
   const searchParams = new URLSearchParams(window.location.search);
@@ -46,21 +44,17 @@ export default function FichaPropiedad() {
         if (pErr) throw pErr;
         setPropiedad(prop);
 
-        // BLINDAJE EXTREMO: 1º Base de datos, 2º Link, 3º Búsqueda anónima en tu perfil
-        let nombre = prop.nombre_agencia || searchParams.get('an');
-        
-        if (!nombre && prop.agencia_id) {
-          const { data: pData } = await supabase.from('perfiles')
-            .select('agencia, nombre_agencia, empresa')
-            .eq('agencia_id', prop.agencia_id)
-            .limit(1);
-            
-          if (pData && pData.length > 0) {
-             nombre = pData[0].agencia || pData[0].nombre_agencia || pData[0].empresa;
+        // SOLUCIÓN PERMANENTE: Consultar directo a la tabla de agencias
+        if (prop.agencia_id) {
+          const { data: agData } = await supabase.from('agencias').select('nombre').eq('id', prop.agencia_id).single();
+          if (agData?.nombre) {
+             setAgenciaFinal(agData.nombre);
+             return;
           }
         }
         
-        setAgenciaFinal(nombre || 'Agencia Inmobiliaria');
+        // Fallback si la agencia fuera eliminada o fallara la consulta
+        setAgenciaFinal(prop.nombre_agencia || searchParams.get('an') || 'Agencia Inmobiliaria');
 
       } catch (error) {
         console.error('Error al cargar datos:', error);
@@ -149,7 +143,6 @@ export default function FichaPropiedad() {
           <span className="px-5 py-2.5 rounded-full bg-white/[0.02] border border-white/5 text-sm text-white/60 flex items-center gap-2"><Tags size={16} className="text-brand-400"/> {propiedad.estado_fisico}</span>
         </div>
 
-        {/* GALERÍA COMPLETA DE IMÁGENES */}
         {fotosArray.length > 1 && (
           <div className="mb-16">
             <h3 className="text-sm font-bold text-white/40 uppercase tracking-widest mb-6 flex items-center gap-2">
