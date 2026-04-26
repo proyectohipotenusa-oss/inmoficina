@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import Leads from './pages/Leads';
 import Pipeline from './pages/Pipeline';
 import Propiedades from './pages/Propiedades';
+import Portales from './pages/Portales'; // <-- NUEVA IMPORTACIÓN DE PORTALES
 import Agenda from './pages/Agenda';
 import Historico from './pages/Historico';
 import Informes from './pages/Informes';
@@ -135,6 +136,10 @@ export default function App() {
       <Route path="/leads"><ProtectedRoute><Leads /></ProtectedRoute></Route>
       <Route path="/pipeline"><ProtectedRoute><Pipeline /></ProtectedRoute></Route>
       <Route path="/propiedades"><ProtectedRoute><Propiedades /></ProtectedRoute></Route>
+      
+      {/* <-- LA NUEVA RUTA DE PORTALES PROTEGIDA --> */}
+      <Route path="/portales"><ProtectedRoute><Portales /></ProtectedRoute></Route>
+      
       <Route path="/agenda"><ProtectedRoute><Agenda /></ProtectedRoute></Route>
       <Route path="/historico"><ProtectedRoute><Historico /></ProtectedRoute></Route>
       <Route path="/informes"><ProtectedRoute><Informes /></ProtectedRoute></Route>
