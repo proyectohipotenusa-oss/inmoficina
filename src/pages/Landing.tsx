@@ -67,7 +67,7 @@ export default function Landing() {
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-[1.1] tracking-tight mb-6">
             Vende Lujo,<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-300 via-brand-400 to-emerald-400 font-extrabold">No Ladrillo.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-300 via-brand-400 to-emerald-400 font-extrabold">No Ladrillos.</span>
           </h1>
           <p className="text-sm sm:text-base text-white/50 max-w-xl mx-auto mb-10 leading-relaxed font-light tracking-wide">
             Inmoficina es el CRM diseñado para la agencia que entiende que la marca propia es su activo más valioso. Tecnología inmersiva, diseño exquisito y herramientas orientadas al cierre.
