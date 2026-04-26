@@ -4,11 +4,14 @@ import { supabase } from '../lib/supabase';
 import { 
   Globe, BarChart3, Sparkles, QrCode, Smartphone, 
   ShieldCheck, ArrowRight, CheckCircle2, Star, Zap, X, Loader2,
-  Trophy, Landmark, LayoutDashboard, Send
+  Trophy, Landmark, LayoutDashboard, Send, MousePointerClick
 } from 'lucide-react';
 
-// URL del nuevo logo proporcionado
-const LOGO_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/9452536f-198f-4e52-bc6d-bf06589f74c8-u1_d1156373-97c1-44f1-aa6a-0bb509624a9f.png";
+// URL del logo original
+const LOGO_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png";
+
+// URL de la imagen premium central que subiste a Supabase
+const HERO_IMG_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/9452536f-198f-4e52-bc6d-bf06589f74c8-u1_d1156373-97c1-44f1-aa6a-0bb509624a9f.png";
 
 // URL temporal para links legales
 const TEMPORARY_LEGAL_URL = "https://www.ejemplo.com";
@@ -94,15 +97,16 @@ export default function Landing() {
              <div className="relative group">
                 <div className="absolute -inset-3 bg-brand-500/10 rounded-[2rem] blur-xl group-hover:bg-brand-500/15 transition duration-1000" />
                 <div className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-ink-900">
+                  {/* IMAGEN DE OFICINA PREMIUM SUBIDA A SUPABASE */}
                   <img 
-                    src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200" 
+                    src={HERO_IMG_URL} 
                     alt="Oficina Premium Real Estate" 
                     className="w-full h-full object-cover scale-[1.03] group-hover:scale-100 transition-transform duration-1000 grayscale-[0.2] group-hover:grayscale-0"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-transparent to-transparent opacity-90" />
                   <div className="absolute bottom-6 left-6 right-6">
                      <div className="p-4 bg-white/[0.03] backdrop-blur-xl rounded-xl border border-white/10 flex items-center gap-3">
-                        <div className="w-8 h-8 bg-brand-500/20 rounded-lg flex items-center justify-center border border-brand-500/30 shrink-0">
+                        <div className="w-8 h-8 bg-brand-500/20 rounded-md flex items-center justify-center border border-brand-500/30 shrink-0">
                            <Smartphone size={16} className="text-brand-300" />
                         </div>
                         <div>
@@ -120,7 +124,7 @@ export default function Landing() {
             </h2>
             <div className="space-y-6">
               {[
-                { icon: Star, title: "Doble Blindaje de Marca", desc: "No permitas que tu nombre desaparezca. Inyectamos tu logo e identidad en cada pixel que ve el cliente." },
+                { icon: Star, title: "Doble Blindaje de Marca", desc: "Inyectamos tu logo e identidad en cada pixel que ve el cliente." },
                 { icon: Sparkles, title: "Inteligencia que Redacta", desc: "Nuestra IA redacta memorias de alto impacto técnico en segundos." },
                 { icon: MousePointerClick, title: "Ventas a un solo clic", desc: "Reports de valoración y dossiers financieros con diseño editorial." }
               ].map((item, i) => (
@@ -188,7 +192,7 @@ export default function Landing() {
               "Códigos QR Dinámicos", 
               "Pipeline y Gestión de Leads"
             ].map((item, i) => (
-              <div key={i} className="flex items-center gap-3 text-white/60 font-light text-sm">
+              <div key={i} className="flex items-center gap-2.5 text-white/60 font-light text-xs">
                 <CheckCircle2 className="text-brand-400 shrink-0" size={14} /> {item}
               </div>
             ))}
