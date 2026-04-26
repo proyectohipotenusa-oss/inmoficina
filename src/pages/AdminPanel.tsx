@@ -1,7 +1,8 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import {
-  Shield, Plus, Building2, Loader2, Copy, Check, X, Users, KeyRound, AlertCircle, Sparkles, ChevronRight, MapPin, Trash2
+  Shield, Plus, Building2, Loader2, Copy, Check, X, Users, KeyRound, AlertCircle, Sparkles, ChevronRight, MapPin, Trash2,
+  TrendingUp, CheckCircle, XCircle, Phone, Mail
 } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageHeader } from '../components/PageHeader';
@@ -42,27 +43,56 @@ function slugify(raw: string) {
 
 export default function AdminPanel() {
   const [agencias, setAgencias] = useState<Agencia[]>([]);
+  const [solicitudes, setSolicitudes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ total: 0, ingresos: 0, agencias: 0 });
   const [selectedAgencia, setSelectedAgencia] = useState<Agencia | 'new' | null>(null);
   const [result, setResult] = useState<CreatedResult | null>(null);
 
-  const loadAgencias = async () => {
+  const loadData = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    
+    // 1. Cargar Agencias reales
+    const { data: ags } = await supabase
       .from('agencias')
       .select('*')
       .order('created_at', { ascending: false });
-    if (!error && data) setAgencias(data as Agencia[]);
+    
+    if (ags) setAgencias(ags as Agencia[]);
+
+    // 2. Cargar Solicitudes de la Landing
+    const { data: sols } = await supabase
+      .from('solicitudes_registro')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    setSolicitudes(sols || []);
+
+    // 3. Cargar Estadísticas
+    const { data: perfiles } = await supabase.from('perfiles').select('rol');
+    const totalAgencias = ags ? ags.length : 0;
+    
+    setStats({
+      total: perfiles?.length || 0,
+      ingresos: totalAgencias * 49,
+      agencias: totalAgencias
+    });
+    
     setLoading(false);
   };
 
-  useEffect(() => { loadAgencias(); }, []);
+  useEffect(() => { loadData(); }, []);
+
+  const actualizarEstado = async (id: string, nuevoEstado: string) => {
+    await supabase.from('solicitudes_registro').update({ estado: nuevoEstado }).eq('id', id);
+    loadData();
+  };
 
   return (
     <Layout title="Panel Admin">
       <PageHeader
         title="Panel Admin"
-        subtitle="Crea agencias y gestiona sus datos de contacto y usuarios."
+        subtitle="Centro de mando: gestiona solicitudes, métricas y accesos de agencias."
         actions={
           <button type="button" className="btn-primary" onClick={() => setSelectedAgencia('new')}>
             <Plus size={16} /> Nueva agencia
@@ -70,7 +100,60 @@ export default function AdminPanel() {
         }
       />
 
-      <div className="card p-0 overflow-hidden shadow-2xl border-white/5 bg-ink-900/50">
+      {/* 1. SECCIÓN DE ESTADÍSTICAS GLOBALES */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div className="card bg-ink-900 border-white/5"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-xl bg-brand-500/10 flex items-center justify-center"><Users className="text-brand-400"/></div><div><p className="text-white/40 text-xs font-bold uppercase tracking-widest">Usuarios Activos</p><p className="text-2xl font-black text-white">{stats.total}</p></div></div></div>
+        <div className="card bg-ink-900 border-white/5"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center"><TrendingUp className="text-emerald-400"/></div><div><p className="text-white/40 text-xs font-bold uppercase tracking-widest">MRR (Ingresos/mes)</p><p className="text-2xl font-black text-emerald-400">{stats.ingresos}€</p></div></div></div>
+        <div className="card bg-ink-900 border-white/5"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center"><Building2 className="text-indigo-400"/></div><div><p className="text-white/40 text-xs font-bold uppercase tracking-widest">Agencias Clientes</p><p className="text-2xl font-black text-white">{stats.agencias}</p></div></div></div>
+      </div>
+
+      {/* 2. SECCIÓN BANDEJA DE SOLICITUDES (LANDING PAGE) */}
+      <div className="space-y-6 mb-16">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-black uppercase tracking-[0.2em] text-brand-400">Solicitudes de Prueba (Leads)</h3>
+          <button onClick={loadData} className="text-[10px] font-bold text-white/40 hover:text-white transition">Actualizar lista</button>
+        </div>
+
+        {loading ? <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-brand-400" /></div> : solicitudes.length === 0 ? <div className="card text-center py-10 bg-white/[0.01] text-white/20 font-bold uppercase tracking-widest border-dashed border border-white/10">Bandeja de entrada limpia</div> : (
+          <div className="grid grid-cols-1 gap-4">
+            {solicitudes.map(s => (
+              <div key={s.id} className={`card p-6 bg-ink-900 border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all ${s.estado === 'procesado' ? 'opacity-50' : 'border-l-4 border-l-brand-500 shadow-lg'}`}>
+                <div className="space-y-2 max-w-md">
+                   <div className="flex items-center gap-3">
+                      <span className="text-lg font-black text-white uppercase">{s.nombre_agencia}</span>
+                      <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${s.estado === 'pendiente' ? 'bg-amber-500/20 text-amber-500' : s.estado === 'rechazado' ? 'bg-red-500/20 text-red-500' : 'bg-emerald-500/20 text-emerald-500'}`}>{s.estado}</span>
+                   </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-[11px] text-white/60">
+                      <div className="flex items-center gap-2"><Users size={12} className="text-white/30" /> {s.contacto_nombre}</div>
+                      <div className="flex items-center gap-2"><Phone size={12} className="text-white/30" /> {s.telefono}</div>
+                      <div className="flex items-center gap-2"><Mail size={12} className="text-white/30" /> {s.email}</div>
+                      <div className="flex items-center gap-2"><MapPin size={12} className="text-white/30" /> {s.direccion || '-'}</div>
+                   </div>
+                </div>
+                
+                <div className="flex items-center gap-3 border-t md:border-t-0 pt-4 md:pt-0 border-white/5">
+                   <div className="text-right mr-4 hidden md:block">
+                      <p className="text-[9px] text-white/20 uppercase font-black tracking-widest">Recibida</p>
+                      <p className="text-[10px] font-bold text-white/40">{new Date(s.created_at).toLocaleDateString()}</p>
+                   </div>
+                   {s.estado === 'pendiente' ? (
+                     <>
+                        <button onClick={() => actualizarEstado(s.id, 'procesado')} className="btn-primary py-2 px-4 text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><CheckCircle size={14}/> Marcar Procesada</button>
+                        <button onClick={() => actualizarEstado(s.id, 'rechazado')} className="btn-ghost py-2 px-4 text-[10px] font-black uppercase tracking-widest text-red-400 hover:bg-red-500/10 flex items-center gap-2"><XCircle size={14}/> Ignorar</button>
+                     </>
+                   ) : (
+                     <button onClick={() => actualizarEstado(s.id, 'pendiente')} className="text-[10px] font-bold text-white/20 hover:text-white transition">Revertir a pendiente</button>
+                   )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 3. SECCIÓN TABLA DE AGENCIAS REALES (Tu código original) */}
+      <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white/60 mb-4">Gestión de Agencias y Accesos</h3>
+      <div className="card p-0 overflow-hidden shadow-2xl border-white/5 bg-ink-900/50 mb-10">
         <div className="flex items-center gap-3 px-6 py-5 border-b border-white/5 bg-white/[0.01]">
           <div className="h-10 w-10 rounded-xl bg-brand-500/10 flex items-center justify-center border border-brand-500/20 text-brand-400">
             <Building2 size={20} />
@@ -78,7 +161,7 @@ export default function AdminPanel() {
           <div>
             <div className="text-sm font-bold text-white">Agencias registradas</div>
             <div className="text-[11px] text-white/40 uppercase tracking-widest font-bold">
-              {loading ? 'Cargando...' : `${agencias.length} agencias`}
+              {loading ? 'Cargando...' : `${agencias.length} agencias habilitadas`}
             </div>
           </div>
         </div>
@@ -144,12 +227,13 @@ export default function AdminPanel() {
         )}
       </div>
 
+      {/* DIÁLOGOS DE CREACIÓN (Tu código original) */}
       {selectedAgencia && (
         <AgencyDialog 
           agencia={selectedAgencia} 
           onClose={() => setSelectedAgencia(null)} 
-          onSave={() => { setSelectedAgencia(null); loadAgencias(); }}
-          onCreated={(res) => { setSelectedAgencia(null); setResult(res); loadAgencias(); }} 
+          onSave={() => { setSelectedAgencia(null); loadData(); }}
+          onCreated={(res) => { setSelectedAgencia(null); setResult(res); loadData(); }} 
         />
       )}
       
@@ -175,12 +259,10 @@ function AgencyDialog({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Estado para guardar los agentes cargados desde la base de datos
   const [agentesDb, setAgentesDb] = useState<Agente[]>([]);
 
   const effectiveSlug = isEdit ? ag!.id : slugify(nombre);
 
-  // Cargar usuarios cuando editamos
   useEffect(() => {
     if (isEdit && ag) {
       supabase.from('perfiles')
@@ -192,14 +274,13 @@ function AgencyDialog({
     }
   }, [isEdit, ag]);
 
-  // Función de ELIMINAR AGENCIA
   const handleDelete = async () => {
     if (confirm(`¿Estás completamente seguro de eliminar "${ag!.nombre}"? Esta acción no se puede deshacer.`)) {
       setSubmitting(true);
       try {
         const { error: deleteError } = await supabase.from('agencias').delete().eq('id', ag!.id);
         if (deleteError) throw deleteError;
-        onSave(); // Cierra y recarga
+        onSave(); 
       } catch (err: any) {
         setError(err.message);
         setSubmitting(false);
@@ -355,7 +436,6 @@ function AgencyDialog({
                 </div>
               </div>
 
-              {/* LISTA DE USUARIOS (Solo visible al editar) */}
               {isEdit && (
                 <div className="md:col-span-2 space-y-4 pt-6 border-t border-white/5">
                   <h3 className="text-[11px] font-bold text-white/30 uppercase tracking-widest">Usuarios Activos de esta Sede</h3>
@@ -390,7 +470,6 @@ function AgencyDialog({
             )}
 
             <div className="flex items-center justify-between pt-8 mt-8 border-t border-white/5">
-              {/* BOTÓN ELIMINAR (Solo visible al editar) */}
               <div>
                 {isEdit && (
                   <button type="button" onClick={handleDelete} disabled={submitting} className="flex items-center gap-2 text-red-500/70 hover:text-red-400 font-bold px-4 py-2.5 rounded-xl hover:bg-red-500/10 transition-colors text-sm">
