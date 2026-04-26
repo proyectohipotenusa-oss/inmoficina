@@ -2,7 +2,7 @@ import { useEffect, useState, FormEvent } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import {
   Shield, Plus, Building2, Loader2, Copy, Check, X, Users, KeyRound, AlertCircle, Sparkles, ChevronRight, MapPin, Trash2,
-  TrendingUp, CheckCircle, XCircle, Phone, Mail, CalendarDays, Timer
+  TrendingUp, CheckCircle, XCircle, Phone, Mail, CalendarDays, Timer, Lock
 } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageHeader } from '../components/PageHeader';
@@ -18,6 +18,7 @@ interface Agencia {
   contacto_email?: string;
   contacto_telefono?: string;
   created_at: string;
+  bloqueada?: boolean;
 }
 
 interface Agente {
@@ -80,18 +81,17 @@ export default function AdminPanel() {
     loadData();
   };
 
-  // SEPARAR LEADS PENDIENTES DE LOS TRIALS ACTIVOS
   const pendingLeads = solicitudes.filter(s => s.estado === 'pendiente' || s.estado === 'rechazado');
   
   const activeTrials = solicitudes
     .filter(s => s.estado === 'procesado')
     .map(s => {
       const created = new Date(s.created_at);
-      const expires = new Date(created.getTime() + 14 * 24 * 60 * 60 * 1000); // 14 días de prueba
+      const expires = new Date(created.getTime() + 14 * 24 * 60 * 60 * 1000); 
       const daysLeft = Math.ceil((expires.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
       return { ...s, expires, daysLeft };
     })
-    .sort((a, b) => a.daysLeft - b.daysLeft); // Ordenar por los que caducan antes
+    .sort((a, b) => a.daysLeft - b.daysLeft); 
 
   return (
     <Layout title="Panel Admin">
@@ -105,7 +105,7 @@ export default function AdminPanel() {
         }
       />
 
-      {/* 1. ESTADÍSTICAS GLOBALES COMPACTAS */}
+      {/* ESTADÍSTICAS */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="card p-4 bg-ink-900 border-white/5 flex items-center gap-4">
            <div className="w-10 h-10 rounded-lg bg-brand-500/10 flex items-center justify-center shrink-0"><Users size={18} className="text-brand-400"/></div>
@@ -121,7 +121,7 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* 2. ZONA DIVIDIDA: LEADS VS AGENDA DE TRIALS */}
+      {/* ZONA DIVIDIDA */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
         
         {/* COLUMNA IZQUIERDA: LEADS FRESCOS */}
@@ -233,13 +233,16 @@ export default function AdminPanel() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {agencias.map((a) => (
-                  <tr key={a.id} onClick={() => setSelectedAgencia(a)} className="hover:bg-white/[0.02] transition-colors group cursor-pointer">
+                  <tr key={a.id} onClick={() => setSelectedAgencia(a)} className={`hover:bg-white/[0.02] transition-colors group cursor-pointer ${a.bloqueada ? 'opacity-50 grayscale' : ''}`}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-7 w-7 rounded-md bg-brand-500/20 text-brand-400 border border-brand-500/30 flex items-center justify-center text-xs font-black shrink-0">
-                          {a.nombre ? a.nombre.slice(0, 1).toUpperCase() : 'A'}
+                        <div className={`h-7 w-7 rounded-md ${a.bloqueada ? 'bg-red-500/20 text-red-500 border-red-500/30' : 'bg-brand-500/20 text-brand-400 border-brand-500/30'} flex items-center justify-center text-xs font-black shrink-0`}>
+                          {a.bloqueada ? <Lock size={12} /> : (a.nombre ? a.nombre.slice(0, 1).toUpperCase() : 'A')}
                         </div>
-                        <div className="font-bold text-white text-[11px] group-hover:text-brand-400 transition-colors truncate max-w-[150px]">{a.nombre}</div>
+                        <div className="min-w-0 flex items-center gap-2">
+                           <div className="font-bold text-white text-[11px] group-hover:text-brand-400 transition-colors truncate max-w-[150px]">{a.nombre}</div>
+                           {a.bloqueada && <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-500 text-[7px] font-black uppercase tracking-widest shrink-0">Bloqueada</span>}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3"><code className="text-[9px] text-white/40 bg-white/5 rounded px-1.5 py-0.5 font-mono">{a.id}</code></td>
@@ -257,7 +260,6 @@ export default function AdminPanel() {
         )}
       </div>
 
-      {/* DIÁLOGOS DE CREACIÓN */}
       {selectedAgencia && (
         <AgencyDialog 
           agencia={selectedAgencia} 
@@ -272,10 +274,6 @@ export default function AdminPanel() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* COMPONENTES MODALES (Adaptados a tamaños más pequeños)                     */
-/* -------------------------------------------------------------------------- */
-
 function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agencia | 'new', onClose: () => void, onSave: () => void, onCreated: (r: CreatedResult) => void }) {
   const isEdit = agencia !== 'new';
   const ag = isEdit ? (agencia as Agencia) : null;
@@ -286,6 +284,8 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
   const [cNombre, setCNombre] = useState(ag?.contacto_nombre || '');
   const [cEmail, setCEmail] = useState(ag?.contacto_email || '');
   const [cTel, setCTel] = useState(ag?.contacto_telefono || '');
+  const [bloqueada, setBloqueada] = useState(ag?.bloqueada || false);
+  
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [agentesDb, setAgentesDb] = useState<Agente[]>([]);
@@ -315,14 +315,16 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
       if (isEdit && ag) {
         const { error: updateError } = await supabase.from('agencias').update({
           nombre: nombre.trim(), licencia: licencia.trim(), direccion: direccion.trim(),
-          contacto_nombre: cNombre.trim(), contacto_email: cEmail.trim(), contacto_telefono: cTel.trim()
+          contacto_nombre: cNombre.trim(), contacto_email: cEmail.trim(), contacto_telefono: cTel.trim(),
+          bloqueada
         }).eq('id', ag.id);
         if (updateError) throw updateError;
         onSave();
       } else {
         const nuevaAgencia = {
           id: effectiveSlug, nombre: nombre.trim(), licencia: licencia.trim(), direccion: direccion.trim(),
-          contacto_nombre: cNombre.trim(), contacto_email: cEmail.trim(), contacto_telefono: cTel.trim()
+          contacto_nombre: cNombre.trim(), contacto_email: cEmail.trim(), contacto_telefono: cTel.trim(),
+          bloqueada: false
         };
         const { error: insertError } = await supabase.from('agencias').insert([nuevaAgencia]);
         if (insertError) throw insertError;
@@ -358,9 +360,12 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
       <div className="relative w-full max-w-3xl bg-ink-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-slide-up flex flex-col max-h-[90vh]">
         <div className="flex items-start justify-between px-6 py-4 border-b border-white/5 shrink-0 bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-brand-500/15 flex items-center justify-center border border-brand-500/20"><Sparkles size={16} className="text-brand-400" /></div>
+            <div className={`h-8 w-8 rounded-lg ${bloqueada ? 'bg-red-500/15 border-red-500/20' : 'bg-brand-500/15 border-brand-500/20'} flex items-center justify-center border`}><Sparkles size={16} className={bloqueada ? 'text-red-400' : 'text-brand-400'} /></div>
             <div>
-              <div className="text-sm font-bold text-white">{isEdit ? 'Editar Agencia' : 'Nueva Agencia'}</div>
+              <div className="text-sm font-bold text-white flex items-center gap-2">
+                 {isEdit ? 'Editar Agencia' : 'Nueva Agencia'}
+                 {bloqueada && <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-500 text-[8px] font-black uppercase tracking-widest">Bloqueada</span>}
+              </div>
               <div className="text-[10px] text-white/40 mt-0.5">{isEdit ? `ID: ${ag.id}` : 'Genera 3 licencias automáticas'}</div>
             </div>
           </div>
@@ -399,6 +404,19 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
                       </div>
                     ))}
                   </div>
+
+                  {/* CONTROLES DE BLOQUEO (SÓLO ADMIN) */}
+                  <div className={`p-4 mt-4 rounded-xl border ${bloqueada ? 'bg-red-500/10 border-red-500/20' : 'bg-white/[0.02] border-white/5'} flex items-center justify-between transition-colors`}>
+                     <div>
+                        <h4 className={`text-[10px] font-black uppercase tracking-widest mb-1 ${bloqueada ? 'text-red-400' : 'text-white/60'}`}>Control de Acceso</h4>
+                        <p className="text-[10px] text-white/40 max-w-sm leading-relaxed">
+                           Si suspendes esta agencia, podrás programar más adelante que sus agentes sean expulsados del sistema temporalmente.
+                        </p>
+                     </div>
+                     <button type="button" onClick={() => setBloqueada(!bloqueada)} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors flex items-center gap-2 ${bloqueada ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'bg-white/10 text-white/60 hover:bg-white/20'}`}>
+                        {bloqueada ? <><Lock size={12}/> SUSPENDIDA</> : 'Suspender Acceso'}
+                     </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -410,7 +428,7 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
               <div className="flex items-center gap-2">
                 <button type="button" className="px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/5 transition" onClick={onClose} disabled={submitting}>Cancelar</button>
                 <button type="submit" className="btn-primary py-2 px-6 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2" disabled={submitting || !nombre}>
-                  {submitting ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} {isEdit ? 'Guardar' : 'Crear Sede'}
+                  {submitting ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} {isEdit ? 'Guardar Cambios' : 'Crear Sede'}
                 </button>
               </div>
             </div>

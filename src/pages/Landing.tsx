@@ -7,13 +7,8 @@ import {
   Trophy, Landmark, LayoutDashboard, Send, MousePointerClick
 } from 'lucide-react';
 
-// URL del logo original
 const LOGO_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png";
-
-// URL de la imagen premium central que subiste a Supabase
 const HERO_IMG_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/9452536f-198f-4e52-bc6d-bf06589f74c8-u1_d1156373-97c1-44f1-aa6a-0bb509624a9f.png";
-
-// URL temporal para links legales
 const TEMPORARY_LEGAL_URL = "https://www.ejemplo.com";
 
 export default function Landing() {
@@ -97,7 +92,6 @@ export default function Landing() {
              <div className="relative group">
                 <div className="absolute -inset-3 bg-brand-500/10 rounded-[2rem] blur-xl group-hover:bg-brand-500/15 transition duration-1000" />
                 <div className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-ink-900">
-                  {/* IMAGEN DE OFICINA PREMIUM SUBIDA A SUPABASE */}
                   <img 
                     src={HERO_IMG_URL} 
                     alt="Oficina Premium Real Estate" 
@@ -204,7 +198,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* FOOTER MODIFICADO */}
+      {/* FOOTER ACTUALIZADO CON LOS 5 ENLACES */}
       <footer className="py-12 px-6 border-t border-white/5 text-center bg-ink-950/50">
         <div className="max-w-6xl mx-auto flex flex-col items-center">
           <div className="w-[24px] h-[24px] mx-auto mb-4 opacity-30 hover:opacity-100 transition-all duration-500 cursor-pointer">
@@ -212,15 +206,15 @@ export default function Landing() {
           </div>
           <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-white/20 mb-6">Elevando el estándar inmobiliario</p>
           
-          {/* NUEVA SECCIÓN DE LINKS LEGALES */}
-          <div className="flex flex-row justify-center items-center gap-8 text-[8px] text-white/30 uppercase font-medium mt-1 mb-3 flex-wrap">
+          <div className="flex flex-row justify-center items-center gap-6 md:gap-8 text-[8px] text-white/30 uppercase font-medium mt-1 mb-4 flex-wrap">
             <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Política de cookies</a>
             <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Política de Privacidad</a>
             <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Aviso Legal</a>
             <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Condiciones de Uso</a>
+            <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Condiciones de contratación</a>
           </div>
 
-          <p className="text-[8px] font-light text-white/10 uppercase tracking-widest pt-2 border-t border-white/5 w-full">© {new Date().getFullYear()} Inmoficina. Todos los derechos reservados.</p>
+          <p className="text-[8px] font-light text-white/10 uppercase tracking-widest pt-4 border-t border-white/5 w-full">© {new Date().getFullYear()} Inmoficina. Todos los derechos reservados.</p>
         </div>
       </footer>
 
