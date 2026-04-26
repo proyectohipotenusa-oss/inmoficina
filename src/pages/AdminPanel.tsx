@@ -2,7 +2,7 @@ import { useEffect, useState, FormEvent } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import {
   Shield, Plus, Building2, Loader2, Copy, Check, X, Users, KeyRound, AlertCircle, Sparkles, ChevronRight, MapPin, Trash2,
-  TrendingUp, CheckCircle, XCircle, Phone, Mail, CalendarDays, Timer, Lock
+  TrendingUp, CheckCircle, XCircle, Phone, Mail, CalendarDays, Timer, Lock, Unlock
 } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageHeader } from '../components/PageHeader';
@@ -63,7 +63,7 @@ export default function AdminPanel() {
 
     // 3. Cargar Estadísticas
     const { data: perfiles } = await supabase.from('perfiles').select('rol');
-    const totalAgencias = ags ? ags.length : 0;
+    const totalAgencias = ags ? ags.filter(a => !a.bloqueada).length : 0; // Solo cuenta ingresos de activas
     
     setStats({
       total: perfiles?.length || 0,
@@ -99,70 +99,70 @@ export default function AdminPanel() {
         title="SuperAdmin"
         subtitle="Centro de mando: embudo de ventas, agenda de trials y gestión de agencias."
         actions={
-          <button type="button" className="btn-primary py-2 text-xs" onClick={() => setSelectedAgencia('new')}>
-            <Plus size={14} /> Nueva Agencia
+          <button type="button" className="btn-primary py-1.5 px-3 text-[10px]" onClick={() => setSelectedAgencia('new')}>
+            <Plus size={12} /> Nueva Agencia
           </button>
         }
       />
 
       {/* ESTADÍSTICAS */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="card p-4 bg-ink-900 border-white/5 flex items-center gap-4">
-           <div className="w-10 h-10 rounded-lg bg-brand-500/10 flex items-center justify-center shrink-0"><Users size={18} className="text-brand-400"/></div>
-           <div><p className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Usuarios Activos</p><p className="text-xl font-black text-white leading-none mt-1">{stats.total}</p></div>
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="card p-3 bg-ink-900 border-white/5 flex items-center gap-3">
+           <div className="w-8 h-8 rounded-md bg-brand-500/10 flex items-center justify-center shrink-0"><Users size={14} className="text-brand-400"/></div>
+           <div><p className="text-white/40 text-[8px] font-bold uppercase tracking-widest">Usuarios Activos</p><p className="text-lg font-black text-white leading-none mt-0.5">{stats.total}</p></div>
         </div>
-        <div className="card p-4 bg-ink-900 border-white/5 flex items-center gap-4">
-           <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0"><TrendingUp size={18} className="text-emerald-400"/></div>
-           <div><p className="text-white/40 text-[9px] font-bold uppercase tracking-widest">MRR (Mes)</p><p className="text-xl font-black text-emerald-400 leading-none mt-1">{stats.ingresos}€</p></div>
+        <div className="card p-3 bg-ink-900 border-white/5 flex items-center gap-3">
+           <div className="w-8 h-8 rounded-md bg-emerald-500/10 flex items-center justify-center shrink-0"><TrendingUp size={14} className="text-emerald-400"/></div>
+           <div><p className="text-white/40 text-[8px] font-bold uppercase tracking-widest">MRR (Mes)</p><p className="text-lg font-black text-emerald-400 leading-none mt-0.5">{stats.ingresos}€</p></div>
         </div>
-        <div className="card p-4 bg-ink-900 border-white/5 flex items-center gap-4">
-           <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0"><Building2 size={18} className="text-indigo-400"/></div>
-           <div><p className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Agencias Clientes</p><p className="text-xl font-black text-white leading-none mt-1">{stats.agencias}</p></div>
+        <div className="card p-3 bg-ink-900 border-white/5 flex items-center gap-3">
+           <div className="w-8 h-8 rounded-md bg-indigo-500/10 flex items-center justify-center shrink-0"><Building2 size={14} className="text-indigo-400"/></div>
+           <div><p className="text-white/40 text-[8px] font-bold uppercase tracking-widest">Agencias Activas</p><p className="text-lg font-black text-white leading-none mt-0.5">{stats.agencias}</p></div>
         </div>
       </div>
 
       {/* ZONA DIVIDIDA */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
         
         {/* COLUMNA IZQUIERDA: LEADS FRESCOS */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 flex items-center gap-2"><Users size={14}/> Bandeja de Leads</h3>
-            <button onClick={loadData} className="text-[9px] font-bold text-white/40 hover:text-white transition">Actualizar</button>
+            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60 flex items-center gap-1.5"><Users size={12}/> Bandeja de Leads</h3>
+            <button onClick={loadData} className="text-[8px] font-bold text-white/40 hover:text-white transition">Actualizar</button>
           </div>
 
-          {loading ? <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-brand-400" size={20} /></div> : pendingLeads.length === 0 ? <div className="card p-6 text-center bg-white/[0.01] text-white/20 text-[10px] font-bold uppercase tracking-widest border-dashed border border-white/10">Bandeja limpia</div> : (
-            <div className="grid grid-cols-1 gap-3">
+          {loading ? <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-brand-400" size={16} /></div> : pendingLeads.length === 0 ? <div className="card p-4 text-center bg-white/[0.01] text-white/20 text-[9px] font-bold uppercase tracking-widest border-dashed border border-white/10">Bandeja limpia</div> : (
+            <div className="grid grid-cols-1 gap-2">
               {pendingLeads.map(s => (
-                <div key={s.id} className={`card p-4 bg-ink-900 border-white/5 flex flex-col gap-3 transition-all ${s.estado === 'rechazado' ? 'opacity-40 grayscale' : 'border-l-2 border-l-brand-500 shadow-lg'}`}>
+                <div key={s.id} className={`card p-3 bg-ink-900 border-white/5 flex flex-col gap-2 transition-all ${s.estado === 'rechazado' ? 'opacity-40 grayscale' : 'border-l-2 border-l-brand-500 shadow-md'}`}>
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-black text-white uppercase truncate">{s.nombre_agencia}</span>
-                        <span className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest ${s.estado === 'pendiente' ? 'bg-amber-500/20 text-amber-500' : 'bg-red-500/20 text-red-500'}`}>{s.estado}</span>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs font-black text-white uppercase truncate">{s.nombre_agencia}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[6px] font-black uppercase tracking-widest ${s.estado === 'pendiente' ? 'bg-amber-500/20 text-amber-500' : 'bg-red-500/20 text-red-500'}`}>{s.estado}</span>
                       </div>
-                      <div className="text-[10px] text-white/50 flex items-center gap-1.5"><MapPin size={10} className="text-white/30" /> {s.direccion || 'Sin dirección'}</div>
+                      <div className="text-[9px] text-white/50 flex items-center gap-1"><MapPin size={8} className="text-white/30" /> {s.direccion || 'Sin dirección'}</div>
                     </div>
                     <div className="text-right">
-                       <p className="text-[8px] text-white/20 uppercase font-black tracking-widest">Recibida</p>
-                       <p className="text-[9px] font-bold text-white/50">{new Date(s.created_at).toLocaleDateString()}</p>
+                       <p className="text-[7px] text-white/20 uppercase font-black tracking-widest">Recibida</p>
+                       <p className="text-[8px] font-bold text-white/50">{new Date(s.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-2 text-[10px] text-white/60 bg-white/[0.02] p-2.5 rounded-lg border border-white/5">
-                     <div className="flex items-center gap-1.5 truncate"><Users size={10} className="text-brand-400 shrink-0" /> {s.contacto_nombre}</div>
-                     <div className="flex items-center gap-1.5 truncate"><Phone size={10} className="text-brand-400 shrink-0" /> {s.telefono}</div>
-                     <div className="col-span-2 flex items-center gap-1.5 truncate"><Mail size={10} className="text-brand-400 shrink-0" /> {s.email}</div>
+                  <div className="grid grid-cols-2 gap-1.5 text-[9px] text-white/60 bg-white/[0.02] p-2 rounded-md border border-white/5">
+                     <div className="flex items-center gap-1 truncate"><Users size={8} className="text-brand-400 shrink-0" /> {s.contacto_nombre}</div>
+                     <div className="flex items-center gap-1 truncate"><Phone size={8} className="text-brand-400 shrink-0" /> {s.telefono}</div>
+                     <div className="col-span-2 flex items-center gap-1 truncate"><Mail size={8} className="text-brand-400 shrink-0" /> {s.email}</div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-1">
+                  <div className="flex items-center gap-1.5 pt-1">
                     {s.estado === 'pendiente' ? (
                       <>
-                        <button onClick={() => actualizarEstado(s.id, 'procesado')} className="flex-1 py-1.5 rounded bg-brand-500/20 text-brand-400 hover:bg-brand-500 hover:text-white transition text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5"><CheckCircle size={12}/> Activar Trial</button>
-                        <button onClick={() => actualizarEstado(s.id, 'rechazado')} className="py-1.5 px-3 rounded bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition text-[9px] font-black uppercase tracking-widest"><X size={12}/></button>
+                        <button onClick={() => actualizarEstado(s.id, 'procesado')} className="flex-1 py-1 rounded bg-brand-500/20 text-brand-400 hover:bg-brand-500 hover:text-white transition text-[8px] font-black uppercase tracking-widest flex items-center justify-center gap-1"><CheckCircle size={10}/> Activar Trial</button>
+                        <button onClick={() => actualizarEstado(s.id, 'rechazado')} className="py-1 px-2.5 rounded bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition text-[8px] font-black uppercase tracking-widest"><X size={10}/></button>
                       </>
                     ) : (
-                      <button onClick={() => actualizarEstado(s.id, 'pendiente')} className="w-full py-1.5 rounded bg-white/5 text-white/40 hover:bg-white/10 transition text-[9px] font-black uppercase tracking-widest">Revertir a Pendiente</button>
+                      <button onClick={() => actualizarEstado(s.id, 'pendiente')} className="w-full py-1 rounded bg-white/5 text-white/40 hover:bg-white/10 transition text-[8px] font-black uppercase tracking-widest">Revertir a Pendiente</button>
                     )}
                   </div>
                 </div>
@@ -172,34 +172,34 @@ export default function AdminPanel() {
         </div>
 
         {/* COLUMNA DERECHA: AGENDA DE FREE-TRIALS */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-2"><CalendarDays size={14}/> Agenda de Seguimiento</h3>
-            <span className="text-[9px] font-bold text-emerald-400/50 bg-emerald-400/10 px-2 py-0.5 rounded-full">{activeTrials.length} Activos</span>
+            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-1.5"><CalendarDays size={12}/> Agenda de Seguimiento</h3>
+            <span className="text-[8px] font-bold text-emerald-400/50 bg-emerald-400/10 px-1.5 py-0.5 rounded-full">{activeTrials.length} Activos</span>
           </div>
 
-          {loading ? <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-emerald-400" size={20} /></div> : activeTrials.length === 0 ? <div className="card p-6 text-center bg-white/[0.01] text-white/20 text-[10px] font-bold uppercase tracking-widest border-dashed border border-white/10">No hay trials activos</div> : (
-            <div className="grid grid-cols-1 gap-3">
+          {loading ? <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-emerald-400" size={16} /></div> : activeTrials.length === 0 ? <div className="card p-4 text-center bg-white/[0.01] text-white/20 text-[9px] font-bold uppercase tracking-widest border-dashed border border-white/10">No hay trials activos</div> : (
+            <div className="grid grid-cols-1 gap-2">
               {activeTrials.map(t => {
                 const isExpired = t.daysLeft <= 0;
                 const isUrgent = !isExpired && t.daysLeft <= 3;
                 const colorClass = isExpired ? 'text-red-400 bg-red-400/10 border-red-400/20' : isUrgent ? 'text-amber-400 bg-amber-400/10 border-amber-400/20' : 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
                 
                 return (
-                  <div key={t.id} className="card p-3 bg-ink-900 border-white/5 flex items-center justify-between gap-4">
+                  <div key={t.id} className="card p-2.5 bg-ink-900 border-white/5 flex items-center justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <div className="text-xs font-bold text-white uppercase truncate mb-0.5">{t.nombre_agencia}</div>
-                      <div className="text-[9px] text-white/50 flex items-center gap-2 truncate">
-                        <span><Users size={8} className="inline mr-1 opacity-50"/>{t.contacto_nombre}</span>
-                        <span><Phone size={8} className="inline mr-1 opacity-50"/>{t.telefono}</span>
+                      <div className="text-[11px] font-bold text-white uppercase truncate mb-0.5">{t.nombre_agencia}</div>
+                      <div className="text-[8px] text-white/50 flex items-center gap-1.5 truncate">
+                        <span><Users size={7} className="inline mr-0.5 opacity-50"/>{t.contacto_nombre}</span>
+                        <span><Phone size={7} className="inline mr-0.5 opacity-50"/>{t.telefono}</span>
                       </div>
                     </div>
                     
-                    <div className={`shrink-0 flex items-center gap-3 px-3 py-1.5 rounded-lg border ${colorClass}`}>
-                      <Timer size={16} className={isExpired ? 'text-red-400' : isUrgent ? 'text-amber-400' : 'text-emerald-400'} />
+                    <div className={`shrink-0 flex items-center gap-2 px-2 py-1 rounded-md border ${colorClass}`}>
+                      <Timer size={12} className={isExpired ? 'text-red-400' : isUrgent ? 'text-amber-400' : 'text-emerald-400'} />
                       <div className="text-right">
-                        <div className="text-sm font-black leading-none">{isExpired ? '0' : t.daysLeft}</div>
-                        <div className="text-[7px] uppercase tracking-widest font-bold opacity-80">{isExpired ? 'Caducado' : 'Días Rest.'}</div>
+                        <div className="text-xs font-black leading-none">{isExpired ? '0' : t.daysLeft}</div>
+                        <div className="text-[6px] uppercase tracking-widest font-bold opacity-80">{isExpired ? 'Caducado' : 'Días Rest.'}</div>
                       </div>
                     </div>
                   </div>
@@ -210,48 +210,51 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* 3. TABLA DE AGENCIAS REALES COMPACTADA */}
-      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-3 flex items-center gap-2"><Building2 size={14}/> Base de Datos de Agencias</h3>
-      <div className="card p-0 overflow-hidden shadow-2xl border-white/5 bg-ink-900/50 mb-10">
+      {/* 3. TABLA DE AGENCIAS REALES COMPACTADA CON COLUMNA "ESTADO" */}
+      <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60 mb-2 flex items-center gap-1.5"><Building2 size={12}/> Base de Datos de Agencias</h3>
+      <div className="card p-0 overflow-hidden shadow-xl border-white/5 bg-ink-900/50 mb-8">
         
         {loading ? (
-          <div className="py-16 flex justify-center text-white/20"><Loader2 className="animate-spin" size={20} /></div>
+          <div className="py-12 flex justify-center text-white/20"><Loader2 className="animate-spin" size={16} /></div>
         ) : agencias.length === 0 ? (
           <EmptyState icon={Shield} title="Todavía no has creado agencias" description="Crea una agencia para generar sus credenciales de acceso." />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="text-[9px] uppercase tracking-[0.15em] text-white/30 border-b border-white/5 bg-white/[0.01]">
-                  <th className="px-4 py-3 font-bold">Agencia</th>
-                  <th className="px-4 py-3 font-bold">Slug ID</th>
-                  <th className="px-4 py-3 font-bold">Contacto</th>
-                  <th className="px-4 py-3 font-bold">Licencia</th>
-                  <th className="px-4 py-3 font-bold">Alta</th>
-                  <th className="px-4 py-3"></th>
+                <tr className="text-[8px] uppercase tracking-[0.15em] text-white/30 border-b border-white/5 bg-white/[0.01]">
+                  <th className="px-3 py-2 font-bold">Agencia</th>
+                  <th className="px-3 py-2 font-bold">Estado</th>
+                  <th className="px-3 py-2 font-bold">Slug ID</th>
+                  <th className="px-3 py-2 font-bold">Contacto</th>
+                  <th className="px-3 py-2 font-bold">Alta</th>
+                  <th className="px-3 py-2"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {agencias.map((a) => (
-                  <tr key={a.id} onClick={() => setSelectedAgencia(a)} className={`hover:bg-white/[0.02] transition-colors group cursor-pointer ${a.bloqueada ? 'opacity-50 grayscale' : ''}`}>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`h-7 w-7 rounded-md ${a.bloqueada ? 'bg-red-500/20 text-red-500 border-red-500/30' : 'bg-brand-500/20 text-brand-400 border-brand-500/30'} flex items-center justify-center text-xs font-black shrink-0`}>
-                          {a.bloqueada ? <Lock size={12} /> : (a.nombre ? a.nombre.slice(0, 1).toUpperCase() : 'A')}
+                  <tr key={a.id} onClick={() => setSelectedAgencia(a)} className={`hover:bg-white/[0.03] transition-colors group cursor-pointer ${a.bloqueada ? 'bg-red-500/[0.02]' : ''}`}>
+                    <td className="px-3 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className={`h-6 w-6 rounded flex items-center justify-center text-[10px] font-black shrink-0 ${a.bloqueada ? 'bg-red-500/20 text-red-500' : 'bg-brand-500/20 text-brand-400'}`}>
+                          {a.nombre ? a.nombre.slice(0, 1).toUpperCase() : 'A'}
                         </div>
-                        <div className="min-w-0 flex items-center gap-2">
-                           <div className="font-bold text-white text-[11px] group-hover:text-brand-400 transition-colors truncate max-w-[150px]">{a.nombre}</div>
-                           {a.bloqueada && <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-500 text-[7px] font-black uppercase tracking-widest shrink-0">Bloqueada</span>}
-                        </div>
+                        <div className={`font-bold text-[10px] truncate max-w-[130px] ${a.bloqueada ? 'text-white/40 line-through' : 'text-white'}`}>{a.nombre}</div>
                       </div>
                     </td>
-                    <td className="px-4 py-3"><code className="text-[9px] text-white/40 bg-white/5 rounded px-1.5 py-0.5 font-mono">{a.id}</code></td>
-                    <td className="px-4 py-3 text-white/60 text-[10px] truncate max-w-[120px]">{a.contacto_nombre || '—'}</td>
-                    <td className="px-4 py-3 text-white/40 font-mono text-[9px] tracking-tight">{a.licencia || '—'}</td>
-                    <td className="px-4 py-3 text-white/40 text-[10px] font-medium">
+                    <td className="px-3 py-2.5">
+                       {a.bloqueada ? (
+                         <span className="px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 text-[7px] font-black uppercase tracking-widest flex items-center gap-1 w-fit"><Lock size={8}/> Bloqueada</span>
+                       ) : (
+                         <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[7px] font-black uppercase tracking-widest flex items-center gap-1 w-fit"><CheckCircle size={8}/> Activa</span>
+                       )}
+                    </td>
+                    <td className="px-3 py-2.5"><code className={`text-[8px] rounded px-1 py-0.5 font-mono ${a.bloqueada ? 'bg-transparent text-white/20' : 'bg-white/5 text-white/40'}`}>{a.id}</code></td>
+                    <td className="px-3 py-2.5 text-[9px] truncate max-w-[100px] text-white/50">{a.contacto_nombre || '—'}</td>
+                    <td className="px-3 py-2.5 text-white/30 text-[9px] font-medium">
                       {new Date(a.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })}
                     </td>
-                    <td className="px-4 py-3 text-right"><ChevronRight size={14} className="text-white/10 group-hover:text-white/40 ml-auto transition-colors" /></td>
+                    <td className="px-3 py-2.5 text-right"><ChevronRight size={12} className="text-white/10 group-hover:text-white/30 ml-auto transition-colors" /></td>
                   </tr>
                 ))}
               </tbody>
@@ -260,6 +263,7 @@ export default function AdminPanel() {
         )}
       </div>
 
+      {/* DIÁLOGOS DE CREACIÓN */}
       {selectedAgencia && (
         <AgencyDialog 
           agencia={selectedAgencia} 
@@ -273,6 +277,10 @@ export default function AdminPanel() {
     </Layout>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+/* COMPONENTES MODALES                                                        */
+/* -------------------------------------------------------------------------- */
 
 function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agencia | 'new', onClose: () => void, onSave: () => void, onCreated: (r: CreatedResult) => void }) {
   const isEdit = agencia !== 'new';
@@ -299,7 +307,7 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
   }, [isEdit, ag]);
 
   const handleDelete = async () => {
-    if (confirm(`¿Eliminar definitivamente "${ag!.nombre}"?`)) {
+    if (confirm(`¿Eliminar definitivamente "${ag!.nombre}"? Esta acción borra propiedades y perfiles.`)) {
       setSubmitting(true);
       try {
         const { error: deleteError } = await supabase.from('agencias').delete().eq('id', ag!.id);
@@ -357,78 +365,75 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-3xl bg-ink-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-slide-up flex flex-col max-h-[90vh]">
-        <div className="flex items-start justify-between px-6 py-4 border-b border-white/5 shrink-0 bg-white/[0.02]">
+      <div className="relative w-full max-w-2xl bg-ink-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl animate-slide-up flex flex-col max-h-[90vh]">
+        <div className="flex items-start justify-between px-5 py-4 border-b border-white/5 shrink-0 bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className={`h-8 w-8 rounded-lg ${bloqueada ? 'bg-red-500/15 border-red-500/20' : 'bg-brand-500/15 border-brand-500/20'} flex items-center justify-center border`}><Sparkles size={16} className={bloqueada ? 'text-red-400' : 'text-brand-400'} /></div>
+            <div className={`h-7 w-7 rounded-md ${bloqueada ? 'bg-red-500/10 border-red-500/20' : 'bg-brand-500/10 border-brand-500/20'} flex items-center justify-center border`}><Sparkles size={14} className={bloqueada ? 'text-red-400' : 'text-brand-400'} /></div>
             <div>
-              <div className="text-sm font-bold text-white flex items-center gap-2">
-                 {isEdit ? 'Editar Agencia' : 'Nueva Agencia'}
-                 {bloqueada && <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-500 text-[8px] font-black uppercase tracking-widest">Bloqueada</span>}
+              <div className="text-xs font-bold text-white flex items-center gap-2">
+                 {isEdit ? 'Ficha de Agencia' : 'Nueva Agencia'}
+                 {bloqueada && <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-500 text-[7px] font-black uppercase tracking-widest">Temporalmente Suspendida</span>}
               </div>
-              <div className="text-[10px] text-white/40 mt-0.5">{isEdit ? `ID: ${ag.id}` : 'Genera 3 licencias automáticas'}</div>
+              <div className="text-[9px] text-white/40 mt-0.5">{isEdit ? `ID: ${ag.id}` : 'Genera 3 licencias automáticas'}</div>
             </div>
           </div>
-          <button type="button" onClick={onClose} className="text-white/30 hover:text-white transition-colors"><X size={20} /></button>
+          <button type="button" onClick={onClose} className="text-white/30 hover:text-white transition-colors"><X size={16} /></button>
         </div>
 
         <div className="overflow-y-auto custom-scrollbar">
-          <form onSubmit={onSubmit} className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+          <form onSubmit={onSubmit} className="p-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               
-              <div className="space-y-4">
-                <h3 className="text-[9px] font-black text-brand-400 uppercase tracking-widest border-b border-white/5 pb-2">Sede Principal</h3>
-                <div><label className="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-1.5 block">Nombre</label><input required autoFocus className="w-full bg-ink-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors" value={nombre} onChange={e => setNombre(e.target.value)} /></div>
-                <div>
-                  <label className="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-1.5 block">Slug ID</label>
-                  <input className="w-full font-mono text-[10px] text-white/40 bg-white/5 border border-white/10 rounded-lg px-3 py-2 cursor-not-allowed" value={effectiveSlug} readOnly />
-                </div>
-                <div><label className="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-1.5 block">Dirección</label><input className="w-full bg-ink-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors" value={direccion} onChange={e => setDireccion(e.target.value)} /></div>
+              <div className="space-y-3">
+                <h3 className="text-[8px] font-black text-brand-400 uppercase tracking-widest border-b border-white/5 pb-1.5">Sede Principal</h3>
+                <div><label className="text-[8px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Nombre</label><input required autoFocus className="w-full bg-ink-950 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] text-white focus:border-brand-500 transition-colors" value={nombre} onChange={e => setNombre(e.target.value)} /></div>
+                <div><label className="text-[8px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Slug ID</label><input className="w-full font-mono text-[9px] text-white/40 bg-white/5 border border-white/10 rounded-md px-2.5 py-1.5 cursor-not-allowed" value={effectiveSlug} readOnly /></div>
+                <div><label className="text-[8px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Dirección</label><input className="w-full bg-ink-950 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] text-white focus:border-brand-500 transition-colors" value={direccion} onChange={e => setDireccion(e.target.value)} /></div>
               </div>
 
-              <div className="space-y-4">
-                <h3 className="text-[9px] font-black text-white/30 uppercase tracking-widest border-b border-white/5 pb-2">Contacto</h3>
-                <div><label className="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-1.5 block">Responsable</label><input className="w-full bg-ink-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors" value={cNombre} onChange={e => setCNombre(e.target.value)} /></div>
-                <div><label className="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-1.5 block">Teléfono</label><input className="w-full bg-ink-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors" value={cTel} onChange={e => setCTel(e.target.value)} /></div>
-                <div><label className="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-1.5 block">Email</label><input type="email" className="w-full bg-ink-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors" value={cEmail} onChange={e => setCEmail(e.target.value)} /></div>
+              <div className="space-y-3">
+                <h3 className="text-[8px] font-black text-white/30 uppercase tracking-widest border-b border-white/5 pb-1.5">Contacto Principal</h3>
+                <div><label className="text-[8px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Responsable</label><input className="w-full bg-ink-950 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] text-white focus:border-brand-500 transition-colors" value={cNombre} onChange={e => setCNombre(e.target.value)} /></div>
+                <div><label className="text-[8px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Teléfono</label><input className="w-full bg-ink-950 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] text-white focus:border-brand-500 transition-colors" value={cTel} onChange={e => setCTel(e.target.value)} /></div>
+                <div><label className="text-[8px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Email Corp.</label><input type="email" className="w-full bg-ink-950 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] text-white focus:border-brand-500 transition-colors" value={cEmail} onChange={e => setCEmail(e.target.value)} /></div>
               </div>
 
               {isEdit && (
-                <div className="md:col-span-2 space-y-3 pt-4 border-t border-white/5">
-                  <h3 className="text-[9px] font-black text-white/30 uppercase tracking-widest">Usuarios Activos</h3>
+                <div className="md:col-span-2 space-y-2 pt-3 border-t border-white/5">
+                  <h3 className="text-[8px] font-black text-white/30 uppercase tracking-widest">Licencias de Uso</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                     {agentesDb.map(agente => (
-                      <div key={agente.id} className="bg-white/5 border border-white/10 rounded-lg p-2.5 flex items-center gap-2.5">
-                        <div className="h-6 w-6 rounded bg-brand-500/20 text-brand-400 flex items-center justify-center shrink-0"><Users size={12}/></div>
-                        <div className="min-w-0"><div className="text-[10px] font-bold text-white truncate">{agente.nombre}</div><div className="text-[9px] text-white/50 font-mono truncate">{agente.email}</div></div>
+                      <div key={agente.id} className="bg-white/5 border border-white/10 rounded-md p-2 flex items-center gap-2">
+                        <div className="h-5 w-5 rounded bg-brand-500/20 text-brand-400 flex items-center justify-center shrink-0"><Users size={10}/></div>
+                        <div className="min-w-0"><div className="text-[9px] font-bold text-white truncate">{agente.nombre}</div><div className="text-[8px] text-white/50 font-mono truncate">{agente.email}</div></div>
                       </div>
                     ))}
                   </div>
 
-                  {/* CONTROLES DE BLOQUEO (SÓLO ADMIN) */}
-                  <div className={`p-4 mt-4 rounded-xl border ${bloqueada ? 'bg-red-500/10 border-red-500/20' : 'bg-white/[0.02] border-white/5'} flex items-center justify-between transition-colors`}>
+                  {/* EL INTERRUPTOR DE BLOQUEO / DESBLOQUEO */}
+                  <div className={`p-3 mt-4 rounded-lg border ${bloqueada ? 'bg-red-500/10 border-red-500/30' : 'bg-white/[0.01] border-white/10'} flex items-center justify-between transition-colors`}>
                      <div>
-                        <h4 className={`text-[10px] font-black uppercase tracking-widest mb-1 ${bloqueada ? 'text-red-400' : 'text-white/60'}`}>Control de Acceso</h4>
-                        <p className="text-[10px] text-white/40 max-w-sm leading-relaxed">
-                           Si suspendes esta agencia, podrás programar más adelante que sus agentes sean expulsados del sistema temporalmente.
+                        <h4 className={`text-[9px] font-black uppercase tracking-widest mb-0.5 ${bloqueada ? 'text-red-400' : 'text-white/60'}`}>Control de Impagos / Acceso</h4>
+                        <p className="text-[9px] text-white/40 max-w-xs leading-relaxed">
+                           {bloqueada ? 'Esta agencia tiene el acceso cortado. Sus usuarios no podrán usar el CRM.' : 'Si cortas el acceso, la agencia no podrá operar pero no perderá sus datos.'}
                         </p>
                      </div>
-                     <button type="button" onClick={() => setBloqueada(!bloqueada)} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors flex items-center gap-2 ${bloqueada ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'bg-white/10 text-white/60 hover:bg-white/20'}`}>
-                        {bloqueada ? <><Lock size={12}/> SUSPENDIDA</> : 'Suspender Acceso'}
+                     <button type="button" onClick={() => setBloqueada(!bloqueada)} className={`px-3 py-1.5 rounded-md text-[8px] font-black uppercase tracking-widest transition-colors flex items-center gap-1.5 ${bloqueada ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30' : 'bg-white/5 text-red-400 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30'}`}>
+                        {bloqueada ? <><Unlock size={10}/> REACTIVAR ACCESO</> : <><Lock size={10}/> SUSPENDER AGENCIA</>}
                      </button>
                   </div>
                 </div>
               )}
             </div>
 
-            {error && <div className="text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-3 mt-6 font-mono">{error}</div>}
+            {error && <div className="text-[9px] text-red-400 bg-red-500/10 border border-red-500/20 rounded-md p-2 mt-4 font-mono">{error}</div>}
 
-            <div className="flex items-center justify-between pt-6 mt-6 border-t border-white/5">
-              <div>{isEdit && <button type="button" onClick={handleDelete} disabled={submitting} className="text-red-500/70 hover:text-red-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5"><Trash2 size={12} /> Eliminar</button>}</div>
+            <div className="flex items-center justify-between pt-4 mt-4 border-t border-white/5">
+              <div>{isEdit && <button type="button" onClick={handleDelete} disabled={submitting} className="text-red-500/50 hover:text-red-400 text-[8px] font-bold uppercase tracking-widest flex items-center gap-1"><Trash2 size={10} /> Purgar Datos</button>}</div>
               <div className="flex items-center gap-2">
-                <button type="button" className="px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/5 transition" onClick={onClose} disabled={submitting}>Cancelar</button>
-                <button type="submit" className="btn-primary py-2 px-6 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2" disabled={submitting || !nombre}>
-                  {submitting ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} {isEdit ? 'Guardar Cambios' : 'Crear Sede'}
+                <button type="button" className="px-3 py-1.5 rounded-md text-[8px] font-bold uppercase tracking-widest text-white/50 hover:text-white hover:bg-white/5 transition" onClick={onClose} disabled={submitting}>Cancelar</button>
+                <button type="submit" className="btn-primary py-1.5 px-4 text-[8px] font-bold uppercase tracking-widest flex items-center gap-1.5" disabled={submitting || !nombre}>
+                  {submitting ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />} {isEdit ? 'Guardar Cambios' : 'Generar Licencias'}
                 </button>
               </div>
             </div>
@@ -443,30 +448,30 @@ function CredentialsDialog({ result, onClose }: { result: CreatedResult, onClose
   const [copied, setCopied] = useState<string | null>(null);
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-      <div className="relative w-full max-w-lg bg-ink-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-slide-up">
-        <div className="px-6 py-5 border-b border-white/5 bg-emerald-500/10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 text-emerald-400"><Check size={16} /></div>
-            <div><div className="text-sm font-bold text-white">Sede Creada</div><div className="text-[9px] text-emerald-400/80 font-medium uppercase tracking-widest">Copia estos datos ahora</div></div>
+      <div className="relative w-full max-w-sm bg-ink-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl animate-slide-up">
+        <div className="px-5 py-4 border-b border-white/5 bg-emerald-500/10 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="h-6 w-6 rounded-md bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 text-emerald-400"><Check size={12} /></div>
+            <div><div className="text-xs font-bold text-white">Sede Creada</div><div className="text-[8px] text-emerald-400/80 font-medium uppercase tracking-widest">Copia estos datos ahora</div></div>
           </div>
         </div>
-        <div className="p-6 space-y-2">
+        <div className="p-5 space-y-2">
           {result?.usuarios?.map(u => (
-            <div key={u.email} className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-xl">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="h-8 w-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-400 shrink-0"><KeyRound size={14} /></div>
-                <div className="min-w-0"><div className="text-[11px] font-bold text-white/90 truncate">{u.email}</div><div className="text-[10px] text-white/40 font-mono truncate">{u.password}</div></div>
+            <div key={u.email} className="flex items-center justify-between p-2.5 bg-white/[0.02] border border-white/5 rounded-lg">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="h-6 w-6 rounded-md bg-brand-500/10 flex items-center justify-center text-brand-400 shrink-0"><KeyRound size={12} /></div>
+                <div className="min-w-0"><div className="text-[10px] font-bold text-white/90 truncate">{u.email}</div><div className="text-[9px] text-white/40 font-mono truncate">{u.password}</div></div>
               </div>
-              <button type="button" onClick={() => { navigator.clipboard.writeText(`${u.email} / ${u.password}`); setCopied(u.email); setTimeout(() => setCopied(null), 1500); }} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all shrink-0">
-                {copied === u.email ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+              <button type="button" onClick={() => { navigator.clipboard.writeText(`${u.email} / ${u.password}`); setCopied(u.email); setTimeout(() => setCopied(null), 1500); }} className="p-1.5 rounded-md bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all shrink-0">
+                {copied === u.email ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
               </button>
             </div>
           ))}
-          <div className="flex items-center gap-3 pt-4">
-            <button type="button" className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-widest transition flex justify-center items-center gap-2" onClick={() => {
+          <div className="flex items-center gap-2 pt-3">
+            <button type="button" className="flex-1 py-1.5 rounded-md bg-white/5 hover:bg-white/10 text-[8px] font-bold uppercase tracking-widest transition flex justify-center items-center gap-1.5" onClick={() => {
               const text = result?.usuarios?.map(u => `${u.email} / ${u.password}`).join('\n') || ''; navigator.clipboard.writeText(text); setCopied('all'); setTimeout(() => setCopied(null), 1500);
-            }}>{copied === 'all' ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />} Copiar todo</button>
-            <button type="button" className="btn-primary flex-1 py-2 text-[10px] font-bold uppercase tracking-widest" onClick={onClose}>Cerrar</button>
+            }}>{copied === 'all' ? <Check size={10} className="text-emerald-400" /> : <Copy size={10} />} Copiar todo</button>
+            <button type="button" className="btn-primary flex-1 py-1.5 text-[8px] font-bold uppercase tracking-widest" onClick={onClose}>Cerrar</button>
           </div>
         </div>
       </div>
