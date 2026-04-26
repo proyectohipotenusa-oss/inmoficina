@@ -141,7 +141,7 @@ export default function Landing() {
       {/* ARSENAL GRID */}
       <section id="arsenal" className="py-20 px-6">
         <div className="max-w-5xl mx-auto text-center mb-16">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight">Arsenal para el Cierre</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight">ARSENAL PARA EL CIERRE DE PROPIEDADES</h2>
           <p className="text-white/40 font-light text-xs max-w-lg mx-auto">Tecnología inmersiva diseñada para elevar la percepción de valor y multiplicar tus conversiones.</p>
         </div>
 
