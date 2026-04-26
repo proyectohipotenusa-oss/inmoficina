@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Link } from 'wouter';
 import { supabase } from '../lib/supabase';
 import { 
-  Globe, BarChart3, Sparkles, QrCode, Smartphone, 
-  ShieldCheck, ArrowRight, CheckCircle2, Star, Zap, X, Loader2,
+  Globe, BarChart3, Sparkles, Smartphone, Rss,
+  ArrowRight, CheckCircle2, Star, Zap, X, Loader2,
   Trophy, Landmark, LayoutDashboard, Send, MousePointerClick
 } from 'lucide-react';
 
@@ -78,7 +78,7 @@ export default function Landing() {
             </button>
             <div className="flex gap-6 opacity-40 grayscale pointer-events-none">
                <span className="text-[9px] font-medium uppercase tracking-widest">IA Generativa</span>
-               <span className="text-[9px] font-medium uppercase tracking-widest">CMA Reports</span>
+               <span className="text-[9px] font-medium uppercase tracking-widest">Multipublicación</span>
                <span className="text-[9px] font-medium uppercase tracking-widest">Fichas VIP</span>
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function Landing() {
             </h2>
             <div className="space-y-6">
               {[
-                { icon: Star, title: "Doble Blindaje de Marca", desc: "Inyectamos tu logo e identidad en cada pixel que ve el cliente." },
+                { icon: Star, title: "Doble Blindaje de Marca", desc: "No permitas que tu nombre desaparezca. Inyectamos tu logo e identidad en cada pixel que ve el cliente." },
                 { icon: Sparkles, title: "Inteligencia que Redacta", desc: "Nuestra IA redacta memorias de alto impacto técnico en segundos." },
                 { icon: MousePointerClick, title: "Ventas a un solo clic", desc: "Reports de valoración y dossiers financieros con diseño editorial." }
               ].map((item, i) => (
@@ -138,7 +138,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ARSENAL GRID */}
+      {/* ARSENAL GRID - ACTUALIZADO CON PORTALES */}
       <section id="arsenal" className="py-20 px-6">
         <div className="max-w-5xl mx-auto text-center mb-16">
           <h2 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight">Arsenal para el Cierre</h2>
@@ -150,7 +150,7 @@ export default function Landing() {
             { icon: Globe, title: "Fichas VIP Inmersivas", desc: "Enlaces web que calculan la hipoteca en tiempo real mientras el cliente explora la galería." },
             { icon: BarChart3, title: "CMA Reports", desc: "Valoraciones de mercado justificadas con datos de las 52 provincias y diseño de lujo." },
             { icon: Landmark, title: "Dossier de Inversión", desc: "Habla el idioma del inversor: ROI, Yield Neto y Cash Flow calculados automáticamente." },
-            { icon: QrCode, title: "Conexión QR Dinámica", desc: "Un puente instantáneo entre el cartel de tu escaparate y el smartphone del cliente." },
+            { icon: Rss, title: "Conexión a Portales", desc: "Sincroniza tus propiedades con Idealista, Fotocasa y más en 1 clic. Adiós al trabajo manual." },
             { icon: LayoutDashboard, title: "Pipeline Kanban", desc: "Control visual absoluto de tus leads. Arrastra y suelta para gestionar tus negociaciones." },
             { icon: Zap, title: "IA Predictor", desc: "Analítica inteligente que evalúa el potencial de cierre de cada propiedad de tu cartera." }
           ].map((f, i) => (
@@ -163,7 +163,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* TARIFA */}
+      {/* TARIFA - AÑADIDO PORTALES */}
       <section id="tarifa" className="py-20 px-6 relative">
         <div className="max-w-2xl mx-auto bg-gradient-to-br from-ink-900 to-ink-950 border border-white/10 p-8 md:p-12 rounded-[2rem] text-center shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 px-4 py-1 bg-brand-500 text-[9px] font-bold uppercase tracking-widest rounded-b-md shadow-lg shadow-brand-500/20">
@@ -180,11 +180,11 @@ export default function Landing() {
               "3 Licencias de Usuario", 
               "Fichas VIP Ilimitadas", 
               "Informes CMA Ilimitados", 
-              "Sin costes por asiento extra", 
+              "Multipublicación Portales (XML)", 
               "IA de Redacción Integrada", 
               "Compresión Fotos en la Nube", 
-              "Códigos QR Dinámicos", 
-              "Pipeline y Gestión de Leads"
+              "Pipeline y Gestión de Leads",
+              "Sin costes por asiento extra"
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-2.5 text-white/60 font-light text-xs">
                 <CheckCircle2 className="text-brand-400 shrink-0" size={14} /> {item}
@@ -198,7 +198,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* FOOTER ACTUALIZADO CON LOS 5 ENLACES */}
+      {/* FOOTER */}
       <footer className="py-12 px-6 border-t border-white/5 text-center bg-ink-950/50">
         <div className="max-w-6xl mx-auto flex flex-col items-center">
           <div className="w-[24px] h-[24px] mx-auto mb-4 opacity-30 hover:opacity-100 transition-all duration-500 cursor-pointer">

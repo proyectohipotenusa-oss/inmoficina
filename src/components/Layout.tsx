@@ -6,7 +6,7 @@ import { Logo } from './Logo';
 import { 
   LayoutDashboard, Users, KanbanSquare, Building2, 
   Calendar, LineChart, Sparkles, UserCircle, LogOut, 
-  Menu, X, FileText, TrendingUp, LifeBuoy
+  Menu, X, FileText, TrendingUp, LifeBuoy, Rss
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -74,6 +74,7 @@ export function Layout({ children, title }: LayoutProps) {
                 <NavItem href="/leads" icon={Users} label="Leads" />
                 <NavItem href="/pipeline" icon={KanbanSquare} label="Pipeline" />
                 <NavItem href="/propiedades" icon={Building2} label="Propiedades" />
+                <NavItem href="/portales" icon={Rss} label="Sincronización Portales" />
                 <NavItem href="/agenda" icon={Calendar} label="Agenda" />
                 <NavItem href="/historico" icon={LineChart} label="Ventas" />
                 <NavItem href="/informes" icon={FileText} label="Informes CMA" />
