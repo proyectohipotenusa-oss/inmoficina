@@ -177,7 +177,7 @@ export default function Landing() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-left mb-10 border-t border-white/5 pt-8">
             {[
-              "3 Licencias de Usuario", 
+              "Licencia para 3 Usuarios", 
               "Fichas VIP Ilimitadas", 
               "Informes CMA Ilimitados", 
               "Multipublicación Portales", 
