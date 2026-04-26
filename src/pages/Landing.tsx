@@ -4,8 +4,14 @@ import { supabase } from '../lib/supabase';
 import { 
   Globe, BarChart3, Sparkles, QrCode, Smartphone, 
   ShieldCheck, ArrowRight, CheckCircle2, Star, Zap, X, Loader2,
-  Trophy, Landmark, LayoutDashboard, Send, MousePointerClick
+  Trophy, Landmark, LayoutDashboard, Send
 } from 'lucide-react';
+
+// URL del nuevo logo proporcionado
+const LOGO_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/9452536f-198f-4e52-bc6d-bf06589f74c8-u1_d1156373-97c1-44f1-aa6a-0bb509624a9f.png";
+
+// URL temporal para links legales
+const TEMPORARY_LEGAL_URL = "https://www.ejemplo.com";
 
 export default function Landing() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,12 +37,12 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-ink-950 text-white font-sans selection:bg-brand-500/30 overflow-x-hidden scroll-smooth">
       
-      {/* NAVBAR: MÁS FINA */}
+      {/* NAVBAR */}
       <nav className="fixed top-0 left-0 right-0 z-40 bg-ink-950/70 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5 group cursor-pointer">
             <div className="w-7 h-7 rounded-md overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-500">
-              <img src="https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png" alt="Logo" className="w-full h-full object-contain" />
+              <img src={LOGO_URL} alt="Logo Inmoficina" className="w-full h-full object-contain" />
             </div>
             <span className="text-sm font-bold tracking-tight uppercase group-hover:text-brand-400 transition-colors">INMOFICINA<span className="text-brand-400">.</span></span>
           </div>
@@ -54,7 +60,7 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* HERO SECTION: TAMAÑOS REDUCIDOS */}
+      {/* HERO SECTION */}
       <section className="relative pt-28 pb-16 px-6 lg:pt-36 lg:pb-24 text-center">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.08),transparent_60%)] pointer-events-none" />
         <div className="max-w-3xl mx-auto relative z-10">
@@ -88,7 +94,6 @@ export default function Landing() {
              <div className="relative group">
                 <div className="absolute -inset-3 bg-brand-500/10 rounded-[2rem] blur-xl group-hover:bg-brand-500/15 transition duration-1000" />
                 <div className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-ink-900">
-                  {/* IMAGEN DE OFICINA PREMIUM SEGURA */}
                   <img 
                     src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200" 
                     alt="Oficina Premium Real Estate" 
@@ -97,7 +102,7 @@ export default function Landing() {
                   <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-transparent to-transparent opacity-90" />
                   <div className="absolute bottom-6 left-6 right-6">
                      <div className="p-4 bg-white/[0.03] backdrop-blur-xl rounded-xl border border-white/10 flex items-center gap-3">
-                        <div className="w-8 h-8 bg-brand-500/20 rounded-md flex items-center justify-center border border-brand-500/30 shrink-0">
+                        <div className="w-8 h-8 bg-brand-500/20 rounded-lg flex items-center justify-center border border-brand-500/30 shrink-0">
                            <Smartphone size={16} className="text-brand-300" />
                         </div>
                         <div>
@@ -115,7 +120,7 @@ export default function Landing() {
             </h2>
             <div className="space-y-6">
               {[
-                { icon: Star, title: "Doble Blindaje de Marca", desc: "Inyectamos tu logo e identidad en cada pixel que ve el cliente." },
+                { icon: Star, title: "Doble Blindaje de Marca", desc: "No permitas que tu nombre desaparezca. Inyectamos tu logo e identidad en cada pixel que ve el cliente." },
                 { icon: Sparkles, title: "Inteligencia que Redacta", desc: "Nuestra IA redacta memorias de alto impacto técnico en segundos." },
                 { icon: MousePointerClick, title: "Ventas a un solo clic", desc: "Reports de valoración y dossiers financieros con diseño editorial." }
               ].map((item, i) => (
@@ -183,7 +188,7 @@ export default function Landing() {
               "Códigos QR Dinámicos", 
               "Pipeline y Gestión de Leads"
             ].map((item, i) => (
-              <div key={i} className="flex items-center gap-2.5 text-white/60 font-light text-xs">
+              <div key={i} className="flex items-center gap-3 text-white/60 font-light text-sm">
                 <CheckCircle2 className="text-brand-400 shrink-0" size={14} /> {item}
               </div>
             ))}
@@ -195,13 +200,24 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* FOOTER */}
+      {/* FOOTER MODIFICADO */}
       <footer className="py-12 px-6 border-t border-white/5 text-center bg-ink-950/50">
-        <div className="w-[24px] h-[24px] mx-auto mb-4 opacity-30 hover:opacity-100 transition-all duration-500 cursor-pointer">
-          <img src="https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png" alt="Logo" className="w-full h-full object-contain grayscale hover:grayscale-0" />
+        <div className="max-w-6xl mx-auto flex flex-col items-center">
+          <div className="w-[24px] h-[24px] mx-auto mb-4 opacity-30 hover:opacity-100 transition-all duration-500 cursor-pointer">
+            <img src={LOGO_URL} alt="Logo Inmoficina" className="w-full h-full object-contain grayscale hover:grayscale-0" />
+          </div>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-white/20 mb-6">Elevando el estándar inmobiliario</p>
+          
+          {/* NUEVA SECCIÓN DE LINKS LEGALES */}
+          <div className="flex flex-row justify-center items-center gap-8 text-[8px] text-white/30 uppercase font-medium mt-1 mb-3 flex-wrap">
+            <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Política de cookies</a>
+            <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Política de Privacidad</a>
+            <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Aviso Legal</a>
+            <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Condiciones de Uso</a>
+          </div>
+
+          <p className="text-[8px] font-light text-white/10 uppercase tracking-widest pt-2 border-t border-white/5 w-full">© {new Date().getFullYear()} Inmoficina. Todos los derechos reservados.</p>
         </div>
-        <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-white/20 mb-2">Elevando el estándar inmobiliario</p>
-        <p className="text-[8px] font-light text-white/10 uppercase tracking-widest">© {new Date().getFullYear()} Inmoficina. Todos los derechos reservados.</p>
       </footer>
 
       {/* MODAL DE REGISTRO */}
@@ -210,58 +226,58 @@ export default function Landing() {
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => formStatus !== 'loading' && setIsModalOpen(false)} />
           
           <div className="relative w-full max-w-sm bg-ink-950 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-slide-up">
-            <div className="p-8">
-              <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-white/30 hover:text-white transition"><X size={18} /></button>
+            <div className="p-8 md:p-10">
+              <button onClick={() => setIsModalOpen(false)} className="absolute top-5 right-5 text-white/30 hover:text-white transition"><X size={20} /></button>
 
               {formStatus === 'success' ? (
-                <div className="text-center py-4 animate-fade-in">
-                  <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
-                    <Send size={20} className="text-emerald-400" />
+                <div className="text-center py-6 animate-fade-in">
+                  <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
+                    <Send size={24} className="text-emerald-400" />
                   </div>
-                  <h3 className="text-lg font-bold mb-2">Solicitud Enviada</h3>
-                  <p className="text-white/50 text-xs leading-relaxed font-light mb-6">Revisaremos tu agencia y crearemos tus credenciales VIP. Te avisaremos por email en breve.</p>
-                  <button onClick={() => setIsModalOpen(false)} className="w-full py-2.5 bg-white/5 rounded-lg text-xs font-semibold uppercase tracking-widest border border-white/10 hover:bg-white/10 transition">Finalizar</button>
+                  <h3 className="text-xl font-bold mb-3">Solicitud Enviada</h3>
+                  <p className="text-white/50 text-sm leading-relaxed font-light mb-8">Revisaremos tu agencia y crearemos tus credenciales VIP. Te avisaremos por email en breve.</p>
+                  <button onClick={() => setIsModalOpen(false)} className="w-full py-3.5 bg-white/5 rounded-xl text-xs font-semibold uppercase tracking-widest border border-white/10 hover:bg-white/10 transition">Finalizar</button>
                 </div>
               ) : (
                 <>
-                  <div className="mb-6 text-center">
-                    <h3 className="text-xl font-bold text-white mb-1">Solicitud de Acceso</h3>
-                    <p className="text-[9px] text-brand-400 uppercase tracking-widest font-semibold">14 Días Gratis • Pack Agencia Premium</p>
+                  <div className="mb-8 text-center">
+                    <h3 className="text-2xl font-bold text-white mb-2">Solicitud de Acceso</h3>
+                    <p className="text-[10px] text-brand-400 uppercase tracking-widest font-semibold">14 Días Gratis • Pack Agencia Premium</p>
                   </div>
 
                   <form onSubmit={handleSubmit} className="space-y-3">
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-semibold text-white/40 uppercase tracking-widest ml-1">Inmobiliaria *</label>
-                      <input required className="w-full bg-ink-900 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500 transition-all font-light" placeholder="Nombre de la agencia" 
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-white/40 uppercase tracking-widest ml-1">Inmobiliaria *</label>
+                      <input required className="w-full bg-ink-900 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-all font-light" placeholder="Nombre de la agencia" 
                         value={formData.nombre_agencia} onChange={e => setFormData({...formData, nombre_agencia: e.target.value})} />
                     </div>
                     
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-semibold text-white/40 uppercase tracking-widest ml-1">Dirección Física *</label>
-                      <input required className="w-full bg-ink-900 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500 transition-all font-light" placeholder="Calle, Ciudad..." 
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-white/40 uppercase tracking-widest ml-1">Dirección Física *</label>
+                      <input required className="w-full bg-ink-900 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-all font-light" placeholder="Calle, Ciudad..." 
                         value={formData.direccion} onChange={e => setFormData({...formData, direccion: e.target.value})} />
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-semibold text-white/40 uppercase tracking-widest ml-1">Responsable *</label>
-                      <input required className="w-full bg-ink-900 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500 transition-all font-light" placeholder="Nombre completo" 
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-white/40 uppercase tracking-widest ml-1">Responsable *</label>
+                      <input required className="w-full bg-ink-900 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-all font-light" placeholder="Nombre completo" 
                         value={formData.contacto_nombre} onChange={e => setFormData({...formData, contacto_nombre: e.target.value})} />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-semibold text-white/40 uppercase tracking-widest ml-1">Teléfono *</label>
-                        <input required type="tel" className="w-full bg-ink-900 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500 transition-all font-light" placeholder="+34..." 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-semibold text-white/40 uppercase tracking-widest ml-1">Teléfono *</label>
+                        <input required type="tel" className="w-full bg-ink-900 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-all font-light" placeholder="+34..." 
                           value={formData.telefono} onChange={e => setFormData({...formData, telefono: e.target.value})} />
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-semibold text-white/40 uppercase tracking-widest ml-1">Email *</label>
-                        <input required type="email" className="w-full bg-ink-900 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500 transition-all font-light" placeholder="hola@..." 
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-semibold text-white/40 uppercase tracking-widest ml-1">Email *</label>
+                        <input required type="email" className="w-full bg-ink-900 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-all font-light" placeholder="hola@..." 
                           value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
                       </div>
                     </div>
 
-                    <button type="submit" disabled={formStatus === 'loading'} className="w-full py-3 mt-4 rounded-lg bg-brand-600 text-white font-semibold text-xs uppercase tracking-widest hover:bg-brand-500 transition flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20">
+                    <button type="submit" disabled={formStatus === 'loading'} className="w-full py-4 mt-6 rounded-xl bg-brand-600 text-white font-semibold text-xs uppercase tracking-widest hover:bg-brand-500 transition flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20">
                       {formStatus === 'loading' ? <Loader2 size={16} className="animate-spin" /> : 'Solicitar Acceso VIP'}
                     </button>
                   </form>
