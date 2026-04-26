@@ -4,23 +4,15 @@ import { supabase } from '../lib/supabase';
 import { Building2, MapPin, BedDouble, Bath, Square, AlertCircle, ArrowUpRight } from 'lucide-react';
 import { formatEUR } from '../lib/format';
 
-const formatAgencyName = (slug?: string) => {
-  if (!slug) return 'Tu Inmobiliaria';
-  return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-};
-
 export default function CatalogoPublico() {
   const [match, params] = useRoute('/a/:agencia_id');
   const [propiedades, setPropiedades] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [nombreAgenciaPublico, setNombreAgenciaPublico] = useState('Cargando...');
 
-  // LA CORRECCIÓN ESTÁ AQUÍ (añadido el espacio de "new URLSearchParams")
   const searchParams = new URLSearchParams(window.location.search);
   const nombreAgente = searchParams.get('un') || '';
   const telefonoAgente = searchParams.get('t') || '';
-  
-  // LA AGENCIA DEFINITIVA EN EL CATÁLOGO
-  const [nombreAgenciaPublico, setNombreAgenciaPublico] = useState(searchParams.get('an') || formatAgencyName(params?.agencia_id));
 
   useEffect(() => {
     if (!match || !params?.agencia_id) return;
@@ -38,10 +30,27 @@ export default function CatalogoPublico() {
         const disponibles = (data || []).filter(p => !['Vendida', 'Alquilada'].includes(p.transaccion));
         setPropiedades(disponibles);
 
-        // Si la propiedad tiene el nombre_agencia guardado de fábrica, lo usamos para el título del Catálogo
-        if (data && data.length > 0 && data[0].nombre_agencia) {
-           setNombreAgenciaPublico(data[0].nombre_agencia);
+        // BLINDAJE EXTREMO DE AGENCIA
+        let nombre = searchParams.get('an');
+        
+        // Intentar sacarlo de alguna propiedad del listado que sí lo tenga guardado
+        if (!nombre && data && data.length > 0) {
+            nombre = data.find(p => p.nombre_agencia)?.nombre_agencia;
         }
+        
+        // Si todo falla, ir directamente a buscar el perfil a la base de datos
+        if (!nombre) {
+            const { data: pData } = await supabase.from('perfiles')
+              .select('agencia, nombre_agencia, empresa')
+              .eq('agencia_id', params.agencia_id)
+              .limit(1);
+              
+            if (pData && pData.length > 0) {
+               nombre = pData[0].agencia || pData[0].nombre_agencia || pData[0].empresa;
+            }
+        }
+
+        setNombreAgenciaPublico(nombre || 'Catálogo Exclusivo');
 
       } catch (err) {
         console.error('Error cargando catálogo:', err);

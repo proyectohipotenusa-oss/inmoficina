@@ -17,17 +17,14 @@ const COLOR_TEXTO_BORDE: Record<string, string> = {
   'Alquilada': 'text-pink-400 border-pink-400'
 };
 
-// Formateador salvavidas por si falla algo
-const formatAgencyName = (slug?: string) => {
-  if (!slug) return 'Tu Inmobiliaria';
-  return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-};
-
 export default function FichaPropiedad() {
   const [match, params] = useRoute('/p/:id');
   const [propiedad, setPropiedad] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [fotoIndex, setFotoIndex] = useState(0);
+  
+  // ESTADO QUE GUARDARÁ EL NOMBRE REAL
+  const [agenciaFinal, setAgenciaFinal] = useState('Cargando...');
 
   const searchParams = new URLSearchParams(window.location.search);
   const nombreAgente = searchParams.get('un') || '';
@@ -49,6 +46,22 @@ export default function FichaPropiedad() {
         if (pErr) throw pErr;
         setPropiedad(prop);
 
+        // BLINDAJE EXTREMO: 1º Base de datos, 2º Link, 3º Búsqueda anónima en tu perfil
+        let nombre = prop.nombre_agencia || searchParams.get('an');
+        
+        if (!nombre && prop.agencia_id) {
+          const { data: pData } = await supabase.from('perfiles')
+            .select('agencia, nombre_agencia, empresa')
+            .eq('agencia_id', prop.agencia_id)
+            .limit(1);
+            
+          if (pData && pData.length > 0) {
+             nombre = pData[0].agencia || pData[0].nombre_agencia || pData[0].empresa;
+          }
+        }
+        
+        setAgenciaFinal(nombre || 'Agencia Inmobiliaria');
+
       } catch (error) {
         console.error('Error al cargar datos:', error);
       } finally {
@@ -63,9 +76,6 @@ export default function FichaPropiedad() {
 
   const fotosArray = Array.isArray(propiedad.fotos) ? propiedad.fotos : [];
   const displayId = propiedad.referencia || `ID-${String(propiedad.id).substring(0, 5).toUpperCase()}`;
-
-  // LA AGENCIA: 1º De la Base de Datos, 2º De la URL, 3º Del ID de Agencia, 4º Genérico. ¡INFALIBLE!
-  const agenciaFinal = propiedad.nombre_agencia || searchParams.get('an') || formatAgencyName(propiedad.agencia_id);
 
   const nextFoto = () => setFotoIndex((i) => (i === fotosArray.length - 1 ? 0 : i + 1));
   const prevFoto = () => setFotoIndex((i) => (i === 0 ? fotosArray.length - 1 : i - 1));
@@ -168,7 +178,6 @@ export default function FichaPropiedad() {
         </div>
       </div>
 
-      {/* BOTÓN WHATSAPP TEXTO CORREGIDO A "Compartir vía WhatsApp" */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-ink-950/80 backdrop-blur-xl border-t border-white/10 z-50 flex items-center justify-center">
         <a href={urlWhatsApp} target="_blank" rel="noreferrer" className="flex-1 max-w-sm h-14 rounded-2xl bg-[#25D366] text-white font-bold flex items-center justify-center gap-2 hover:bg-[#20b858] transition shadow-xl shadow-[#25D366]/20">
           <WhatsAppIcon size={24} /> Compartir vía WhatsApp

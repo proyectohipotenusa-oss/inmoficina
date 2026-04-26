@@ -28,11 +28,6 @@ const generarIdVisual = (id: any) => {
   return `ID-${String(id).substring(0, 5).toUpperCase()}`;
 };
 
-const formatAgencyName = (slug?: string) => {
-  if (!slug) return 'Tu Inmobiliaria';
-  return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-};
-
 export default function Propiedades() {
   const { perfil } = useAuth();
   const [propiedades, setPropiedades] = useState<any[]>([]);
@@ -41,7 +36,8 @@ export default function Propiedades() {
   const [editingProp, setEditingProp] = useState<any | null>(null);
   const [viewingProp, setViewingProp] = useState<any | null>(null);
 
-  const nombreAgenciaFijo = perfil?.agencia || perfil?.nombre_agencia || formatAgencyName(perfil?.agencia_id);
+  // AHORA USA TU NOMBRE REAL O UN TEXTO ESTÁNDAR LIMPIO (Cero adivinanzas)
+  const nombreAgenciaFijo = perfil?.agencia || perfil?.nombre_agencia || perfil?.empresa || 'Agencia Inmobiliaria';
 
   const load = async () => {
     if (!perfil?.agencia_id) return;
@@ -150,12 +146,10 @@ function FullViewModal({ propiedad, onClose }: { propiedad: any, onClose: () => 
   const numeroPagos = plazoAños * 12;
   const cuotaMensual = capitalPrestamo > 0 && interesMensual > 0 ? (capitalPrestamo * interesMensual * Math.pow(1 + interesMensual, numeroPagos)) / (Math.pow(1 + interesMensual, numeroPagos) - 1) : 0;
 
-  // URL PARA EL CÓDIGO QR
-  const nombreAgenciaFijo = propiedad.nombre_agencia || perfil?.agencia || perfil?.nombre_agencia || formatAgencyName(perfil?.agencia_id);
+  const nombreAgenciaFijo = propiedad.nombre_agencia || perfil?.agencia || perfil?.nombre_agencia || perfil?.empresa || 'Agencia Inmobiliaria';
   const agenteNombre = perfil?.nombre || '';
   const agenteTelf = perfil?.telefono || '';
   const publicUrl = `${window.location.origin}/p/${propiedad.id}?an=${encodeURIComponent(nombreAgenciaFijo)}&un=${encodeURIComponent(agenteNombre)}&t=${encodeURIComponent(agenteTelf)}`;
-  // Usamos una API gratuita y súper rápida para generar el QR
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(publicUrl)}&margin=2`;
 
   return (
@@ -202,7 +196,6 @@ function FullViewModal({ propiedad, onClose }: { propiedad: any, onClose: () => 
           <div className="lg:col-span-1">
             <div className="sticky top-0 space-y-6">
               
-              {/* PLAN HIPOTECARIO */}
               <div>
                 <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 mb-4"><Calculator size={16} /> Plan Hipotecario</h3>
                 <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-5">
@@ -226,7 +219,6 @@ function FullViewModal({ propiedad, onClose }: { propiedad: any, onClose: () => 
                 </div>
               </div>
 
-              {/* SECCIÓN CÓDIGO QR PARA ESCAPARATE */}
               <div>
                 <h3 className="text-xs font-bold text-brand-400 uppercase tracking-widest flex items-center gap-1.5 mb-4"><QrCode size={16} /> QR Escaparate VIP</h3>
                 <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 text-center flex flex-col items-center">
