@@ -10,18 +10,12 @@ import { supabase } from '../lib/supabase';
 import { formatEUR } from '../lib/format';
 
 interface PropiedadInv {
-  id: string;
-  titulo: string;
-  ciudad: string;
-  fotos: string[];
-  precio?: number;
-  codigo_postal?: string;
-  estado_fisico?: string;
-  tipo?: string;
-  nombre_agencia?: string;
+  id: string; titulo: string; ciudad: string; fotos: string[]; precio?: number;
+  codigo_postal?: string; estado_fisico?: string; tipo?: string; nombre_agencia?: string;
+  direccion?: string;
 }
 
-const generarIdVisual = (id: string | number) => {
+const generarIdVisual = (id: any) => {
   if (!id) return 'ID-000';
   return `ID-${String(id).substring(0, 5).toUpperCase()}`;
 };
@@ -55,28 +49,28 @@ export default function Inversion() {
   return (
     <Layout title="Dossier de Inversión">
       <PageHeader title="Dossier de Inversión" subtitle="Analiza la rentabilidad financiera y el ROI para tus clientes inversores." />
-      <div className="mb-8 relative max-w-md">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-        <input className="input pl-12 bg-ink-900 border-white/10" placeholder="Buscar propiedad..." value={filtro} onChange={(e) => setFiltro(e.target.value)} />
+      <div className="mb-6 relative max-w-md">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={16} />
+        <input className="input pl-10 bg-ink-900 border-white/10 text-[13px]" placeholder="Buscar propiedad..." value={filtro} onChange={(e) => setFiltro(e.target.value)} />
       </div>
       
       {loading ? <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-brand-400" /></div> : propsFiltradas.length === 0 ? <div className="text-center py-20 text-white/40">No hay propiedades.</div> : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
           {propsFiltradas.map(p => (
-            <div key={p.id} className="card p-5 bg-ink-900 border-white/5 flex flex-col group relative">
-              <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-ink-950/80 border border-white/10 text-[9px] font-mono text-white/60">
+            <div key={p.id} className="card p-4 bg-ink-900 border-white/5 flex flex-col group relative">
+              <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-ink-950/80 border border-white/10 text-[8px] font-mono text-white/60">
                 {generarIdVisual(p.id)}
               </div>
-              <div className="flex items-start gap-4 mb-4">
-                <div className="h-12 w-12 rounded-xl bg-ink-950 overflow-hidden border border-white/10 shrink-0">
-                  {p.fotos?.[0] ? <img src={p.fotos[0]} className="w-full h-full object-cover" /> : <Building2 className="m-auto mt-3 text-white/10" size={20}/>}
+              <div className="flex items-start gap-3 mb-3">
+                <div className="h-10 w-10 rounded-xl bg-ink-950 overflow-hidden border border-white/10 shrink-0">
+                  {p.fotos?.[0] ? <img src={p.fotos[0]} className="w-full h-full object-cover" /> : <Building2 className="m-auto mt-2 text-white/10" size={16}/>}
                 </div>
                 <div className="min-w-0 pr-8">
-                  <h3 className="text-sm font-bold text-white truncate">{p.titulo}</h3>
-                  <p className="text-[10px] text-white/40 flex items-center gap-1 mt-1"><MapPin size={10}/> {p.ciudad}</p>
+                  <h3 className="text-[13px] font-bold text-white truncate leading-tight">{p.titulo}</h3>
+                  <p className="text-[9px] text-white/40 flex items-center gap-1 mt-1"><MapPin size={10}/> {p.ciudad}</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedProp(p)} className="mt-auto w-full py-2.5 rounded-xl bg-white/5 text-brand-400 text-[11px] font-bold hover:bg-brand-500 hover:text-white transition-all flex items-center justify-center gap-2"><TrendingUp size={14} /> Dossier de inversión</button>
+              <button onClick={() => setSelectedProp(p)} className="mt-auto w-full py-2 rounded-lg bg-white/5 text-brand-400 text-[11px] font-bold hover:bg-brand-500 hover:text-white transition-all flex items-center justify-center gap-2"><TrendingUp size={12} /> Dossier de inversión</button>
             </div>
           ))}
         </div>
@@ -128,11 +122,11 @@ function InvestmentReport({ propiedad, onClose }: { propiedad: PropiedadInv, onC
   return (
     <div className="fixed inset-0 z-[100] bg-ink-950 overflow-y-auto print:static print:h-auto print:w-full print:bg-white print:overflow-visible print:text-slate-800">
       <div className="sticky top-0 bg-ink-900 border-b border-white/10 px-6 py-3 flex justify-between items-center z-20 print:hidden">
-        <button onClick={onClose} className="text-white/50 hover:text-white flex items-center gap-2 text-sm"><X size={18}/> Cerrar</button>
-        <button onClick={handlePrint} className="btn-primary text-xs py-1.5 px-4"><Printer size={16} /> Imprimir Dossier</button>
+        <button onClick={onClose} className="text-white/50 hover:text-white flex items-center gap-2 text-[13px]"><X size={16}/> Cerrar</button>
+        <button onClick={handlePrint} className="btn-primary text-[11px] py-1.5 px-4"><Printer size={14} /> Imprimir Dossier</button>
       </div>
 
-      <div className="max-w-[800px] mx-auto p-8 print:p-0 print:max-w-none">
+      <div className="max-w-[800px] mx-auto p-4 sm:p-6 print:p-0 print:max-w-none print:transform print:scale-[0.90] print:origin-top-left print:w-[111%]">
         <div className="flex justify-between items-end border-b border-white/10 pb-4 mb-6 print:border-slate-300">
           <div>
             <div className="text-brand-400 font-black text-2xl tracking-tighter uppercase">{nombreAgenciaFijo}</div>

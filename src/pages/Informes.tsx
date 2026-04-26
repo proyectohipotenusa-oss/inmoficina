@@ -4,25 +4,16 @@ import { PageHeader } from '../components/PageHeader';
 import { 
   Building2, Search, FileText, X, 
   TrendingUp, MapPin, Printer, Info, CheckCircle2,
-  BedDouble, Bath, Square, Home, FileSignature, QrCode
+  BedDouble, Bath, Square, Home, FileSignature, QrCode, Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { formatEUR } from '../lib/format';
 
 interface PropiedadCMA {
-  id: string;
-  titulo: string;
-  ciudad: string;
-  fotos: string[];
-  metros_cuadrados?: number;
-  codigo_postal?: string;
-  tipo?: string;
-  estado_fisico?: string;
-  habitaciones?: number;
-  banos?: number;
-  descripcion?: string;
-  nombre_agencia?: string;
+  id: string; titulo: string; ciudad: string; fotos: string[]; metros_cuadrados?: number;
+  codigo_postal?: string; tipo?: string; estado_fisico?: string; habitaciones?: number;
+  banos?: number; descripcion?: string; nombre_agencia?: string; direccion?: string;
 }
 
 const PROVINCIAS: Record<string, { nombre: string, baseM2: number }> = {
@@ -54,7 +45,7 @@ const PROVINCIAS: Record<string, { nombre: string, baseM2: number }> = {
   '51': { nombre: 'Ceuta', baseM2: 2175.17 }, '52': { nombre: 'Melilla', baseM2: 1965.33 }
 };
 
-const generarIdVisual = (id: string | number) => {
+const generarIdVisual = (id: any) => {
   if (!id) return 'ID-000';
   return `ID-${String(id).substring(0, 5).toUpperCase()}`;
 };
@@ -67,7 +58,7 @@ const formatAgencyName = (slug?: string) => {
 export default function Informes() {
   const { perfil } = useAuth();
   const [propiedades, setPropiedades] = useState<PropiedadCMA[]>([]);
-  const [, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState('');
   const [selectedProp, setSelectedProp] = useState<PropiedadCMA | null>(null);
 
@@ -88,29 +79,31 @@ export default function Informes() {
   return (
     <Layout title="Informes CMA">
       <PageHeader title="Informes de Valoración" subtitle="Genera análisis comparativos de mercado para tus clientes." />
-      <div className="mb-8 relative max-w-md">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-        <input className="input pl-12 bg-ink-900 border-white/10" placeholder="Buscar propiedad..." value={filtro} onChange={(e) => setFiltro(e.target.value)} />
+      <div className="mb-6 relative max-w-md">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={16} />
+        <input className="input pl-10 bg-ink-900 border-white/10 text-[13px]" placeholder="Buscar propiedad..." value={filtro} onChange={(e) => setFiltro(e.target.value)} />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {propsFiltradas.map(p => (
-          <div key={p.id} className="card p-5 bg-ink-900 border-white/5 flex flex-col group relative">
-            <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-ink-950/80 border border-white/10 text-[9px] font-mono text-white/60">
-              {generarIdVisual(p.id)}
-            </div>
-            <div className="flex items-start gap-4 mb-4">
-              <div className="h-12 w-12 rounded-xl bg-ink-950 overflow-hidden border border-white/10 shrink-0">
-                {p.fotos?.[0] ? <img src={p.fotos[0]} className="w-full h-full object-cover" /> : <Building2 className="m-auto mt-3 text-white/10" size={20}/>}
+      {loading ? <div className="py-24 flex items-center justify-center text-white/40"><Loader2 className="animate-spin" size={24} /></div> : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+          {propsFiltradas.map(p => (
+            <div key={p.id} className="card p-4 bg-ink-900 border-white/5 flex flex-col group relative">
+              <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-ink-950/80 border border-white/10 text-[8px] font-mono text-white/60">
+                {generarIdVisual(p.id)}
               </div>
-              <div className="min-w-0 pr-8">
-                <h3 className="text-sm font-bold text-white truncate">{p.titulo}</h3>
-                <p className="text-[10px] text-white/40 flex items-center gap-1 mt-1"><MapPin size={10}/> {p.ciudad}</p>
+              <div className="flex items-start gap-3 mb-3">
+                <div className="h-10 w-10 rounded-lg bg-ink-950 overflow-hidden border border-white/10 shrink-0">
+                  {p.fotos?.[0] ? <img src={p.fotos[0]} className="w-full h-full object-cover" /> : <Building2 className="m-auto mt-2 text-white/10" size={16}/>}
+                </div>
+                <div className="min-w-0 pr-8">
+                  <h3 className="text-[13px] font-bold text-white truncate leading-tight">{p.titulo}</h3>
+                  <p className="text-[9px] text-white/40 flex items-center gap-1 mt-1"><MapPin size={10}/> {p.ciudad}</p>
+                </div>
               </div>
+              <button onClick={() => setSelectedProp(p)} className="mt-auto w-full py-2 rounded-lg bg-white/5 text-white/70 text-[11px] font-bold hover:bg-brand-500 hover:text-white transition-all flex items-center justify-center gap-2"><FileText size={12} /> Generar Informe</button>
             </div>
-            <button onClick={() => setSelectedProp(p)} className="mt-auto w-full py-2.5 rounded-xl bg-white/5 text-white/70 text-[11px] font-bold hover:bg-brand-500 hover:text-white transition-all flex items-center justify-center gap-2"><FileText size={14} /> Generar Informe</button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </Layout>
   );
 }
@@ -158,11 +151,11 @@ function CMAReport({ propiedad, onClose }: { propiedad: PropiedadCMA, onClose: (
   return (
     <div className="fixed inset-0 z-[100] bg-ink-950 overflow-y-auto print:static print:bg-white print:text-black">
       <div className="sticky top-0 bg-ink-900 border-b border-white/10 px-6 py-3 flex justify-between items-center z-20 print:hidden">
-        <button onClick={onClose} className="text-white/50 hover:text-white flex items-center gap-2 text-sm"><X size={18}/> Cerrar</button>
-        <button onClick={handlePrint} className="btn-primary text-xs py-1.5 px-4"><Printer size={16} /> Imprimir Informe</button>
+        <button onClick={onClose} className="text-white/50 hover:text-white flex items-center gap-2 text-[13px]"><X size={16}/> Cerrar</button>
+        <button onClick={handlePrint} className="btn-primary text-[11px] py-1.5 px-4"><Printer size={14} /> Imprimir Informe</button>
       </div>
 
-      <div className="max-w-[800px] mx-auto p-8 print:p-0 print:max-w-none">
+      <div className="max-w-[800px] mx-auto p-4 sm:p-6 print:p-0 print:max-w-none print:transform print:scale-[0.70] print:origin-top-left print:w-[142%]">
         <div className="flex justify-between items-end border-b border-white/10 pb-4 mb-6 print:border-slate-300">
           <div>
             <div className="text-brand-400 font-black text-2xl tracking-tighter uppercase">{nombreAgenciaFijo}</div>
