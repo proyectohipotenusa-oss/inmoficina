@@ -39,7 +39,7 @@ export default function Landing() {
       <nav className="fixed top-0 left-0 right-0 z-40 bg-ink-950/70 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5 group cursor-pointer">
-            <div className="w-7 h-7 rounded-md overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-500">
+            <div className="w-12 h-12 rounded-md overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-500">
               <img src={LOGO_URL} alt="Logo Inmoficina" className="w-full h-full object-contain" />
             </div>
             <span className="text-sm font-bold tracking-tight uppercase group-hover:text-brand-400 transition-colors">INMOFICINA<span className="text-brand-400">.</span></span>
