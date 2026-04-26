@@ -1,5 +1,6 @@
 import { Switch, Route, Redirect } from 'wouter';
 import { useAuth } from './context/AuthContext';
+import Landing from './pages/Landing'; // <-- IMPORTAMOS LA LANDING PAGE
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Leads from './pages/Leads';
@@ -14,7 +15,7 @@ import Perfil from './pages/Perfil';
 import AdminPanel from './pages/AdminPanel';
 import PublicProfile from './pages/PublicProfile';
 import FichaPropiedad from './pages/FichaPropiedad';
-import CatalogoPublico from './pages/CatalogoPublico'; // <-- IMPORTADO EL CATÁLOGO PÚBLICO
+import CatalogoPublico from './pages/CatalogoPublico';
 
 function SmartDashboard() {
   const { perfil, session } = useAuth();
@@ -44,21 +45,21 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <Switch>
+      {/* LA NUEVA LANDING PAGE COMO RUTA PRINCIPAL PÚBLICA */}
+      <Route path="/" component={Landing} />
+      
       <Route path="/login" component={Login} />
       
       {/* RUTAS PÚBLICAS (Cualquier cliente las puede ver sin login) */}
       <Route path="/u/:slug" component={PublicProfile} />
       <Route path="/p/:id" component={FichaPropiedad} /> 
-      <Route path="/a/:agencia_id" component={CatalogoPublico} /> {/* <-- NUEVA RUTA DEL CATÁLOGO */}
+      <Route path="/a/:agencia_id" component={CatalogoPublico} />
       
       <Route path="/admin">
         <ProtectedRoute><AdminPanel /></ProtectedRoute>
       </Route>
 
-      <Route path="/">
-        <ProtectedRoute><SmartDashboard /></ProtectedRoute>
-      </Route>
-
+      {/* EL DASHBOARD AHORA VIVE EN SU PROPIA RUTA */}
       <Route path="/dashboard">
         <ProtectedRoute><SmartDashboard /></ProtectedRoute>
       </Route>
