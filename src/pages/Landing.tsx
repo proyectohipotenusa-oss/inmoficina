@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 const LOGO_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png";
-const HERO_IMG_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/9452536f-198f-4e52-bc6d-bf06589f74c8-u1_d1156373-97c1-44f1-aa6a-0bb509624a9f.png";
+const HERO_IMG_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/1777235529301-019dcb7d-a185-7894-8e9f-05d821ff0562.png";
 const TEMPORARY_LEGAL_URL = "https://www.ejemplo.com";
 
 export default function Landing() {
@@ -37,9 +37,9 @@ export default function Landing() {
       
       {/* NAVBAR */}
       <nav className="fixed top-0 left-0 right-0 z-40 bg-ink-950/70 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5 group cursor-pointer">
-            <div className="w-7 h-7 rounded-md overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-500">
+            <div className="w-[48px] h-[48px] rounded-md overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-500">
               <img src={LOGO_URL} alt="Logo Inmoficina" className="w-full h-full object-contain" />
             </div>
             <span className="text-sm font-bold tracking-tight uppercase group-hover:text-brand-400 transition-colors">INMOFICINA<span className="text-brand-400">.</span></span>
@@ -59,18 +59,18 @@ export default function Landing() {
       </nav>
 
       {/* HERO SECTION */}
-      <section className="relative pt-28 pb-16 px-6 lg:pt-36 lg:pb-24 text-center">
+      <section className="relative pt-32 pb-16 px-6 lg:pt-40 lg:pb-24 text-center">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.08),transparent_60%)] pointer-events-none" />
         <div className="max-w-3xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.02] text-white/70 text-[9px] font-medium uppercase tracking-[0.2em] mb-6 animate-fade-in backdrop-blur-md">
-            <Trophy size={12} className="text-brand-400" /> El Estándar de la Nueva Generación
+            <Trophy size={13} className="text-brand-400" /> Digitaliza tu agencia inmobiliaria
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-[1.1] tracking-tight mb-6">
             Vende Lujo,<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-300 via-brand-400 to-emerald-400 font-extrabold">No Ladrillo.</span>
           </h1>
           <p className="text-sm sm:text-base text-white/50 max-w-xl mx-auto mb-10 leading-relaxed font-light tracking-wide">
-            Inmoficina es el CRM diseñado para la agencia que entiende que la marca propia es su activo más valioso. Tecnología inmersiva, diseño exquisito y herramientas orientadas al cierre.
+            Inmoficina es el CRM diseñado para la agencia inmobiliaria que entiende que la marca propia es su activo más valioso. Tecnología inmersiva, diseño exquisito y herramientas orientadas al cierre.
           </p>
           <div className="flex flex-col items-center gap-5">
             <button onClick={() => setIsModalOpen(true)} className="group relative px-6 py-3 bg-white text-ink-950 rounded-lg font-bold uppercase tracking-widest text-[11px] hover:bg-brand-50 hover:scale-[1.02] transition-all shadow-[0_10px_30px_rgba(255,255,255,0.1)] active:scale-95 flex items-center gap-2">
@@ -141,7 +141,7 @@ export default function Landing() {
       {/* ARSENAL GRID */}
       <section id="arsenal" className="py-20 px-6">
         <div className="max-w-5xl mx-auto text-center mb-16">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight">Arsenal para el Cierre</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight">Arsenal para el Cierre de Propiedades</h2>
           <p className="text-white/40 font-light text-xs max-w-lg mx-auto">Tecnología inmersiva diseñada para elevar la percepción de valor y multiplicar tus conversiones.</p>
         </div>
 
@@ -177,7 +177,7 @@ export default function Landing() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-left mb-10 border-t border-white/5 pt-8">
             {[
-              "3 Licencias de Usuario", 
+              "Licencia para 3 usuarios", 
               "Fichas VIP Ilimitadas", 
               "Informes CMA Ilimitados", 
               "Multipublicación Portales", 
