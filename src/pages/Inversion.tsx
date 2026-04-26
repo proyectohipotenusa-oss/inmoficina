@@ -9,7 +9,19 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { formatEUR } from '../lib/format';
 
-const generarIdVisual = (id: any) => {
+interface PropiedadInv {
+  id: string;
+  titulo: string;
+  ciudad: string;
+  fotos: string[];
+  precio?: number;
+  codigo_postal?: string;
+  estado_fisico?: string;
+  tipo?: string;
+  nombre_agencia?: string;
+}
+
+const generarIdVisual = (id: string | number) => {
   if (!id) return 'ID-000';
   return `ID-${String(id).substring(0, 5).toUpperCase()}`;
 };
@@ -21,16 +33,16 @@ const formatAgencyName = (slug?: string) => {
 
 export default function Inversion() {
   const { perfil } = useAuth();
-  const [propiedades, setPropiedades] = useState<any[]>([]);
+  const [propiedades, setPropiedades] = useState<PropiedadInv[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState('');
-  const [selectedProp, setSelectedProp] = useState<any | null>(null);
+  const [selectedProp, setSelectedProp] = useState<PropiedadInv | null>(null);
 
   useEffect(() => {
     const load = async () => {
       if (!perfil?.agencia_id) return;
       const { data } = await supabase.from('propiedades').select('*').eq('agencia_id', perfil.agencia_id).order('titulo');
-      setPropiedades(data || []);
+      setPropiedades((data as PropiedadInv[]) || []);
       setLoading(false);
     };
     load();
@@ -73,7 +85,7 @@ export default function Inversion() {
   );
 }
 
-function InvestmentReport({ propiedad, onClose }: { propiedad: any, onClose: () => void }) {
+function InvestmentReport({ propiedad, onClose }: { propiedad: PropiedadInv, onClose: () => void }) {
   const { perfil } = useAuth();
   const displayId = generarIdVisual(propiedad.id);
   const precioCompra = Number(propiedad.precio || 300000);
@@ -100,7 +112,6 @@ function InvestmentReport({ propiedad, onClose }: { propiedad: any, onClose: () 
   const ingresosNetosAnuales = (ingresosAlquilerMes * 12) - gastosAnuales;
   const yieldNeto = (ingresosNetosAnuales / inversionTotal) * 100;
 
-  // LÓGICA INFALIBLE PARA EL TÍTULO DEL DOCUMENTO
   const nombreAgenciaFijo = propiedad.nombre_agencia || perfil?.agencia || perfil?.nombre_agencia || perfil?.empresa || formatAgencyName(perfil?.agencia_id);
   const agenteNombre = perfil?.nombre || '';
   const agenteTelf = perfil?.telefono || '';
@@ -124,7 +135,6 @@ function InvestmentReport({ propiedad, onClose }: { propiedad: any, onClose: () 
       <div className="max-w-[800px] mx-auto p-8 print:p-0 print:max-w-none">
         <div className="flex justify-between items-end border-b border-white/10 pb-4 mb-6 print:border-slate-300">
           <div>
-            {/* EL NOMBRE DE TU AGENCIA AHORA AQUÍ */}
             <div className="text-brand-400 font-black text-2xl tracking-tighter uppercase">{nombreAgenciaFijo}</div>
             <div className="text-[8px] uppercase tracking-[0.2em] text-white/40 font-bold print:text-[10px] print:text-slate-500">Investment & Financial Report • {displayId}</div>
           </div>

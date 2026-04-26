@@ -6,33 +6,29 @@ import { Logo } from './Logo';
 import { 
   LayoutDashboard, Users, KanbanSquare, Building2, 
   Calendar, LineChart, Sparkles, UserCircle, LogOut, 
-  Menu, X, FileText, TrendingUp, LifeBuoy, Rss
+  Menu, X, FileText, TrendingUp, LifeBuoy, Rss, LucideIcon
 } from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
-  title?: string;
 }
 
-export function Layout({ children, title }: LayoutProps) {
+export function Layout({ children }: LayoutProps) {
   const { perfil } = useAuth();
   const [location, setLocation] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // CIERRE DE SESIÓN SUAVE (Sin parpadeo cutre)
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
     } finally {
-      // Limpiamos la caché del navegador para no dejar rastros
       localStorage.clear();
       sessionStorage.clear();
-      // Usamos el enrutador nativo de React para un deslizamiento limpio al Login
       setLocation('/login');
     }
   };
 
-  const NavItem = ({ href, icon: Icon, label, isBottom = false }: { href: string, icon: any, label: string, isBottom?: boolean }) => {
+  const NavItem = ({ href, icon: Icon, label, isBottom = false }: { href: string, icon: LucideIcon, label: string, isBottom?: boolean }) => {
     const active = location === href;
     return (
       <Link href={href}>
@@ -83,13 +79,9 @@ export function Layout({ children, title }: LayoutProps) {
               </>
             )}
             
-            {/* Sección Inferior de Cuenta y Soporte */}
             <div className="mt-auto pt-6 pb-2 space-y-1">
               <NavItem href="/perfil" icon={UserCircle} label="Perfil" />
-              <a 
-                href="mailto:admin@inmoficina.es?subject=Necesito%20ayuda%20con..." 
-                className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-white/50 hover:bg-white/5 hover:text-white"
-              >
+              <a href="mailto:admin@inmoficina.es?subject=Necesito%20ayuda%20con..." className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-white/50 hover:bg-white/5 hover:text-white">
                 <LifeBuoy size={18} className="text-white/40" />
                 <span className="font-medium text-sm">Soporte Técnico</span>
               </a>

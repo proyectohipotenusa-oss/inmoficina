@@ -10,6 +10,10 @@ import {
 } from 'lucide-react';
 import { formatEUR } from '../lib/format';
 
+interface LeadDash { id: string; estado: string; ultimo_contacto: string; created_at: string; nombre: string; }
+interface PropDash { id: string; transaccion: string; }
+interface TareaDash { id: string; tipo: string; titulo: string; hora: string; completada: boolean; }
+
 const TIPO_ICONO: Record<string, any> = {
   'Visita': Home, 'Llamada': Phone, 'Correo': Mail, 'Reunión': Users, 'Firma': PenTool, 'Otro': Circle
 };
@@ -19,14 +23,12 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const nombreUsuario = perfil?.nombre?.split(' ')[0] || 'Inmo';
 
-  const [leads, setLeads] = useState<any[]>([]);
-  const [propiedades, setPropiedades] = useState<any[]>([]);
-  const [tareasHoy, setTareasHoy] = useState<any[]>([]);
+  const [leads, setLeads] = useState<LeadDash[]>([]);
+  const [propiedades, setPropiedades] = useState<PropDash[]>([]);
+  const [tareasHoy, setTareasHoy] = useState<TareaDash[]>([]);
   const [ventasMes, setVentasMes] = useState(0);
   const [cantidadVentasMes, setCantidadVentasMes] = useState(0);
   const [loading, setLoading] = useState(true);
-  
-  // POST-IT: Estado y carga desde localStorage
   const [notaRapida, setNotaRapida] = useState('');
 
   useEffect(() => {
@@ -46,15 +48,15 @@ export default function Dashboard() {
       const hoyISO = new Date().toISOString().split('T')[0];
 
       const [resLeads, resProps, resVentas, resTareas] = await Promise.all([
-        supabase.from('leads').select('*').eq('agencia_id', perfil.agencia_id),
-        supabase.from('propiedades').select('*').eq('agencia_id', perfil.agencia_id),
-        supabase.from('ventas').select('*').eq('agencia_id', perfil.agencia_id),
-        supabase.from('tareas').select('*').eq('agencia_id', perfil.agencia_id).eq('fecha', hoyISO).order('hora', { ascending: true })
+        supabase.from('leads').select('id, estado, ultimo_contacto, created_at, nombre').eq('agencia_id', perfil.agencia_id),
+        supabase.from('propiedades').select('id, transaccion').eq('agencia_id', perfil.agencia_id),
+        supabase.from('ventas').select('importe, fecha').eq('agencia_id', perfil.agencia_id),
+        supabase.from('tareas').select('id, tipo, titulo, hora, completada').eq('agencia_id', perfil.agencia_id).eq('fecha', hoyISO).order('hora', { ascending: true })
       ]);
 
-      setLeads(resLeads.data || []);
-      setPropiedades(resProps.data || []);
-      setTareasHoy(resTareas.data || []);
+      setLeads((resLeads.data as LeadDash[]) || []);
+      setPropiedades((resProps.data as PropDash[]) || []);
+      setTareasHoy((resTareas.data as TareaDash[]) || []);
 
       if (resVentas.data) {
         const hoy = new Date();
@@ -196,10 +198,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* FILA INFERIOR: ALERTA Y POST-IT */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 mt-5">
-        
-        {/* ATENCIÓN URGENTE */}
         <div className="card p-6 bg-ink-900 border-white/5 xl:col-span-2">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
@@ -231,7 +230,6 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* POST-IT RÁPIDO */}
         <div className="card p-0 bg-amber-500/5 border border-amber-500/20 flex flex-col h-full overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-8 h-8 bg-gradient-to-bl from-amber-500/20 to-transparent rounded-bl-xl opacity-50" />
           <div className="flex items-center gap-2 p-4 pb-2">
@@ -245,7 +243,6 @@ export default function Dashboard() {
             onChange={handleNotaChange}
           />
         </div>
-
       </div>
     </Layout>
   );

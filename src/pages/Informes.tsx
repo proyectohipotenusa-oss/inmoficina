@@ -2,13 +2,28 @@ import { useEffect, useState } from 'react';
 import { Layout } from '../components/Layout';
 import { PageHeader } from '../components/PageHeader';
 import { 
-  Building2, Search, FileText, Loader2, X, 
+  Building2, Search, FileText, X, 
   TrendingUp, MapPin, Printer, Info, CheckCircle2,
-  BedDouble, Bath, Square, Home, Tags, FileSignature, QrCode
+  BedDouble, Bath, Square, Home, FileSignature, QrCode
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { formatEUR } from '../lib/format';
+
+interface PropiedadCMA {
+  id: string;
+  titulo: string;
+  ciudad: string;
+  fotos: string[];
+  metros_cuadrados?: number;
+  codigo_postal?: string;
+  tipo?: string;
+  estado_fisico?: string;
+  habitaciones?: number;
+  banos?: number;
+  descripcion?: string;
+  nombre_agencia?: string;
+}
 
 const PROVINCIAS: Record<string, { nombre: string, baseM2: number }> = {
   '01': { nombre: 'Álava', baseM2: 2523.50 }, '02': { nombre: 'Albacete', baseM2: 1381.33 },
@@ -39,7 +54,7 @@ const PROVINCIAS: Record<string, { nombre: string, baseM2: number }> = {
   '51': { nombre: 'Ceuta', baseM2: 2175.17 }, '52': { nombre: 'Melilla', baseM2: 1965.33 }
 };
 
-const generarIdVisual = (id: any) => {
+const generarIdVisual = (id: string | number) => {
   if (!id) return 'ID-000';
   return `ID-${String(id).substring(0, 5).toUpperCase()}`;
 };
@@ -51,16 +66,16 @@ const formatAgencyName = (slug?: string) => {
 
 export default function Informes() {
   const { perfil } = useAuth();
-  const [propiedades, setPropiedades] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [propiedades, setPropiedades] = useState<PropiedadCMA[]>([]);
+  const [, setLoading] = useState(true);
   const [filtro, setFiltro] = useState('');
-  const [selectedProp, setSelectedProp] = useState<any | null>(null);
+  const [selectedProp, setSelectedProp] = useState<PropiedadCMA | null>(null);
 
   useEffect(() => {
     const load = async () => {
       if (!perfil?.agencia_id) return;
       const { data } = await supabase.from('propiedades').select('*').eq('agencia_id', perfil.agencia_id).order('titulo');
-      setPropiedades(data || []);
+      setPropiedades((data as PropiedadCMA[]) || []);
       setLoading(false);
     };
     load();
@@ -100,7 +115,7 @@ export default function Informes() {
   );
 }
 
-function CMAReport({ propiedad, onClose }: { propiedad: any, onClose: () => void }) {
+function CMAReport({ propiedad, onClose }: { propiedad: PropiedadCMA, onClose: () => void }) {
   const { perfil } = useAuth();
   const displayId = generarIdVisual(propiedad.id);
 
@@ -127,7 +142,6 @@ function CMAReport({ propiedad, onClose }: { propiedad: any, onClose: () => void
   const impuestosAprox = valorEstimado * 0.08; 
   const netoPropietario = valorEstimado - comisionAgencia - impuestosAprox;
 
-  // LÓGICA INFALIBLE PARA EL TÍTULO DEL DOCUMENTO
   const nombreAgenciaFijo = propiedad.nombre_agencia || perfil?.agencia || perfil?.nombre_agencia || perfil?.empresa || formatAgencyName(perfil?.agencia_id);
   const agenteNombre = perfil?.nombre || '';
   const agenteTelf = perfil?.telefono || '';
@@ -151,7 +165,6 @@ function CMAReport({ propiedad, onClose }: { propiedad: any, onClose: () => void
       <div className="max-w-[800px] mx-auto p-8 print:p-0 print:max-w-none">
         <div className="flex justify-between items-end border-b border-white/10 pb-4 mb-6 print:border-slate-300">
           <div>
-            {/* EL NOMBRE DE TU AGENCIA ES AHORA EL TÍTULO DEL DOCUMENTO */}
             <div className="text-brand-400 font-black text-2xl tracking-tighter uppercase">{nombreAgenciaFijo}</div>
             <div className="text-[8px] uppercase tracking-[0.2em] text-white/40 font-bold print:text-xs print:text-slate-500">Luxury CRM • Análisis de Mercado • {displayId}</div>
           </div>

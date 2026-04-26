@@ -5,11 +5,15 @@ import { User, Camera, ShieldCheck, Sparkles, Copy, ExternalLink, Loader2 } from
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 
+interface AgenciaData {
+  id: string;
+  nombre: string;
+}
+
 export default function Perfil() {
   const { perfil, user } = useAuth();
-  const [agencia, setAgencia] = useState<any>(null);
+  const [agencia, setAgencia] = useState<AgenciaData | null>(null);
 
-  // Estados del formulario
   const [nombre, setNombre] = useState('');
   const [emailPublico, setEmailPublico] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -20,11 +24,10 @@ export default function Perfil() {
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  // Cargar datos al inicio
   useEffect(() => {
     if (perfil?.agencia_id) {
-      supabase.from('agencias').select('*').eq('id', perfil.agencia_id).single().then(({data}) => {
-        if (data) setAgencia(data);
+      supabase.from('agencias').select('id, nombre').eq('id', perfil.agencia_id).single().then(({data}) => {
+        if (data) setAgencia(data as AgenciaData);
       });
     }
     if (perfil) {
@@ -37,171 +40,60 @@ export default function Perfil() {
     }
   }, [perfil]);
 
-  // Lógica para comprimir y subir la foto del perfil
-  const handleAvatarUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleAvatarUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-    setUploading(true);
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        // Tamaño ideal para foto de perfil
-        const MAX_SIZE = 400;
-        let w = img.width, h = img.height;
-        
-        if (w > h) { if (w > MAX_SIZE) { h *= MAX_SIZE / w; w = MAX_SIZE; } } 
-        else { if (h > MAX_SIZE) { w *= MAX_SIZE / h; h = MAX_SIZE; } }
-        
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, w, h);
-          const base64 = canvas.toDataURL('image/jpeg', 0.8);
-          setAvatarUrl(base64);
-        }
-        setUploading(false);
-      };
-    };
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${perfil?.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      
+      await supabase.from('perfiles').update({ avatar_url: publicUrl }).eq('id', perfil?.id);
+      setAvatarUrl(publicUrl);
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      alert('Error al subir la imagen');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    await supabase.from('perfiles').update({
-      nombre,
-      email_publico: emailPublico,
-      telefono,
-      slug,
-      bio,
-      avatar_url: avatarUrl // Guardamos la foto
-    }).eq('id', perfil?.id);
-    
-    setTimeout(() => setSubmitting(false), 500);
+    try {
+      const updates = { nombre, email_publico: emailPublico, telefono, slug, bio };
+      const { error } = await supabase.from('perfiles').update(updates).eq('id', perfil?.id);
+      if (error) throw error;
+      alert('Perfil actualizado con éxito');
+    } catch (error) {
+      console.error(error);
+      alert('Error al actualizar el perfil');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(`https://inmoficina.es/u/${slug}`);
+    navigator.clipboard.writeText(`inmoficina.es/u/${slug}`);
     alert('Enlace copiado al portapapeles');
   };
 
   return (
-    <Layout title="Perfil del agente">
-      <PageHeader 
-        title="Perfil del agente" 
-        subtitle="Gestiona tus datos, tu foto y tu enlace público." 
-      />
-      
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 max-w-6xl">
-        
-        <div className="xl:col-span-2">
-          <div className="card p-8 bg-ink-900 border-white/5">
-            
-            {/* Cabecera Avatar */}
-            <div className="flex gap-4 items-center mb-8">
-              <div className="relative">
-                <div className="h-16 w-16 rounded-xl bg-ink-950 flex items-center justify-center border border-white/5 overflow-hidden">
-                   {avatarUrl ? (
-                     <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                   ) : (
-                     <User size={24} className="text-white/30" />
-                   )}
-                </div>
-                
-                {/* Input de archivo oculto con el botón */}
-                <label className="absolute -bottom-2 -right-2 h-7 w-7 bg-brand-500 rounded-full flex items-center justify-center text-white border-2 border-ink-900 hover:bg-brand-400 transition cursor-pointer">
-                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploading} />
-                  {uploading ? <Loader2 size={12} className="animate-spin" /> : <Camera size={12} />}
-                </label>
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-white">{nombre || perfil?.nombre || 'Usuario'}</h2>
-                <div className="text-[13px] text-brand-400">{perfil?.email || user?.email}</div>
-                <div className="text-[10px] text-white/40 mt-1">Sube una imagen cuadrada de al menos 256x256</div>
-              </div>
-            </div>
+    <Layout title="Mi Perfil">
+      <PageHeader title="Perfil Público" subtitle="Configura tu tarjeta de visita digital y enlace VIP." />
 
-            <form onSubmit={onSubmit} className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="label">Nombre completo</label>
-                  <input required className="input bg-ink-950 border-white/10" value={nombre} onChange={e => setNombre(e.target.value)} />
-                </div>
-                <div>
-                  <label className="label">Email de acceso</label>
-                  <input className="input bg-ink-950 border-white/5 text-white/50 cursor-not-allowed" disabled value={perfil?.email || user?.email || ''} />
-                </div>
-                
-                <div>
-                  <label className="label">Email personal (de contacto público)</label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 text-sm">@</span>
-                    <input className="input bg-ink-950 border-white/10 pl-9" placeholder="tu-email@ejemplo.com" value={emailPublico} onChange={e => setEmailPublico(e.target.value)} />
-                  </div>
-                  <p className="text-[10px] text-white/40 mt-1.5">Si lo dejas vacío, se usará tu email de acceso en la ficha pública.</p>
-                </div>
-                <div>
-                  <label className="label">Teléfono con WhatsApp</label>
-                  <input className="input bg-ink-950 border-white/10" placeholder="+34 600 000 000" value={telefono} onChange={e => setTelefono(e.target.value)} />
-                </div>
-
-                <div className="col-span-1 sm:col-span-2">
-                  <label className="label">Slug público</label>
-                  <div className="flex">
-                    <span className="inline-flex items-center px-4 rounded-l-xl border border-r-0 border-white/10 bg-ink-950 text-white/40 text-[13px]">
-                      inmoficina.es/u/
-                    </span>
-                    <input required className="input bg-ink-950 border-white/10 rounded-l-none focus:z-10" value={slug} onChange={e => setSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'))} />
-                  </div>
-                </div>
-
-                <div className="col-span-1 sm:col-span-2">
-                  <label className="label">Mini-bio</label>
-                  <textarea 
-                    className="input bg-ink-950 border-white/10 resize-none" 
-                    rows={3} 
-                    maxLength={280} 
-                    placeholder="Preséntate en 2-3 frases. Especialización, zonas, experiencia..."
-                    value={bio} 
-                    onChange={e => setBio(e.target.value)} 
-                  />
-                  <div className="text-right text-[10px] text-white/40 mt-1.5">{bio.length}/280</div>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <button type="submit" className="btn-primary !px-6" disabled={submitting || uploading}>
-                  {submitting ? <Loader2 size={16} className="animate-spin" /> : 'Guardar cambios'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        {/* Tarjetas Laterales */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="space-y-6">
-          <div className="card p-6 bg-ink-900 border-white/5">
-            <h3 className="text-sm font-semibold flex items-center gap-2 mb-5 text-white/90">
-              <ShieldCheck size={16} className="text-white/40"/> Licencia de agencia
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <div className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-1">Agencia</div>
-                <div className="text-base text-white font-semibold">{agencia?.nombre || perfil?.agencia_id}</div>
-              </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-1">Nº de licencia</div>
-                <div className="text-sm text-white/70 font-medium">{agencia?.licencia || '—'}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card p-6 bg-ink-900/80 border-white/5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 blur-3xl rounded-full" />
+          <div className="card p-6 bg-ink-900 border-white/5 relative overflow-hidden group">
+            <div className="absolute -right-10 -top-10 w-32 h-32 bg-brand-500/10 blur-3xl rounded-full" />
             <h3 className="text-sm font-semibold flex items-center gap-2 mb-5 relative z-10 text-white/90">
               <Sparkles size={16} className="text-brand-400"/> Tu enlace público
             </h3>
@@ -213,21 +105,60 @@ export default function Perfil() {
               </div>
               
               <div className="flex gap-3">
-                <button onClick={copyToClipboard} className="btn-ghost border border-white/5 flex-1 py-2 text-[12px] flex items-center justify-center gap-1">
+                <button type="button" onClick={copyToClipboard} className="btn-ghost border border-white/5 flex-1 py-2 text-[12px] flex items-center justify-center gap-1">
                   <Copy size={14}/> Copiar
                 </button>
-                {/* BOTÓN CONVERTIDO A ENLACE EXTERNO PARA BURLAR EL IFRAME */}
-                <a 
-                  href={`/u/${slug}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="btn-ghost border border-white/5 flex-1 py-2 text-[12px] flex items-center justify-center gap-1"
-                >
-                  <ExternalLink size={14}/> Previsualizar
+                <a href={`/u/${slug}`} target="_blank" rel="noopener noreferrer" className="btn-ghost border border-white/5 flex-1 py-2 text-[12px] flex items-center justify-center gap-1">
+                  <ExternalLink size={14}/> Visitar
                 </a>
               </div>
             </div>
           </div>
+          
+          <div className="card p-6 bg-ink-900 border-white/5 space-y-4">
+            <h3 className="text-sm font-semibold flex items-center gap-2 text-white/90"><ShieldCheck size={16} className="text-emerald-400"/> Info Privada</h3>
+            <div className="space-y-3 pt-2 border-t border-white/5">
+              <div><div className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Email Acceso</div><div className="text-sm font-mono text-white/80">{user?.email}</div></div>
+              <div><div className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Agencia</div><div className="text-sm font-bold text-white/80">{agencia?.nombre || 'Independiente'}</div></div>
+              <div><div className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Rol</div><div className="text-sm uppercase text-brand-400 font-bold">{perfil?.rol}</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:col-span-2 card p-0 bg-ink-900 border-white/5 overflow-hidden">
+          <form onSubmit={onSubmit}>
+            <div className="p-6 border-b border-white/5">
+              <div className="flex items-center gap-6">
+                <div className="relative group shrink-0">
+                  <div className="w-24 h-24 rounded-2xl bg-ink-950 border border-white/10 overflow-hidden flex items-center justify-center relative">
+                    {avatarUrl ? <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" /> : <User size={32} className="text-white/20" />}
+                    <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity backdrop-blur-sm">
+                      {uploading ? <Loader2 size={20} className="animate-spin text-white" /> : <><Camera size={20} className="text-white mb-1" /><span className="text-[10px] font-bold text-white">Cambiar</span></>}
+                      <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploading} />
+                    </label>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-lg font-bold text-white mb-1">Tarjeta de Visita Digital</h2>
+                  <p className="text-xs text-white/50">Esta información será visible para tus clientes en los enlaces VIP de propiedades y dosieres.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div><label className="label">Nombre Público</label><input required className="input bg-ink-950 border-white/10 text-sm" value={nombre} onChange={e => setNombre(e.target.value)} /></div>
+                <div><label className="label">Alias URL (Slug)</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-sm">/u/</span><input required className="input bg-ink-950 border-white/10 pl-9 text-sm" value={slug} onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))} /></div></div>
+                <div><label className="label">Teléfono Público (WhatsApp)</label><input className="input bg-ink-950 border-white/10 text-sm" value={telefono} onChange={e => setTelefono(e.target.value)} /></div>
+                <div><label className="label">Email Público</label><input type="email" className="input bg-ink-950 border-white/10 text-sm" value={emailPublico} onChange={e => setEmailPublico(e.target.value)} /></div>
+              </div>
+              <div><label className="label">Biografía Profesional (Opcional)</label><textarea rows={4} className="input bg-ink-950 border-white/10 resize-none text-sm leading-relaxed" placeholder="Ej. Especialista en mercado residencial prime con 10 años de experiencia..." value={bio} onChange={e => setBio(e.target.value)} /></div>
+            </div>
+
+            <div className="p-6 pt-0 flex justify-end">
+              <button type="submit" className="btn-primary" disabled={submitting}>{submitting ? <Loader2 size={16} className="animate-spin" /> : 'Guardar Perfil'}</button>
+            </div>
+          </form>
         </div>
       </div>
     </Layout>

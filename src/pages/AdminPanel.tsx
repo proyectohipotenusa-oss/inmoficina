@@ -1,8 +1,8 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import {
-  Shield, Plus, Building2, Loader2, Copy, Check, X, Users, KeyRound, AlertCircle, Sparkles, ChevronRight, MapPin, Trash2,
-  TrendingUp, CheckCircle, XCircle, Phone, Mail, CalendarDays, Timer, Lock, Unlock
+  Shield, Plus, Building2, Loader2, Copy, Check, X, Users, KeyRound, Sparkles, ChevronRight, MapPin, Trash2,
+  TrendingUp, CheckCircle, Phone, Mail, CalendarDays, Timer, Lock, Unlock
 } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageHeader } from '../components/PageHeader';
@@ -12,13 +12,23 @@ import { supabase } from '../lib/supabase';
 interface Agencia {
   id: string;
   nombre: string;
-  licencia: string;
   direccion?: string;
   contacto_nombre?: string;
   contacto_email?: string;
   contacto_telefono?: string;
   created_at: string;
   bloqueada?: boolean;
+}
+
+interface Solicitud {
+  id: string;
+  estado: string;
+  nombre_agencia: string;
+  direccion: string;
+  contacto_nombre: string;
+  telefono: string;
+  email: string;
+  created_at: string;
 }
 
 interface Agente {
@@ -44,7 +54,7 @@ function slugify(raw: string) {
 
 export default function AdminPanel() {
   const [agencias, setAgencias] = useState<Agencia[]>([]);
-  const [solicitudes, setSolicitudes] = useState<any[]>([]);
+  const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, ingresos: 0, agencias: 0 });
   const [selectedAgencia, setSelectedAgencia] = useState<Agencia | 'new' | null>(null);
@@ -53,17 +63,14 @@ export default function AdminPanel() {
   const loadData = async () => {
     setLoading(true);
     
-    // 1. Cargar Agencias reales
     const { data: ags } = await supabase.from('agencias').select('*').order('created_at', { ascending: false });
     if (ags) setAgencias(ags as Agencia[]);
 
-    // 2. Cargar Solicitudes de la Landing
     const { data: sols } = await supabase.from('solicitudes_registro').select('*').order('created_at', { ascending: false });
-    setSolicitudes(sols || []);
+    setSolicitudes((sols as Solicitud[]) || []);
 
-    // 3. Cargar Estadísticas
     const { data: perfiles } = await supabase.from('perfiles').select('rol');
-    const totalAgencias = ags ? ags.filter(a => !a.bloqueada).length : 0; // Solo cuenta ingresos de activas
+    const totalAgencias = ags ? ags.filter(a => !a.bloqueada).length : 0;
     
     setStats({
       total: perfiles?.length || 0,
@@ -98,14 +105,9 @@ export default function AdminPanel() {
       <PageHeader
         title="SuperAdmin"
         subtitle="Centro de mando: embudo de ventas, agenda de trials y gestión de agencias."
-        actions={
-          <button type="button" className="btn-primary py-1.5 px-3 text-[10px]" onClick={() => setSelectedAgencia('new')}>
-            <Plus size={12} /> Nueva Agencia
-          </button>
-        }
+        actions={<button type="button" className="btn-primary py-1.5 px-3 text-[10px]" onClick={() => setSelectedAgencia('new')}><Plus size={12} /> Nueva Agencia</button>}
       />
 
-      {/* ESTADÍSTICAS */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="card p-3 bg-ink-900 border-white/5 flex items-center gap-3">
            <div className="w-8 h-8 rounded-md bg-brand-500/10 flex items-center justify-center shrink-0"><Users size={14} className="text-brand-400"/></div>
@@ -121,10 +123,7 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* ZONA DIVIDIDA */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-        
-        {/* COLUMNA IZQUIERDA: LEADS FRESCOS */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60 flex items-center gap-1.5"><Users size={12}/> Bandeja de Leads</h3>
@@ -148,19 +147,14 @@ export default function AdminPanel() {
                        <p className="text-[8px] font-bold text-white/50">{new Date(s.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
-                  
                   <div className="grid grid-cols-2 gap-1.5 text-[9px] text-white/60 bg-white/[0.02] p-2 rounded-md border border-white/5">
                      <div className="flex items-center gap-1 truncate"><Users size={8} className="text-brand-400 shrink-0" /> {s.contacto_nombre}</div>
                      <div className="flex items-center gap-1 truncate"><Phone size={8} className="text-brand-400 shrink-0" /> {s.telefono}</div>
                      <div className="col-span-2 flex items-center gap-1 truncate"><Mail size={8} className="text-brand-400 shrink-0" /> {s.email}</div>
                   </div>
-
                   <div className="flex items-center gap-1.5 pt-1">
                     {s.estado === 'pendiente' ? (
-                      <>
-                        <button onClick={() => actualizarEstado(s.id, 'procesado')} className="flex-1 py-1 rounded bg-brand-500/20 text-brand-400 hover:bg-brand-500 hover:text-white transition text-[8px] font-black uppercase tracking-widest flex items-center justify-center gap-1"><CheckCircle size={10}/> Activar Trial</button>
-                        <button onClick={() => actualizarEstado(s.id, 'rechazado')} className="py-1 px-2.5 rounded bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition text-[8px] font-black uppercase tracking-widest"><X size={10}/></button>
-                      </>
+                      <><button onClick={() => actualizarEstado(s.id, 'procesado')} className="flex-1 py-1 rounded bg-brand-500/20 text-brand-400 hover:bg-brand-500 hover:text-white transition text-[8px] font-black uppercase tracking-widest flex items-center justify-center gap-1"><CheckCircle size={10}/> Activar Trial</button><button onClick={() => actualizarEstado(s.id, 'rechazado')} className="py-1 px-2.5 rounded bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition text-[8px] font-black uppercase tracking-widest"><X size={10}/></button></>
                     ) : (
                       <button onClick={() => actualizarEstado(s.id, 'pendiente')} className="w-full py-1 rounded bg-white/5 text-white/40 hover:bg-white/10 transition text-[8px] font-black uppercase tracking-widest">Revertir a Pendiente</button>
                     )}
@@ -171,7 +165,6 @@ export default function AdminPanel() {
           )}
         </div>
 
-        {/* COLUMNA DERECHA: AGENDA DE FREE-TRIALS */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-1.5"><CalendarDays size={12}/> Agenda de Seguimiento</h3>
@@ -184,23 +177,15 @@ export default function AdminPanel() {
                 const isExpired = t.daysLeft <= 0;
                 const isUrgent = !isExpired && t.daysLeft <= 3;
                 const colorClass = isExpired ? 'text-red-400 bg-red-400/10 border-red-400/20' : isUrgent ? 'text-amber-400 bg-amber-400/10 border-amber-400/20' : 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
-                
                 return (
                   <div key={t.id} className="card p-2.5 bg-ink-900 border-white/5 flex items-center justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="text-[11px] font-bold text-white uppercase truncate mb-0.5">{t.nombre_agencia}</div>
-                      <div className="text-[8px] text-white/50 flex items-center gap-1.5 truncate">
-                        <span><Users size={7} className="inline mr-0.5 opacity-50"/>{t.contacto_nombre}</span>
-                        <span><Phone size={7} className="inline mr-0.5 opacity-50"/>{t.telefono}</span>
-                      </div>
+                      <div className="text-[8px] text-white/50 flex items-center gap-1.5 truncate"><span><Users size={7} className="inline mr-0.5 opacity-50"/>{t.contacto_nombre}</span><span><Phone size={7} className="inline mr-0.5 opacity-50"/>{t.telefono}</span></div>
                     </div>
-                    
                     <div className={`shrink-0 flex items-center gap-2 px-2 py-1 rounded-md border ${colorClass}`}>
                       <Timer size={12} className={isExpired ? 'text-red-400' : isUrgent ? 'text-amber-400' : 'text-emerald-400'} />
-                      <div className="text-right">
-                        <div className="text-xs font-black leading-none">{isExpired ? '0' : t.daysLeft}</div>
-                        <div className="text-[6px] uppercase tracking-widest font-bold opacity-80">{isExpired ? 'Caducado' : 'Días Rest.'}</div>
-                      </div>
+                      <div className="text-right"><div className="text-xs font-black leading-none">{isExpired ? '0' : t.daysLeft}</div><div className="text-[6px] uppercase tracking-widest font-bold opacity-80">{isExpired ? 'Caducado' : 'Días Rest.'}</div></div>
                     </div>
                   </div>
                 )
@@ -210,10 +195,8 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* 3. TABLA DE AGENCIAS REALES COMPACTADA CON COLUMNA "ESTADO" */}
       <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60 mb-2 flex items-center gap-1.5"><Building2 size={12}/> Base de Datos de Agencias</h3>
       <div className="card p-0 overflow-hidden shadow-xl border-white/5 bg-ink-900/50 mb-8">
-        
         {loading ? (
           <div className="py-12 flex justify-center text-white/20"><Loader2 className="animate-spin" size={16} /></div>
         ) : agencias.length === 0 ? (
@@ -223,12 +206,7 @@ export default function AdminPanel() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="text-[8px] uppercase tracking-[0.15em] text-white/30 border-b border-white/5 bg-white/[0.01]">
-                  <th className="px-3 py-2 font-bold">Agencia</th>
-                  <th className="px-3 py-2 font-bold">Estado</th>
-                  <th className="px-3 py-2 font-bold">Slug ID</th>
-                  <th className="px-3 py-2 font-bold">Contacto</th>
-                  <th className="px-3 py-2 font-bold">Alta</th>
-                  <th className="px-3 py-2"></th>
+                  <th className="px-3 py-2 font-bold">Agencia</th><th className="px-3 py-2 font-bold">Estado</th><th className="px-3 py-2 font-bold">Slug ID</th><th className="px-3 py-2 font-bold">Contacto</th><th className="px-3 py-2 font-bold">Alta</th><th className="px-3 py-2"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -243,17 +221,11 @@ export default function AdminPanel() {
                       </div>
                     </td>
                     <td className="px-3 py-2.5">
-                       {a.bloqueada ? (
-                         <span className="px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 text-[7px] font-black uppercase tracking-widest flex items-center gap-1 w-fit"><Lock size={8}/> Bloqueada</span>
-                       ) : (
-                         <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[7px] font-black uppercase tracking-widest flex items-center gap-1 w-fit"><CheckCircle size={8}/> Activa</span>
-                       )}
+                       {a.bloqueada ? <span className="px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 text-[7px] font-black uppercase tracking-widest flex items-center gap-1 w-fit"><Lock size={8}/> Bloqueada</span> : <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[7px] font-black uppercase tracking-widest flex items-center gap-1 w-fit"><CheckCircle size={8}/> Activa</span>}
                     </td>
                     <td className="px-3 py-2.5"><code className={`text-[8px] rounded px-1 py-0.5 font-mono ${a.bloqueada ? 'bg-transparent text-white/20' : 'bg-white/5 text-white/40'}`}>{a.id}</code></td>
                     <td className="px-3 py-2.5 text-[9px] truncate max-w-[100px] text-white/50">{a.contacto_nombre || '—'}</td>
-                    <td className="px-3 py-2.5 text-white/30 text-[9px] font-medium">
-                      {new Date(a.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })}
-                    </td>
+                    <td className="px-3 py-2.5 text-white/30 text-[9px] font-medium">{new Date(a.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })}</td>
                     <td className="px-3 py-2.5 text-right"><ChevronRight size={12} className="text-white/10 group-hover:text-white/30 ml-auto transition-colors" /></td>
                   </tr>
                 ))}
@@ -263,31 +235,17 @@ export default function AdminPanel() {
         )}
       </div>
 
-      {/* DIÁLOGOS DE CREACIÓN */}
-      {selectedAgencia && (
-        <AgencyDialog 
-          agencia={selectedAgencia} 
-          onClose={() => setSelectedAgencia(null)} 
-          onSave={() => { setSelectedAgencia(null); loadData(); }}
-          onCreated={(res) => { setSelectedAgencia(null); setResult(res); loadData(); }} 
-        />
-      )}
-      
+      {selectedAgencia && <AgencyDialog agencia={selectedAgencia} onClose={() => setSelectedAgencia(null)} onSave={() => { setSelectedAgencia(null); loadData(); }} onCreated={(res) => { setSelectedAgencia(null); setResult(res); loadData(); }} />}
       {result && <CredentialsDialog result={result} onClose={() => setResult(null)} />}
     </Layout>
   );
 }
-
-/* -------------------------------------------------------------------------- */
-/* COMPONENTES MODALES                                                        */
-/* -------------------------------------------------------------------------- */
 
 function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agencia | 'new', onClose: () => void, onSave: () => void, onCreated: (r: CreatedResult) => void }) {
   const isEdit = agencia !== 'new';
   const ag = isEdit ? (agencia as Agencia) : null;
 
   const [nombre, setNombre] = useState(ag?.nombre || '');
-  const [licencia, setLicencia] = useState(ag?.licencia || '');
   const [direccion, setDireccion] = useState(ag?.direccion || '');
   const [cNombre, setCNombre] = useState(ag?.contacto_nombre || '');
   const [cEmail, setCEmail] = useState(ag?.contacto_email || '');
@@ -313,7 +271,7 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
         const { error: deleteError } = await supabase.from('agencias').delete().eq('id', ag!.id);
         if (deleteError) throw deleteError;
         onSave(); 
-      } catch (err: any) { setError(err.message); setSubmitting(false); }
+      } catch (err) { setError((err as Error).message); setSubmitting(false); }
     }
   };
 
@@ -322,7 +280,7 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
     try {
       if (isEdit && ag) {
         const { error: updateError } = await supabase.from('agencias').update({
-          nombre: nombre.trim(), licencia: licencia.trim(), direccion: direccion.trim(),
+          nombre: nombre.trim(), direccion: direccion.trim(),
           contacto_nombre: cNombre.trim(), contacto_email: cEmail.trim(), contacto_telefono: cTel.trim(),
           bloqueada
         }).eq('id', ag.id);
@@ -330,7 +288,7 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
         onSave();
       } else {
         const nuevaAgencia = {
-          id: effectiveSlug, nombre: nombre.trim(), licencia: licencia.trim(), direccion: direccion.trim(),
+          id: effectiveSlug, nombre: nombre.trim(), direccion: direccion.trim(),
           contacto_nombre: cNombre.trim(), contacto_email: cEmail.trim(), contacto_telefono: cTel.trim(),
           bloqueada: false
         };
@@ -370,10 +328,7 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
           <div className="flex items-center gap-3">
             <div className={`h-7 w-7 rounded-md ${bloqueada ? 'bg-red-500/10 border-red-500/20' : 'bg-brand-500/10 border-brand-500/20'} flex items-center justify-center border`}><Sparkles size={14} className={bloqueada ? 'text-red-400' : 'text-brand-400'} /></div>
             <div>
-              <div className="text-xs font-bold text-white flex items-center gap-2">
-                 {isEdit ? 'Ficha de Agencia' : 'Nueva Agencia'}
-                 {bloqueada && <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-500 text-[7px] font-black uppercase tracking-widest">Temporalmente Suspendida</span>}
-              </div>
+              <div className="text-xs font-bold text-white flex items-center gap-2">{isEdit ? 'Ficha de Agencia' : 'Nueva Agencia'}{bloqueada && <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-500 text-[7px] font-black uppercase tracking-widest">Temporalmente Suspendida</span>}</div>
               <div className="text-[9px] text-white/40 mt-0.5">{isEdit ? `ID: ${ag.id}` : 'Genera 3 licencias automáticas'}</div>
             </div>
           </div>
@@ -383,14 +338,12 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
         <div className="overflow-y-auto custom-scrollbar">
           <form onSubmit={onSubmit} className="p-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-              
               <div className="space-y-3">
                 <h3 className="text-[8px] font-black text-brand-400 uppercase tracking-widest border-b border-white/5 pb-1.5">Sede Principal</h3>
                 <div><label className="text-[8px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Nombre</label><input required autoFocus className="w-full bg-ink-950 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] text-white focus:border-brand-500 transition-colors" value={nombre} onChange={e => setNombre(e.target.value)} /></div>
                 <div><label className="text-[8px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Slug ID</label><input className="w-full font-mono text-[9px] text-white/40 bg-white/5 border border-white/10 rounded-md px-2.5 py-1.5 cursor-not-allowed" value={effectiveSlug} readOnly /></div>
                 <div><label className="text-[8px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Dirección</label><input className="w-full bg-ink-950 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] text-white focus:border-brand-500 transition-colors" value={direccion} onChange={e => setDireccion(e.target.value)} /></div>
               </div>
-
               <div className="space-y-3">
                 <h3 className="text-[8px] font-black text-white/30 uppercase tracking-widest border-b border-white/5 pb-1.5">Contacto Principal</h3>
                 <div><label className="text-[8px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Responsable</label><input className="w-full bg-ink-950 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] text-white focus:border-brand-500 transition-colors" value={cNombre} onChange={e => setCNombre(e.target.value)} /></div>
@@ -409,14 +362,10 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
                       </div>
                     ))}
                   </div>
-
-                  {/* EL INTERRUPTOR DE BLOQUEO / DESBLOQUEO */}
                   <div className={`p-3 mt-4 rounded-lg border ${bloqueada ? 'bg-red-500/10 border-red-500/30' : 'bg-white/[0.01] border-white/10'} flex items-center justify-between transition-colors`}>
                      <div>
                         <h4 className={`text-[9px] font-black uppercase tracking-widest mb-0.5 ${bloqueada ? 'text-red-400' : 'text-white/60'}`}>Control de Impagos / Acceso</h4>
-                        <p className="text-[9px] text-white/40 max-w-xs leading-relaxed">
-                           {bloqueada ? 'Esta agencia tiene el acceso cortado. Sus usuarios no podrán usar el CRM.' : 'Si cortas el acceso, la agencia no podrá operar pero no perderá sus datos.'}
-                        </p>
+                        <p className="text-[9px] text-white/40 max-w-xs leading-relaxed">{bloqueada ? 'Esta agencia tiene el acceso cortado. Sus usuarios no podrán usar el CRM.' : 'Si cortas el acceso, la agencia no podrá operar pero no perderá sus datos.'}</p>
                      </div>
                      <button type="button" onClick={() => setBloqueada(!bloqueada)} className={`px-3 py-1.5 rounded-md text-[8px] font-black uppercase tracking-widest transition-colors flex items-center gap-1.5 ${bloqueada ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30' : 'bg-white/5 text-red-400 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30'}`}>
                         {bloqueada ? <><Unlock size={10}/> REACTIVAR ACCESO</> : <><Lock size={10}/> SUSPENDER AGENCIA</>}
@@ -425,7 +374,6 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
                 </div>
               )}
             </div>
-
             {error && <div className="text-[9px] text-red-400 bg-red-500/10 border border-red-500/20 rounded-md p-2 mt-4 font-mono">{error}</div>}
 
             <div className="flex items-center justify-between pt-4 mt-4 border-t border-white/5">

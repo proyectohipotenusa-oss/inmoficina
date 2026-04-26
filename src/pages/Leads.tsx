@@ -1,38 +1,50 @@
-import { useEffect, useState, FormEvent } from 'react';
+import { useEffect, useState, FormEvent, useCallback } from 'react';
 import { Layout } from '../components/Layout';
 import { PageHeader } from '../components/PageHeader';
 import { EmptyState } from '../components/EmptyState';
 import { 
   Users, Plus, Loader2, X, Phone, Mail, 
-  MapPin, Home, Euro, BedDouble, 
-  Building2, Square, Info, Bath, Tags, Flame, Zap
+  MapPin, Home, Euro, BedDouble, Flame, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { formatEUR } from '../lib/format';
-import { WhatsAppIcon } from '../components/icons/WhatsAppIcon'; // IMPORTANTE: Añadido el icono de WA
+import { WhatsAppIcon } from '../components/icons/WhatsAppIcon';
+
+interface Lead {
+  id: string;
+  nombre: string;
+  email?: string;
+  telefono?: string;
+  estado: string;
+  presupuesto_max?: number;
+  habitaciones_min?: number;
+  tipo_interes?: string;
+  zona_interes?: string;
+  ultimo_contacto?: string;
+  created_at: string;
+}
 
 const ESTADOS = ['nuevo', 'contactado', 'visita', 'negociacion', 'cerrado', 'perdido'];
 const TIPOS_PROPIEDAD = ['Cualquiera', 'piso', 'ático', 'dúplex', 'chalet', 'casa', 'estudio', 'loft', 'local', 'oficina', 'garaje', 'terreno', 'nave', 'trastero'];
 
 export default function Leads() {
   const { perfil } = useAuth();
-  const [leads, setLeads] = useState<any[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingLead, setEditingLead] = useState<any | null>(null);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!perfil?.agencia_id) return;
     setLoading(true);
-    
     const { data: lData } = await supabase.from('leads').select('*').eq('agencia_id', perfil.agencia_id).order('created_at', { ascending: false });
-    setLeads(lData || []);
+    setLeads((lData as Lead[]) || []);
     setLoading(false);
-  };
+  }, [perfil?.agencia_id]);
 
-  useEffect(() => { loadData(); }, [perfil?.agencia_id]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const touchLead = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -41,7 +53,7 @@ export default function Leads() {
     await supabase.from('leads').update({ ultimo_contacto: now }).eq('id', id);
   };
 
-  const openEdit = (lead: any) => {
+  const openEdit = (lead: Lead) => {
     setEditingLead(lead);
     setIsDialogOpen(true);
   };
@@ -112,7 +124,6 @@ export default function Leads() {
                         {l.presupuesto_max ? ` hasta ${formatEUR(l.presupuesto_max)}` : ''}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        {/* ORDEN DE BOTONES CORREGIDO */}
                         <div className="flex items-center justify-end gap-2">
                           <button onClick={(e) => touchLead(l.id, e)} className="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500 hover:text-white flex items-center justify-center text-amber-400 transition" title="Registrar contacto hoy">
                             <Zap size={14} />
@@ -148,7 +159,7 @@ export default function Leads() {
   );
 }
 
-function LeadDialog({ lead, onClose, onSaved }: { lead?: any, onClose: () => void, onSaved: () => void }) {
+function LeadDialog({ lead, onClose, onSaved }: { lead?: Lead | null, onClose: () => void, onSaved: () => void }) {
   const { perfil } = useAuth();
   const isEditing = !!lead;
   
@@ -178,7 +189,7 @@ function LeadDialog({ lead, onClose, onSaved }: { lead?: any, onClose: () => voi
       ultimo_contacto: new Date().toISOString()
     };
 
-    if (isEditing) {
+    if (isEditing && lead) {
       await supabase.from('leads').update(payload).eq('id', lead.id);
     } else {
       await supabase.from('leads').insert(payload);
@@ -190,7 +201,7 @@ function LeadDialog({ lead, onClose, onSaved }: { lead?: any, onClose: () => voi
   };
 
   const onDelete = async () => {
-    if (!confirm('¿Eliminar lead?')) return;
+    if (!lead || !confirm('¿Eliminar lead?')) return;
     setSubmitting(true);
     await supabase.from('leads').delete().eq('id', lead.id);
     onSaved(); 
