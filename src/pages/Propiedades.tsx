@@ -4,7 +4,7 @@ import { PageHeader } from '../components/PageHeader';
 import { EmptyState } from '../components/EmptyState';
 import { 
   Building2, Plus, Loader2, X, Trash2, MapPin, BedDouble, Bath, Square, ChevronRight,
-  Home, Tags, Camera, ArrowLeft, ArrowRight, Sparkles, Euro, ArrowUpRight, Globe
+  Home, Tags, Info, Camera, ArrowLeft, ArrowRight, Sparkles, Calculator, Euro, Percent, ArrowUpRight, Globe, QrCode
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -90,6 +90,36 @@ function PropDialog({ propiedad, onClose, onSaved }: { propiedad?: Propiedad | n
   const [submitting, setSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
+
+  // --- MOTOR HEURÍSTICO IA (Copywriting Inmobiliario) ---
+  const generarConIA = () => {
+    setIsGenerating(true);
+    
+    // Simulamos el pensamiento de la IA
+    setTimeout(() => {
+      const isLujo = Number(precio) > 500000;
+      const isReforma = estadoFisico === 'A reformar/A renovar';
+      const zona = ciudad && cp ? `en el distrito de ${ciudad} (Código Postal ${cp}), una ubicación estratégica que garantiza calidad de vida, excelente conectividad y acceso a todos los servicios esenciales.` : 'en una ubicación privilegiada y de alta demanda.';
+      
+      let copy = `Presentamos este exclusivo ${tipo} ${zona}\n\n`;
+      copy += `Con una superficie de ${metros || 'amplios'} m², la propiedad cuenta con una distribución óptima que incluye ${habitaciones || 'varias'} habitaciones luminosas y ${banos || 'cómodos'} baños completos. Cada espacio ha sido pensado para maximizar el confort y la funcionalidad.\n\n`;
+      
+      if (estadoFisico === 'A estrenar/Nueva') {
+        copy += `El inmueble es de obra nueva, destacando por sus acabados de primera calidad, diseño contemporáneo y eficiencia energética, listo para convertirse en su nuevo hogar sin necesidad de adaptaciones.\n\n`;
+      } else if (estadoFisico === 'Buen estado/Reformada') {
+        copy += `La propiedad se encuentra en excelente estado de conservación, con detalles cuidados y lista para entrar a vivir desde el primer día.\n\n`;
+      } else if (isReforma) {
+        copy += `Esta propiedad representa una excelente oportunidad de inversión. Un lienzo en blanco con infinitas posibilidades de reforma y redistribución para crear la vivienda de sus sueños a medida.\n\n`;
+      }
+
+      if (isLujo) copy += `Una pieza única en el mercado orientada a clientes exigentes que valoran la exclusividad, la privacidad y el prestigio.\n\n`;
+      
+      copy += `No deje pasar esta oportunidad. Contáctenos para solicitar más información o programar una visita privada.`;
+
+      setDescripcion(copy);
+      setIsGenerating(false);
+    }, 1200);
+  };
 
   const resizeImage = (file: File): Promise<Blob> => {
     return new Promise((resolve) => {
@@ -191,7 +221,12 @@ function PropDialog({ propiedad, onClose, onSaved }: { propiedad?: Propiedad | n
             </div>
           </div>
           <div className="space-y-4 pt-4 border-t border-white/5">
-             <div className="flex justify-between items-end"><h3 className="text-[11px] font-bold uppercase tracking-widest text-emerald-400 flex items-center gap-1.5"><Tags size={14}/> Descripción Pública</h3><button type="button" onClick={() => {}} className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1 px-2 py-1 bg-brand-500/10 text-brand-400 rounded hover:bg-brand-500 hover:text-white transition"><Sparkles size={10}/> Generar con IA</button></div>
+             <div className="flex justify-between items-end">
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-emerald-400 flex items-center gap-1.5"><Tags size={14}/> Descripción Pública</h3>
+                <button type="button" onClick={generarConIA} disabled={isGenerating} className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1 px-2 py-1 bg-brand-500/10 text-brand-400 rounded hover:bg-brand-500 hover:text-white transition disabled:opacity-50">
+                  {isGenerating ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10}/>} Generar con IA
+                </button>
+             </div>
              <textarea rows={5} className="input bg-ink-900 border-white/10 resize-none text-sm leading-relaxed" placeholder="Describe los detalles de la propiedad..." value={descripcion} onChange={e=>setDescripcion(e.target.value)} disabled={isGenerating} />
           </div>
           <div className="space-y-4 pt-4 border-t border-white/5">

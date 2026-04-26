@@ -13,6 +13,8 @@ interface Agencia {
   id: string;
   nombre: string;
   direccion?: string;
+  ciudad?: string;
+  codigo_postal?: string;
   contacto_nombre?: string;
   contacto_email?: string;
   contacto_telefono?: string;
@@ -25,6 +27,8 @@ interface Solicitud {
   estado: string;
   nombre_agencia: string;
   direccion: string;
+  ciudad: string;
+  codigo_postal: string;
   contacto_nombre: string;
   telefono: string;
   email: string;
@@ -140,7 +144,7 @@ export default function AdminPanel() {
                         <span className="text-xs font-black text-white uppercase truncate">{s.nombre_agencia}</span>
                         <span className={`px-1.5 py-0.5 rounded text-[6px] font-black uppercase tracking-widest ${s.estado === 'pendiente' ? 'bg-amber-500/20 text-amber-500' : 'bg-red-500/20 text-red-500'}`}>{s.estado}</span>
                       </div>
-                      <div className="text-[9px] text-white/50 flex items-center gap-1"><MapPin size={8} className="text-white/30" /> {s.direccion || 'Sin dirección'}</div>
+                      <div className="text-[9px] text-white/50 flex items-center gap-1"><MapPin size={8} className="text-white/30" /> {s.direccion} {s.ciudad ? `, ${s.ciudad}` : ''} {s.codigo_postal}</div>
                     </div>
                     <div className="text-right">
                        <p className="text-[7px] text-white/20 uppercase font-black tracking-widest">Recibida</p>
@@ -247,6 +251,8 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
 
   const [nombre, setNombre] = useState(ag?.nombre || '');
   const [direccion, setDireccion] = useState(ag?.direccion || '');
+  const [ciudad, setCiudad] = useState(ag?.ciudad || '');
+  const [cp, setCp] = useState(ag?.codigo_postal || '');
   const [cNombre, setCNombre] = useState(ag?.contacto_nombre || '');
   const [cEmail, setCEmail] = useState(ag?.contacto_email || '');
   const [cTel, setCTel] = useState(ag?.contacto_telefono || '');
@@ -280,7 +286,7 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
     try {
       if (isEdit && ag) {
         const { error: updateError } = await supabase.from('agencias').update({
-          nombre: nombre.trim(), direccion: direccion.trim(),
+          nombre: nombre.trim(), direccion: direccion.trim(), ciudad: ciudad.trim(), codigo_postal: cp.trim(),
           contacto_nombre: cNombre.trim(), contacto_email: cEmail.trim(), contacto_telefono: cTel.trim(),
           bloqueada
         }).eq('id', ag.id);
@@ -288,7 +294,7 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
         onSave();
       } else {
         const nuevaAgencia = {
-          id: effectiveSlug, nombre: nombre.trim(), direccion: direccion.trim(),
+          id: effectiveSlug, nombre: nombre.trim(), direccion: direccion.trim(), ciudad: ciudad.trim(), codigo_postal: cp.trim(),
           contacto_nombre: cNombre.trim(), contacto_email: cEmail.trim(), contacto_telefono: cTel.trim(),
           bloqueada: false
         };
@@ -343,6 +349,10 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: { agencia: Agenci
                 <div><label className="text-[8px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Nombre</label><input required autoFocus className="w-full bg-ink-950 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] text-white focus:border-brand-500 transition-colors" value={nombre} onChange={e => setNombre(e.target.value)} /></div>
                 <div><label className="text-[8px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Slug ID</label><input className="w-full font-mono text-[9px] text-white/40 bg-white/5 border border-white/10 rounded-md px-2.5 py-1.5 cursor-not-allowed" value={effectiveSlug} readOnly /></div>
                 <div><label className="text-[8px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Dirección</label><input className="w-full bg-ink-950 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] text-white focus:border-brand-500 transition-colors" value={direccion} onChange={e => setDireccion(e.target.value)} /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><label className="text-[8px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Ciudad</label><input className="w-full bg-ink-950 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] text-white focus:border-brand-500 transition-colors" value={ciudad} onChange={e => setCiudad(e.target.value)} /></div>
+                  <div><label className="text-[8px] font-bold text-white/40 uppercase tracking-widest mb-1 block">C.P.</label><input className="w-full bg-ink-950 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] text-white focus:border-brand-500 transition-colors" value={cp} onChange={e => setCp(e.target.value)} /></div>
+                </div>
               </div>
               <div className="space-y-3">
                 <h3 className="text-[8px] font-black text-white/30 uppercase tracking-widest border-b border-white/5 pb-1.5">Contacto Principal</h3>
