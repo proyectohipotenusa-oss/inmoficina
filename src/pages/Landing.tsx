@@ -63,7 +63,7 @@ export default function Landing() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.08),transparent_60%)] pointer-events-none" />
         <div className="max-w-3xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.02] text-white/70 text-[9px] font-medium uppercase tracking-[0.2em] mb-6 animate-fade-in backdrop-blur-md">
-            <Trophy size={12} className="text-brand-400" /> Digitaliza tu agencia inmobiliaria
+            <Trophy size={14} className="text-brand-400" /> Digitaliza tu agencia inmobiliaria
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-[1.1] tracking-tight mb-6">
           Más tiempo para vender,<br />
