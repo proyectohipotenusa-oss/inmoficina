@@ -81,7 +81,7 @@ export default function App() {
       <Route path="/propiedades"><ProtectedRoute><PlanGuard><Propiedades /></PlanGuard></ProtectedRoute></Route>
       
       {/* RUTAS PREMIUM BLOQUEADAS POR PLANGUARD */}
-      <Route path="/portales"><ProtectedRoute><PlanGuard premium><Portales /></PlanGuard></ProtectedRoute></Route>
+      <Route path="/portales"><ProtectedRoute><PlanGuard><Portales /></PlanGuard></ProtectedRoute></Route>
       <Route path="/informes"><ProtectedRoute><PlanGuard premium><Informes /></PlanGuard></ProtectedRoute></Route>
       <Route path="/inversion"><ProtectedRoute><PlanGuard premium><Inversion /></PlanGuard></ProtectedRoute></Route>
       <Route path="/ia-predictor"><ProtectedRoute><PlanGuard premium><IAPredictor /></PlanGuard></ProtectedRoute></Route>

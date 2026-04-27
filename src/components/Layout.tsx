@@ -104,7 +104,7 @@ export function Layout({ children, title }: LayoutProps) {
                 <NavItem href="/leads" icon={Users} label="Leads" />
                 <NavItem href="/pipeline" icon={KanbanSquare} label="Pipeline" />
                 <NavItem href="/propiedades" icon={Building2} label="Propiedades" />
-                <NavItem href="/portales" icon={Rss} label="Sincronización Portales" premium />
+                <NavItem href="/portales" icon={Rss} label="Sincronización Portales" />
                 <NavItem href="/agenda" icon={Calendar} label="Agenda" />
                 <NavItem href="/historico" icon={LineChart} label="Ventas" />
                 <NavItem href="/informes" icon={FileText} label="Informes CMA" premium />

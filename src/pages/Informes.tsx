@@ -4,56 +4,20 @@ import { PageHeader } from '../components/PageHeader';
 import { 
   Building2, Search, FileText, X, 
   TrendingUp, MapPin, Printer, Info, CheckCircle2,
-  BedDouble, Bath, Square, Home, FileSignature, QrCode, Loader2
+  BedDouble, Bath, Square, Home, FileSignature, QrCode, Loader2, Lock
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { formatEUR } from '../lib/format';
 
-interface PropiedadCMA {
-  id: string; titulo: string; ciudad: string; fotos: string[]; metros_cuadrados?: number;
-  codigo_postal?: string; tipo?: string; estado_fisico?: string; habitaciones?: number;
-  banos?: number; descripcion?: string; nombre_agencia?: string; direccion?: string;
-}
+interface PropiedadCMA { id: string; titulo: string; ciudad: string; fotos: string[]; metros_cuadrados?: number; codigo_postal?: string; tipo?: string; estado_fisico?: string; habitaciones?: number; banos?: number; descripcion?: string; nombre_agencia?: string; direccion?: string; }
 
 const PROVINCIAS: Record<string, { nombre: string, baseM2: number }> = {
-  '01': { nombre: 'Álava', baseM2: 2523.50 }, '02': { nombre: 'Albacete', baseM2: 1381.33 },
-  '03': { nombre: 'Alicante', baseM2: 2525.17 }, '04': { nombre: 'Almería', baseM2: 1600.67 },
-  '05': { nombre: 'Ávila', baseM2: 1195.50 }, '06': { nombre: 'Badajoz', baseM2: 1147.00 },
-  '07': { nombre: 'Baleares', baseM2: 4787.83 }, '08': { nombre: 'Barcelona', baseM2: 3598.67 },
-  '09': { nombre: 'Burgos', baseM2: 1552.50 }, '10': { nombre: 'Cáceres', baseM2: 1135.33 },
-  '11': { nombre: 'Cádiz', baseM2: 2103.83 }, '12': { nombre: 'Castellón', baseM2: 1584.67 },
-  '13': { nombre: 'Ciudad Real', baseM2: 970.33 }, '14': { nombre: 'Córdoba', baseM2: 1496.17 },
-  '15': { nombre: 'A Coruña', baseM2: 2001.33 }, '16': { nombre: 'Cuenca', baseM2: 1018.50 },
-  '17': { nombre: 'Girona', baseM2: 2850.67 }, '18': { nombre: 'Granada', baseM2: 1868.67 },
-  '19': { nombre: 'Guadalajara', baseM2: 1565.50 }, '20': { nombre: 'Gipuzkoa', baseM2: 3960.17 },
-  '21': { nombre: 'Huelva', baseM2: 1583.00 }, '22': { nombre: 'Huesca', baseM2: 1565.50 },
-  '23': { nombre: 'Jaén', baseM2: 1052.67 }, '24': { nombre: 'León', baseM2: 1315.50 },
-  '25': { nombre: 'Lleida', baseM2: 1552.17 }, '26': { nombre: 'La Rioja', baseM2: 1600.50 },
-  '27': { nombre: 'Lugo', baseM2: 1231.00 }, '28': { nombre: 'Madrid', baseM2: 4561.67 },
-  '29': { nombre: 'Málaga', baseM2: 3695.67 }, '30': { nombre: 'Murcia', baseM2: 1681.00 },
-  '31': { nombre: 'Navarra', baseM2: 1998.17 }, '32': { nombre: 'Ourense', baseM2: 1263.33 },
-  '33': { nombre: 'Asturias', baseM2: 1749.67 }, '34': { nombre: 'Palencia', baseM2: 1267.17 },
-  '35': { nombre: 'Las Palmas', baseM2: 2671.33 }, '36': { nombre: 'Pontevedra', baseM2: 1855.00 },
-  '37': { nombre: 'Salamanca', baseM2: 1607.50 }, '38': { nombre: 'S.C. Tenerife', baseM2: 2981.67 },
-  '39': { nombre: 'Cantabria', baseM2: 2048.33 }, '40': { nombre: 'Segovia', baseM2: 1528.50 },
-  '41': { nombre: 'Sevilla', baseM2: 2097.67 }, '42': { nombre: 'Soria', baseM2: 1144.17 },
-  '43': { nombre: 'Tarragona', baseM2: 1943.83 }, '44': { nombre: 'Teruel', baseM2: 1027.17 },
-  '45': { nombre: 'Toledo', baseM2: 1299.67 }, '46': { nombre: 'Valencia', baseM2: 2144.17 },
-  '47': { nombre: 'Valladolid', baseM2: 1652.00 }, '48': { nombre: 'Bizkaia', baseM2: 3295.17 },
-  '49': { nombre: 'Zamora', baseM2: 1082.67 }, '50': { nombre: 'Zaragoza', baseM2: 1825.50 },
-  '51': { nombre: 'Ceuta', baseM2: 2175.17 }, '52': { nombre: 'Melilla', baseM2: 1965.33 }
+  '01': { nombre: 'Álava', baseM2: 2523.50 }, '02': { nombre: 'Albacete', baseM2: 1381.33 }, '03': { nombre: 'Alicante', baseM2: 2525.17 }, '04': { nombre: 'Almería', baseM2: 1600.67 }, '05': { nombre: 'Ávila', baseM2: 1195.50 }, '06': { nombre: 'Badajoz', baseM2: 1147.00 }, '07': { nombre: 'Baleares', baseM2: 4787.83 }, '08': { nombre: 'Barcelona', baseM2: 3598.67 }, '09': { nombre: 'Burgos', baseM2: 1552.50 }, '10': { nombre: 'Cáceres', baseM2: 1135.33 }, '11': { nombre: 'Cádiz', baseM2: 2103.83 }, '12': { nombre: 'Castellón', baseM2: 1584.67 }, '13': { nombre: 'Ciudad Real', baseM2: 970.33 }, '14': { nombre: 'Córdoba', baseM2: 1496.17 }, '15': { nombre: 'A Coruña', baseM2: 2001.33 }, '16': { nombre: 'Cuenca', baseM2: 1018.50 }, '17': { nombre: 'Girona', baseM2: 2850.67 }, '18': { nombre: 'Granada', baseM2: 1868.67 }, '19': { nombre: 'Guadalajara', baseM2: 1565.50 }, '20': { nombre: 'Gipuzkoa', baseM2: 3960.17 }, '21': { nombre: 'Huelva', baseM2: 1583.00 }, '22': { nombre: 'Huesca', baseM2: 1565.50 }, '23': { nombre: 'Jaén', baseM2: 1052.67 }, '24': { nombre: 'León', baseM2: 1315.50 }, '25': { nombre: 'Lleida', baseM2: 1552.17 }, '26': { nombre: 'La Rioja', baseM2: 1600.50 }, '27': { nombre: 'Lugo', baseM2: 1231.00 }, '28': { nombre: 'Madrid', baseM2: 4561.67 }, '29': { nombre: 'Málaga', baseM2: 3695.67 }, '30': { nombre: 'Murcia', baseM2: 1681.00 }, '31': { nombre: 'Navarra', baseM2: 1998.17 }, '32': { nombre: 'Ourense', baseM2: 1263.33 }, '33': { nombre: 'Asturias', baseM2: 1749.67 }, '34': { nombre: 'Palencia', baseM2: 1267.17 }, '35': { nombre: 'Las Palmas', baseM2: 2671.33 }, '36': { nombre: 'Pontevedra', baseM2: 1855.00 }, '37': { nombre: 'Salamanca', baseM2: 1607.50 }, '38': { nombre: 'S.C. Tenerife', baseM2: 2981.67 }, '39': { nombre: 'Cantabria', baseM2: 2048.33 }, '40': { nombre: 'Segovia', baseM2: 1528.50 }, '41': { nombre: 'Sevilla', baseM2: 2097.67 }, '42': { nombre: 'Soria', baseM2: 1144.17 }, '43': { nombre: 'Tarragona', baseM2: 1943.83 }, '44': { nombre: 'Teruel', baseM2: 1027.17 }, '45': { nombre: 'Toledo', baseM2: 1299.67 }, '46': { nombre: 'Valencia', baseM2: 2144.17 }, '47': { nombre: 'Valladolid', baseM2: 1652.00 }, '48': { nombre: 'Bizkaia', baseM2: 3295.17 }, '49': { nombre: 'Zamora', baseM2: 1082.67 }, '50': { nombre: 'Zaragoza', baseM2: 1825.50 }, '51': { nombre: 'Ceuta', baseM2: 2175.17 }, '52': { nombre: 'Melilla', baseM2: 1965.33 }
 };
 
-const generarIdVisual = (id: any) => {
-  if (!id) return 'ID-000';
-  return `ID-${String(id).substring(0, 5).toUpperCase()}`;
-};
-
-const formatAgencyName = (slug?: string) => {
-  if (!slug) return 'Agencia Inmobiliaria';
-  return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-};
+const generarIdVisual = (id: any) => { if (!id) return 'ID-000'; return `ID-${String(id).substring(0, 5).toUpperCase()}`; };
+const formatAgencyName = (slug?: string) => { if (!slug) return 'Agencia Inmobiliaria'; return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); };
 
 export default function Informes() {
   const { perfil } = useAuth();
@@ -61,16 +25,33 @@ export default function Informes() {
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState('');
   const [selectedProp, setSelectedProp] = useState<PropiedadCMA | null>(null);
+  const [planAgencia, setPlanAgencia] = useState<'estandar'|'premium'>('premium');
 
   useEffect(() => {
     const load = async () => {
       if (!perfil?.agencia_id) return;
       const { data } = await supabase.from('propiedades').select('*').eq('agencia_id', perfil.agencia_id).order('titulo');
+      const { data: agData } = await supabase.from('agencias').select('plan').eq('id', perfil.agencia_id).single();
       setPropiedades((data as PropiedadCMA[]) || []);
+      if (agData) setPlanAgencia(agData.plan as any);
       setLoading(false);
     };
     load();
   }, [perfil?.agencia_id]);
+
+  if (planAgencia === 'estandar') {
+    return (
+      <Layout title="Informes CMA">
+        <div className="py-24 text-center flex flex-col items-center">
+          <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mb-6 border border-amber-500/20">
+            <Lock size={40} className="text-amber-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Función Premium</h2>
+          <p className="text-white/40 max-w-sm mb-8 text-sm">Mejora tu plan para generar Informes de Valoración CMA profesionales y automáticos.</p>
+        </div>
+      </Layout>
+    );
+  }
 
   if (selectedProp) { return <CMAReport propiedad={selectedProp} onClose={() => setSelectedProp(null)} />; }
 
@@ -87,17 +68,10 @@ export default function Informes() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
           {propsFiltradas.map(p => (
             <div key={p.id} className="card p-4 bg-ink-900 border-white/5 flex flex-col group relative">
-              <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-ink-950/80 border border-white/10 text-[8px] font-mono text-white/60">
-                {generarIdVisual(p.id)}
-              </div>
+              <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-ink-950/80 border border-white/10 text-[8px] font-mono text-white/60">{generarIdVisual(p.id)}</div>
               <div className="flex items-start gap-3 mb-3">
-                <div className="h-10 w-10 rounded-lg bg-ink-950 overflow-hidden border border-white/10 shrink-0">
-                  {p.fotos?.[0] ? <img src={p.fotos[0]} className="w-full h-full object-cover" /> : <Building2 className="m-auto mt-2 text-white/10" size={16}/>}
-                </div>
-                <div className="min-w-0 pr-8">
-                  <h3 className="text-[13px] font-bold text-white truncate leading-tight">{p.titulo}</h3>
-                  <p className="text-[9px] text-white/40 flex items-center gap-1 mt-1"><MapPin size={10}/> {p.ciudad}</p>
-                </div>
+                <div className="h-10 w-10 rounded-lg bg-ink-950 overflow-hidden border border-white/10 shrink-0">{p.fotos?.[0] ? <img src={p.fotos[0]} className="w-full h-full object-cover" /> : <Building2 className="m-auto mt-2 text-white/10" size={16}/>}</div>
+                <div className="min-w-0 pr-8"><h3 className="text-[13px] font-bold text-white truncate leading-tight">{p.titulo}</h3><p className="text-[9px] text-white/40 flex items-center gap-1 mt-1"><MapPin size={10}/> {p.ciudad}</p></div>
               </div>
               <button onClick={() => setSelectedProp(p)} className="mt-auto w-full py-2 rounded-lg bg-white/5 text-white/70 text-[11px] font-bold hover:bg-brand-500 hover:text-white transition-all flex items-center justify-center gap-2"><FileText size={12} /> Generar Informe</button>
             </div>

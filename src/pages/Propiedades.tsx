@@ -4,7 +4,7 @@ import { PageHeader } from '../components/PageHeader';
 import { EmptyState } from '../components/EmptyState';
 import { 
   Building2, Plus, Loader2, X, Trash2, MapPin, BedDouble, Bath, Square, ChevronRight,
-  Home, Tags, Info, Camera, ArrowLeft, ArrowRight, Sparkles, Calculator, Euro, Percent, ArrowUpRight, Globe, QrCode, TrendingUp
+  Home, Tags, Info, Camera, ArrowLeft, ArrowRight, Sparkles, Calculator, Euro, Percent, ArrowUpRight, Globe, QrCode, TrendingUp, Lock
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -30,10 +30,7 @@ const COLOR_TEXTO_BORDE: Record<string, string> = {
   'Alquilada': 'text-pink-600 border-pink-400'
 };
 
-const generarIdVisual = (id: any) => {
-  if (!id) return 'ID-000';
-  return `ID-${String(id).substring(0, 5).toUpperCase()}`;
-};
+const generarIdVisual = (id: any) => { if (!id) return 'ID-000'; return `ID-${String(id).substring(0, 5).toUpperCase()}`; };
 
 export default function Propiedades() {
   const { perfil } = useAuth();
@@ -42,8 +39,8 @@ export default function Propiedades() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProp, setEditingProp] = useState<Propiedad | null>(null);
   const [viewingProp, setViewingProp] = useState<Propiedad | null>(null);
-  
   const [sortPrice, setSortPrice] = useState<'asc'|'desc'|null>(null);
+  const [planAgencia, setPlanAgencia] = useState<'estandar'|'premium'>('premium');
 
   const nombreAgenciaFijo = perfil?.agencia || perfil?.nombre_agencia || perfil?.empresa || 'Agencia Inmobiliaria';
 
@@ -51,14 +48,18 @@ export default function Propiedades() {
     if (!perfil?.agencia_id) return;
     setLoading(true);
     const { data } = await supabase.from('propiedades').select('*').eq('agencia_id', perfil.agencia_id).order('created_at', { ascending: false });
+    const { data: agData } = await supabase.from('agencias').select('plan').eq('id', perfil.agencia_id).single();
+    
     setPropiedades((data as Propiedad[]) || []);
+    if (agData) setPlanAgencia(agData.plan as any);
     setLoading(false);
   }, [perfil?.agencia_id]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
   const abrirFichaPublica = (p: Propiedad, e: React.MouseEvent) => {
-    e.stopPropagation();
+    e.stopPropagation(); 
+    if (planAgencia === 'estandar') return alert("Función Premium: Actualiza tu plan para compartir Fichas VIP.");
     const agenteNombre = perfil?.nombre || '';
     const agenteTelf = perfil?.telefono || '';
     const url = `${window.location.origin}/p/${p.id}?an=${encodeURIComponent(nombreAgenciaFijo)}&un=${encodeURIComponent(agenteNombre)}&t=${encodeURIComponent(agenteTelf)}`;
@@ -67,6 +68,7 @@ export default function Propiedades() {
 
   const abrirCatalogoPublico = () => {
     if (!perfil?.agencia_id) return;
+    if (planAgencia === 'estandar') return alert("Función Premium: Actualiza tu plan para activar tu Catálogo Público.");
     const agenteNombre = perfil?.nombre || '';
     const agenteTelf = perfil?.telefono || '';
     const url = `${window.location.origin}/a/${perfil.agencia_id}?an=${encodeURIComponent(nombreAgenciaFijo)}&un=${encodeURIComponent(agenteNombre)}&t=${encodeURIComponent(agenteTelf)}`;
@@ -81,13 +83,10 @@ export default function Propiedades() {
 
   return (
     <Layout title="Propiedades">
-      <PageHeader 
-        title="Catálogo de Propiedades" 
-        subtitle="Gestiona tu cartera de inmuebles, publica y comparte fichas." 
-        actions={
+      <PageHeader title="Catálogo de Propiedades" subtitle="Gestiona tu cartera de inmuebles, publica y comparte fichas." actions={
           <div className="flex flex-wrap gap-2 w-full justify-end">
-            <button className="btn-ghost border border-white/10 flex items-center gap-1.5 text-[11px] py-1.5 px-3 whitespace-nowrap" onClick={abrirCatalogoPublico}>
-              <Globe size={14}/> Catálogo Público
+            <button className={`btn-ghost border border-white/10 flex items-center gap-1.5 text-[11px] py-1.5 px-3 whitespace-nowrap ${planAgencia === 'estandar' ? 'opacity-50' : ''}`} onClick={abrirCatalogoPublico}>
+              <Globe size={14}/> Catálogo Público {planAgencia === 'estandar' && '🔒'}
             </button>
             <button className="btn-primary text-[11px] py-1.5 px-3 whitespace-nowrap" onClick={() => { setEditingProp(null); setIsDialogOpen(true); }}>
               <Plus size={14} /> Nueva Propiedad
@@ -108,10 +107,7 @@ export default function Propiedades() {
             <table className="w-full text-sm min-w-[700px]">
               <thead>
                 <tr className="text-left text-[9px] uppercase tracking-widest text-white/40 border-b border-white/5 bg-white/[0.01]">
-                  <th className="px-4 py-3 font-bold">Propiedad</th>
-                  <th className="px-4 py-3 font-bold">Transacción</th>
-                  <th className="px-4 py-3 font-bold">Características</th>
-                  <th className="px-4 py-3 font-bold text-right cursor-pointer hover:text-white group transition-colors" onClick={() => setSortPrice(prev => prev === 'asc' ? 'desc' : 'asc')}>
+                  <th className="px-4 py-3 font-bold">Propiedad</th><th className="px-4 py-3 font-bold">Transacción</th><th className="px-4 py-3 font-bold">Características</th><th className="px-4 py-3 font-bold text-right cursor-pointer hover:text-white group transition-colors" onClick={() => setSortPrice(prev => prev === 'asc' ? 'desc' : 'asc')}>
                     <div className="flex items-center justify-end gap-1.5">Precio <span className="text-white/30 group-hover:text-white/60">{sortPrice === 'asc' ? '↑' : sortPrice === 'desc' ? '↓' : '↕'}</span></div>
                   </th>
                 </tr>
@@ -126,10 +122,9 @@ export default function Propiedades() {
                       <div className="flex items-center justify-end gap-2.5">
                         <div className="font-bold text-[13px] text-white mr-1 whitespace-nowrap">{formatEUR(p.precio)}</div>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {/* BOTONES EDITADOS: Calculadora (Ficha Interna), Globo (Ficha Pública), Trending (Dossier) */}
                           <button onClick={(e) => { e.stopPropagation(); setViewingProp(p); }} className="p-1.5 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="Ficha Interna y Calculadora Financiera"><Calculator size={12}/></button>
-                          <button onClick={(e) => abrirFichaPublica(p, e)} className="p-1.5 rounded-md bg-brand-500/10 text-brand-400 hover:bg-brand-500 hover:text-white transition" title="Ficha Técnica VIP (Pública)"><Globe size={12}/></button>
-                          <button onClick={(e) => { e.stopPropagation(); window.location.href = '/inversion'; }} className="p-1.5 rounded-md bg-purple-500/10 text-purple-400 hover:bg-purple-500 hover:text-white transition" title="Dossier de Inversión"><TrendingUp size={12}/></button>
+                          <button onClick={(e) => abrirFichaPublica(p, e)} className={`p-1.5 rounded-md transition ${planAgencia === 'estandar' ? 'bg-white/5 text-white/20' : 'bg-brand-500/10 text-brand-400 hover:bg-brand-500 hover:text-white'}`} title="Ficha Técnica VIP (Pública)"><Globe size={12}/></button>
+                          <button onClick={(e) => { e.stopPropagation(); if (planAgencia === 'premium') window.location.href = '/inversion'; else alert("Función Premium: Actualiza tu plan para crear Dossiers de Inversión."); }} className={`p-1.5 rounded-md transition ${planAgencia === 'estandar' ? 'bg-white/5 text-white/20' : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500 hover:text-white'}`} title="Dossier de Inversión"><TrendingUp size={12}/></button>
                         </div>
                       </div>
                     </td>
@@ -240,7 +235,7 @@ function FullViewModal({ propiedad, onClose }: { propiedad: Propiedad, onClose: 
   );
 }
 
-function PropertyDialog({ propiedad, agenciaFija, onClose, onSaved }: { propiedad?: Propiedad | null, agenciaFija: string, onClose: () => void, onSaved: () => void }) {
+function PropDialog({ propiedad, agenciaFija, onClose, onSaved }: { propiedad?: Propiedad | null, agenciaFija: string, onClose: () => void, onSaved: () => void }) {
   const { perfil } = useAuth();
   const isEditing = !!propiedad;
   
