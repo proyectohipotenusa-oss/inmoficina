@@ -5,7 +5,7 @@ import {
   Globe, BarChart3, Sparkles, Smartphone, Rss,
   ArrowRight, CheckCircle2, Star, X, Loader2,
   Trophy, Landmark, LayoutDashboard, Send, 
-  MousePointerClick, Mail, Phone, MapPin, Zap, Building2
+  Mail, Phone, MapPin, Zap, Building2, ChevronDown
 } from 'lucide-react';
 
 const LOGO_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png";
@@ -19,8 +19,11 @@ export default function Landing() {
     nombre_agencia: '', direccion: '', ciudad: '', codigo_postal: '', contacto_nombre: '', telefono: '', email: ''
   });
 
-  const [contactStatus, setContactStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+  const [contactStatus, setContactStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [contactData, setContactData] = useState({ nombre: '', email: '', mensaje: '' });
+
   const [scrolled, setScrolled] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -47,15 +50,23 @@ export default function Landing() {
     else { setFormStatus('success'); }
   };
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setContactStatus('loading');
-    setTimeout(() => setContactStatus('success'), 1500);
+    const { error } = await supabase.from('mensajes_contacto').insert([contactData]);
+    if (error) { console.error(error); setContactStatus('error'); } 
+    else { setContactStatus('success'); setContactData({ nombre: '', email: '', mensaje: '' }); }
   };
+
+  const FAQS = [
+    { q: "¿Tengo que introducir mi tarjeta de crédito para la prueba gratis?", a: "Absolutamente no. Queremos que pruebes todo el potencial de Inmoficina durante 14 días sin ningún tipo de compromiso ni riesgo." },
+    { q: "¿Hay contratos de permanencia?", a: "No. Creemos en ganar tu confianza mes a mes. Puedes cancelar tu suscripción en cualquier momento con un solo clic, sin preguntas." },
+    { q: "¿Tengo que instalar algún programa?", a: "No, Inmoficina es 100% en la nube (Cloud). Puedes acceder desde cualquier ordenador, tablet o móvil solo con tu navegador web." },
+    { q: "¿Están seguros los datos de mis clientes?", a: "Tus datos están protegidos con encriptación de grado militar (Row Level Security) en servidores seguros. Nadie más que tu agencia tiene acceso a ellos." }
+  ];
 
   return (
     <>
-      {/* TIPOGRAFÍAS SÓLIDAS Y PROFESIONALES: Inter (SaaS Standard) y Playfair Display */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap');
         .font-sans { font-family: 'Inter', sans-serif; }
@@ -64,7 +75,6 @@ export default function Landing() {
       `}</style>
 
       <div className="min-h-screen bg-ink-950 text-white font-sans selection:bg-brand-500/30 overflow-x-hidden w-full relative">
-        
         <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-brand-500/10 blur-[120px] pointer-events-none" />
         <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/5 blur-[120px] pointer-events-none" />
 
@@ -82,6 +92,7 @@ export default function Landing() {
               <a href="#servicios" className="hover:text-white transition-colors">Funcionalidades</a>
               <a href="#por-que-nosotros" className="hover:text-white transition-colors">La Diferencia</a>
               <a href="#precios" className="hover:text-white transition-colors">Inversión</a>
+              <a href="#faq" className="hover:text-white transition-colors">Q&A</a>
               <a href="#contacto" className="hover:text-white transition-colors">Contacto</a>
             </div>
 
@@ -111,10 +122,13 @@ export default function Landing() {
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4">
-              <button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto group relative px-6 py-3 bg-brand-600 text-white rounded-lg font-medium uppercase tracking-widest text-[11px] hover:bg-brand-500 transition-all duration-300 flex items-center justify-center gap-2">
-                Comenzar 14 días gratis <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform opacity-70" />
-              </button>
-              <a href="#servicios" className="w-full sm:w-auto px-6 py-3 rounded-lg border border-white/10 text-white/70 font-medium uppercase tracking-widest text-[11px] hover:bg-white/5 transition-all flex items-center justify-center">
+              <div className="w-full sm:w-auto flex flex-col items-center">
+                <button onClick={() => setIsModalOpen(true)} className="w-full group relative px-6 py-3 bg-brand-600 text-white rounded-lg font-medium uppercase tracking-widest text-[11px] hover:bg-brand-500 transition-all duration-300 flex items-center justify-center gap-2">
+                  Comenzar 14 días gratis <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform opacity-70" />
+                </button>
+                <span className="text-[9px] text-white/40 mt-2 uppercase tracking-widest flex items-center gap-1"><CheckCircle2 size={10} className="text-emerald-400"/> Sin tarjeta de crédito</span>
+              </div>
+              <a href="#servicios" className="w-full sm:w-auto px-6 py-3 rounded-lg border border-white/10 text-white/70 font-medium uppercase tracking-widest text-[11px] hover:bg-white/5 transition-all flex items-center justify-center sm:-mt-5">
                 Ver Funcionalidades
               </a>
             </div>
@@ -155,8 +169,8 @@ export default function Landing() {
                 { icon: LayoutDashboard, title: "Pipeline Kanban", desc: "Control visual absoluto de tus leads. Arrastra, suelta y detecta qué clientes requieren atención urgente." }
               ].map((s, i) => (
                 <div key={i} className="p-6 rounded-2xl bg-ink-900/40 border border-white/5 hover:border-brand-500/20 transition-all duration-300">
-                  <div className="w-10 h-10 rounded-lg bg-white/[0.03] border border-white/5 flex items-center justify-center mb-5">
-                    <s.icon className="text-white/60" size={18} />
+                  <div className="w-10 h-10 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mb-5">
+                    <s.icon className="text-brand-500" size={18} />
                   </div>
                   <h3 className="text-base font-medium mb-2 tracking-tight text-white/90">{s.title}</h3>
                   <p className="text-white/40 text-xs font-light leading-relaxed">{s.desc}</p>
@@ -175,8 +189,8 @@ export default function Landing() {
                 <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-transparent to-transparent opacity-80" />
                 <div className="absolute bottom-6 left-6 right-6">
                   <div className="p-4 bg-ink-950/80 backdrop-blur-md rounded-xl border border-white/10 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center shrink-0">
-                      <Star size={18} className="text-white/80" />
+                    <div className="w-10 h-10 bg-brand-500/20 rounded-lg flex items-center justify-center shrink-0 border border-brand-500/30">
+                      <Star size={18} className="text-brand-400" />
                     </div>
                     <div>
                       <p className="text-[9px] font-semibold text-white/50 uppercase tracking-[0.2em] mb-0.5">Blindaje de Marca</p>
@@ -204,9 +218,9 @@ export default function Landing() {
                   { title: "Seguridad y Privacidad", desc: "Tus datos y los de tus clientes bajo cifrado de grado militar y bases de datos aisladas." }
                 ].map((item, i) => (
                   <div key={i} className="flex gap-4">
-                    <div className="mt-0.5"><CheckCircle2 className="text-white/40" size={18} /></div>
+                    <div className="mt-0.5"><CheckCircle2 className="text-emerald-400" size={18} /></div>
                     <div>
-                      <h4 className="text-sm font-medium mb-1 text-white/90">{item.title}</h4>
+                      <h4 className="text-sm font-medium mb-1 text-brand-500">{item.title}</h4>
                       <p className="text-white/40 text-xs font-light leading-relaxed">{item.desc}</p>
                     </div>
                   </div>
@@ -219,12 +233,12 @@ export default function Landing() {
         {/* PRECIOS */}
         <section id="precios" className="py-20 sm:py-24 px-4 sm:px-6 w-full relative">
           <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4">Inversión Inteligente</h2>
+            <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4 text-brand-500">Inversión Inteligente</h2>
             <p className="text-white/50 text-sm font-light">Software de nivel empresarial, sin comisiones ocultas ni permanencia.</p>
           </div>
 
           <div className="max-w-sm mx-auto bg-ink-900/40 border border-white/10 p-8 rounded-[2rem] text-center relative">
-            <div className="absolute top-0 left-0 right-0 py-1.5 bg-white/5 border-b border-white/5 text-[9px] font-semibold text-white/60 uppercase tracking-[0.2em]">
+            <div className="absolute top-0 left-0 right-0 py-1.5 bg-brand-600 border-b border-brand-500 text-[9px] font-semibold text-white uppercase tracking-[0.2em]">
               Pack Agencia Premium
             </div>
             
@@ -250,20 +264,43 @@ export default function Landing() {
                 "Compresión Fotos en la Nube"
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2.5 text-white/60 font-light text-xs">
-                  <CheckCircle2 className="text-white/20 shrink-0" size={14} /> {item}
+                  <CheckCircle2 className="text-brand-500 shrink-0" size={14} /> {item}
                 </div>
               ))}
             </div>
 
-            <button onClick={() => setIsModalOpen(true)} className="w-full py-3 rounded-lg bg-white text-ink-950 font-semibold text-[11px] uppercase tracking-[0.1em] hover:bg-white/90 transition-all">
+            <button onClick={() => setIsModalOpen(true)} className="w-full py-3 rounded-lg bg-brand-600 text-white font-semibold text-[11px] uppercase tracking-[0.1em] hover:bg-brand-500 transition-all">
               Comenzar Prueba Gratuita
             </button>
-            <p className="mt-4 text-[9px] text-white/30 uppercase tracking-widest">14 días de prueba • Cancela cuando quieras</p>
+            <p className="mt-3 text-[9px] text-white/30 uppercase tracking-widest flex items-center justify-center gap-1"><CheckCircle2 size={10} className="text-emerald-400"/> Sin tarjeta de crédito</p>
+          </div>
+        </section>
+
+        {/* Q&A / FAQ */}
+        <section id="faq" className="py-20 sm:py-24 px-4 sm:px-6 bg-ink-900/20 border-t border-white/5 w-full">
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4">Preguntas Frecuentes</h2>
+              <p className="text-white/50 text-sm font-light">Todo lo que necesitas saber antes de empezar.</p>
+            </div>
+            <div className="space-y-3">
+              {FAQS.map((faq, i) => (
+                <div key={i} className="bg-ink-900/40 border border-white/5 rounded-xl overflow-hidden transition-all">
+                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full px-6 py-4 flex items-center justify-between text-left text-white/90 hover:text-white transition">
+                    <span className="font-medium text-sm">{faq.q}</span>
+                    <ChevronDown size={16} className={`text-white/40 transition-transform duration-300 ${openFaq === i ? 'rotate-180' : ''}`} />
+                  </button>
+                  <div className={`px-6 overflow-hidden transition-all duration-300 ${openFaq === i ? 'max-h-40 pb-4 opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <p className="text-xs text-white/50 leading-relaxed font-light">{faq.a}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
         {/* CONTACTO */}
-        <section id="contacto" className="py-20 px-4 sm:px-6 bg-ink-900/20 border-t border-white/5 w-full">
+        <section id="contacto" className="py-20 px-4 sm:px-6 bg-ink-900/30 border-t border-white/5 w-full">
           <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
             <div>
               <h2 className="font-serif text-2xl md:text-3xl font-medium mb-4">¿Hablamos?</h2>
@@ -273,11 +310,11 @@ export default function Landing() {
               
               <div className="space-y-5">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5"><Mail className="text-white/60" size={16} /></div>
+                  <div className="w-10 h-10 rounded-full bg-brand-500/10 flex items-center justify-center border border-brand-500/20"><Mail className="text-brand-500" size={16} /></div>
                   <div><p className="text-[9px] uppercase tracking-widest text-white/40 font-medium mb-0.5">Email</p><a href="mailto:admin@inmoficina.es" className="text-sm font-medium hover:text-white transition-colors text-white/80">admin@inmoficina.es</a></div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5"><Phone className="text-white/60" size={16} /></div>
+                  <div className="w-10 h-10 rounded-full bg-brand-500/10 flex items-center justify-center border border-brand-500/20"><Phone className="text-brand-500" size={16} /></div>
                   <div><p className="text-[9px] uppercase tracking-widest text-white/40 font-medium mb-0.5">Teléfono</p><p className="text-sm font-medium text-white/80">+34 644 314 460</p></div>
                 </div>
               </div>
@@ -286,17 +323,17 @@ export default function Landing() {
             <div className="bg-ink-900/40 border border-white/5 p-6 rounded-2xl">
               {contactStatus === 'success' ? (
                 <div className="h-full flex flex-col items-center justify-center text-center py-6 animate-fade-in">
-                  <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mb-4"><CheckCircle2 className="text-white/80" size={24} /></div>
+                  <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4"><CheckCircle2 className="text-emerald-400" size={24} /></div>
                   <h3 className="text-lg font-medium mb-2">Mensaje Recibido</h3>
                   <p className="text-white/40 text-xs">Te responderemos a la brevedad.</p>
                   <button onClick={() => setContactStatus('idle')} className="mt-6 px-4 py-1.5 border border-white/10 rounded-lg text-[10px] uppercase tracking-widest hover:bg-white/5 transition text-white/60">Enviar otro</button>
                 </div>
               ) : (
                 <form onSubmit={handleContactSubmit} className="space-y-4">
-                  <div><label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1.5 ml-1">Nombre</label><input required type="text" className="w-full bg-ink-950 border border-white/5 rounded-lg px-3 py-2 text-xs focus:border-white/20 transition outline-none" /></div>
-                  <div><label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1.5 ml-1">Email</label><input required type="email" className="w-full bg-ink-950 border border-white/5 rounded-lg px-3 py-2 text-xs focus:border-white/20 transition outline-none" /></div>
-                  <div><label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1.5 ml-1">Mensaje</label><textarea required rows={3} className="w-full bg-ink-950 border border-white/5 rounded-lg px-3 py-2 text-xs focus:border-white/20 transition outline-none resize-none" /></div>
-                  <button type="submit" disabled={contactStatus === 'loading'} className="w-full py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2">
+                  <div><label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1.5 ml-1">Nombre</label><input required type="text" className="w-full bg-ink-950 border border-white/5 rounded-lg px-3 py-2 text-xs focus:border-brand-500 transition outline-none" value={contactData.nombre} onChange={e => setContactData({...contactData, nombre: e.target.value})} /></div>
+                  <div><label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1.5 ml-1">Email</label><input required type="email" className="w-full bg-ink-950 border border-white/5 rounded-lg px-3 py-2 text-xs focus:border-brand-500 transition outline-none" value={contactData.email} onChange={e => setContactData({...contactData, email: e.target.value})} /></div>
+                  <div><label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1.5 ml-1">Mensaje</label><textarea required rows={3} className="w-full bg-ink-950 border border-white/5 rounded-lg px-3 py-2 text-xs focus:border-brand-500 transition outline-none resize-none" value={contactData.mensaje} onChange={e => setContactData({...contactData, mensaje: e.target.value})} /></div>
+                  <button type="submit" disabled={contactStatus === 'loading'} className="w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-medium uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2">
                     {contactStatus === 'loading' ? <Loader2 className="animate-spin" size={14} /> : <><Send size={14} /> Enviar Mensaje</>}
                   </button>
                 </form>
@@ -309,23 +346,26 @@ export default function Landing() {
         <footer id="footer" className="py-10 px-4 sm:px-6 border-t border-white/5 bg-ink-950 w-full text-center sm:text-left">
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-white/5 pb-10">
             <div className="md:col-span-2 flex flex-col items-center sm:items-start">
-              <div className="w-[40px] h-[40px] mb-4 opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
+              <div className="w-[48px] h-[48px] mb-4 opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
                 <img src={LOGO_URL} alt="Logo Inmoficina" className="w-full h-full object-contain grayscale hover:grayscale-0" />
               </div>
               <p className="text-white/40 text-xs font-light max-w-sm leading-relaxed">El CRM diseñado exclusivamente para el sector inmobiliario profesional. Tecnología y diseño orientados al cierre.</p>
             </div>
             
             <div className="flex flex-col items-center sm:items-start">
-              <h4 className="text-[9px] font-semibold uppercase tracking-widest text-white/60 mb-4">Producto</h4>
+              <h4 className="text-[9px] font-semibold uppercase tracking-widest text-white/60 mb-4">Menú</h4>
               <a href="#servicios" className="text-white/40 hover:text-white text-xs mb-2.5 transition">Funcionalidades</a>
-              <a href="#precios" className="text-white/40 hover:text-white text-xs mb-2.5 transition">Planes</a>
-              <Link href="/login" className="text-white/40 hover:text-white text-xs transition">Acceso Clientes</Link>
+              <a href="#por-que-nosotros" className="text-white/40 hover:text-white text-xs mb-2.5 transition">La Diferencia</a>
+              <a href="#precios" className="text-white/40 hover:text-white text-xs mb-2.5 transition">Inversión</a>
+              <a href="#faq" className="text-white/40 hover:text-white text-xs mb-2.5 transition">Q&A</a>
+              <a href="#contacto" className="text-white/40 hover:text-white text-xs mb-2.5 transition">Contacto</a>
             </div>
 
             <div className="flex flex-col items-center sm:items-start">
               <h4 className="text-[9px] font-semibold uppercase tracking-widest text-white/60 mb-4">Legal</h4>
-              <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="text-white/40 hover:text-white text-xs mb-2.5 transition">Aviso Legal</a>
+              <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="text-white/40 hover:text-white text-xs mb-2.5 transition">Política de Cookies</a>
               <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="text-white/40 hover:text-white text-xs mb-2.5 transition">Política de Privacidad</a>
+              <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="text-white/40 hover:text-white text-xs mb-2.5 transition">Aviso Legal</a>
               <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="text-white/40 hover:text-white text-xs mb-2.5 transition">Condiciones de Uso</a>
               <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="text-white/40 hover:text-white text-xs transition">Condiciones de Contratación</a>
             </div>
@@ -342,14 +382,14 @@ export default function Landing() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in overflow-y-auto font-sans">
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => formStatus !== 'loading' && setIsModalOpen(false)} />
             <div className="relative w-full max-w-sm bg-ink-950 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-slide-up my-auto">
-              <div className="p-6">
+              <div className="p-6 sm:p-8">
                 <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-white/30 hover:text-white transition"><X size={18} /></button>
                 {formStatus === 'success' ? (
                   <div className="text-center py-4 animate-fade-in">
-                    <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10"><Send size={20} className="text-white/80" /></div>
+                    <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20"><Send size={20} className="text-emerald-400" /></div>
                     <h3 className="text-lg font-medium mb-2 text-white/90">Solicitud Enviada</h3>
                     <p className="text-white/40 text-xs leading-relaxed font-light mb-6">Revisaremos tu agencia y crearemos tus credenciales VIP. Te avisaremos por email a la brevedad.</p>
-                    <button onClick={() => setIsModalOpen(false)} className="w-full py-2.5 bg-white/10 rounded-lg text-[10px] font-semibold uppercase tracking-widest hover:bg-white/20 transition text-white">Finalizar</button>
+                    <button onClick={() => setIsModalOpen(false)} className="w-full py-2.5 bg-brand-600 rounded-lg text-[10px] font-semibold uppercase tracking-widest hover:bg-brand-500 transition text-white">Finalizar</button>
                   </div>
                 ) : (
                   <>
@@ -358,20 +398,21 @@ export default function Landing() {
                       <p className="text-[9px] text-white/50 uppercase tracking-widest font-medium">14 Días Gratis • Agencia Premium</p>
                     </div>
                     <form onSubmit={handleSubmit} className="space-y-3">
-                      <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Inmobiliaria *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-white/20 transition-all outline-none" value={formData.nombre_agencia} onChange={e => setFormData({...formData, nombre_agencia: e.target.value})} /></div>
-                      <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Dirección *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-white/20 transition-all outline-none" value={formData.direccion} onChange={e => setFormData({...formData, direccion: e.target.value})} /></div>
+                      <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Inmobiliaria *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.nombre_agencia} onChange={e => setFormData({...formData, nombre_agencia: e.target.value})} /></div>
+                      <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Dirección *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.direccion} onChange={e => setFormData({...formData, direccion: e.target.value})} /></div>
                       <div className="grid grid-cols-2 gap-3">
-                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Ciudad *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-white/20 transition-all outline-none" value={formData.ciudad} onChange={e => setFormData({...formData, ciudad: e.target.value})} /></div>
-                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">C.P. *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-white/20 transition-all outline-none" value={formData.codigo_postal} onChange={e => setFormData({...formData, codigo_postal: e.target.value})} /></div>
+                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Ciudad *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.ciudad} onChange={e => setFormData({...formData, ciudad: e.target.value})} /></div>
+                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">C.P. *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.codigo_postal} onChange={e => setFormData({...formData, codigo_postal: e.target.value})} /></div>
                       </div>
-                      <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Responsable *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-white/20 transition-all outline-none" value={formData.contacto_nombre} onChange={e => setFormData({...formData, contacto_nombre: e.target.value})} /></div>
+                      <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Responsable *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.contacto_nombre} onChange={e => setFormData({...formData, contacto_nombre: e.target.value})} /></div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Teléfono *</label><input required type="tel" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-white/20 transition-all outline-none" value={formData.telefono} onChange={e => setFormData({...formData, telefono: e.target.value})} /></div>
-                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Email *</label><input required type="email" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-white/20 transition-all outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
+                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Teléfono *</label><input required type="tel" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.telefono} onChange={e => setFormData({...formData, telefono: e.target.value})} /></div>
+                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Email *</label><input required type="email" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
                       </div>
-                      <button type="submit" disabled={formStatus === 'loading'} className="w-full py-3 mt-4 rounded-lg bg-white/10 text-white font-semibold text-[10px] uppercase tracking-widest hover:bg-white/20 transition flex items-center justify-center gap-2">
+                      <button type="submit" disabled={formStatus === 'loading'} className="w-full py-3 mt-4 rounded-lg bg-brand-600 text-white font-semibold text-[10px] uppercase tracking-widest hover:bg-brand-500 transition flex items-center justify-center gap-2">
                         {formStatus === 'loading' ? <Loader2 size={14} className="animate-spin" /> : 'Solicitar Acceso VIP'}
                       </button>
+                      <p className="text-[9px] text-white/30 text-center uppercase tracking-widest flex items-center justify-center gap-1 mt-2"><CheckCircle2 size={10} className="text-emerald-400"/> Sin tarjeta de crédito</p>
                     </form>
                   </>
                 )}
