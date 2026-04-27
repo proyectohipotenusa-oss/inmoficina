@@ -8,8 +8,8 @@ import {
   MousePointerClick, Mail, Phone, MapPin, Zap, Building2
 } from 'lucide-react';
 
-// URL del nuevo Logo proporcionado
-const LOGO_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/1777235529301-019dcb7d-a185-7894-8e9f-05d821ff0562.png";
+const LOGO_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png";
+const HERO_IMG_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/1777235529301-019dcb7d-a185-7894-8e9f-05d821ff0562.png";
 const TEMPORARY_LEGAL_URL = "https://www.ejemplo.com";
 
 export default function Landing() {
@@ -61,7 +61,7 @@ export default function Landing() {
 
   return (
     <>
-      {/* TIPOGRAFÍAS PREMIUM: Outfit para cuerpo, Playfair Display para titulares de lujo */}
+      {/* TIPOGRAFÍAS PREMIUM */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
         .font-sans { font-family: 'Outfit', sans-serif; }
@@ -82,10 +82,10 @@ export default function Landing() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             {/* Logo */}
             <a href="#hero" className="flex items-center gap-3 group cursor-pointer">
-              <div className="w-[48px] h-[48px] rounded-lg overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-500 shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+              <div className="w-[40px] h-[40px] sm:w-[48px] sm:h-[48px] rounded-lg overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-500 shadow-[0_0_15px_rgba(255,255,255,0.1)]">
                 <img src={LOGO_URL} alt="Logo Inmoficina" className="w-full h-full object-cover" />
               </div>
-              <span className="text-sm font-bold tracking-widest uppercase group-hover:text-brand-400 transition-colors hidden sm:block">INMOFICINA<span className="text-brand-400">.</span></span>
+              <span className="text-xs sm:text-sm font-bold tracking-widest uppercase group-hover:text-brand-400 transition-colors hidden sm:block">INMOFICINA<span className="text-brand-400">.</span></span>
             </a>
 
             {/* Enlaces de anclaje (Desktop) */}
@@ -96,10 +96,10 @@ export default function Landing() {
               <a href="#contacto" className="hover:text-white transition-colors">Contacto</a>
             </div>
 
-            {/* Botones de Acción */}
+            {/* Botones de Acción (Login visible en móvil) */}
             <div className="flex items-center gap-4">
-              <Link href="/login" className="text-[11px] font-bold uppercase tracking-widest hover:text-brand-400 transition text-white/80 hidden sm:block">Login</Link>
-              <button onClick={() => setIsModalOpen(true)} className="px-5 py-2.5 rounded-lg bg-white text-ink-950 text-[10px] font-extrabold uppercase tracking-widest hover:bg-brand-50 hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] active:scale-95 whitespace-nowrap">
+              <Link href="/login" className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest hover:text-brand-400 transition text-white/80">Login</Link>
+              <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg bg-white text-ink-950 text-[10px] font-extrabold uppercase tracking-widest hover:bg-brand-50 hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] active:scale-95 whitespace-nowrap">
                 Probar Gratis
               </button>
             </div>
@@ -111,23 +111,19 @@ export default function Landing() {
         ============================================= */}
         <section id="hero" className="relative pt-40 pb-20 px-4 sm:px-6 lg:pt-48 lg:pb-32 text-center w-full min-h-[90vh] flex flex-col justify-center items-center">
           <div className="max-w-4xl mx-auto relative z-10">
-            {/* Pill de novedad */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/[0.03] text-white/80 text-[10px] font-semibold uppercase tracking-[0.2em] mb-8 backdrop-blur-md animate-fade-in shadow-xl shadow-black/50">
               <Trophy size={13} className="text-brand-400" /> Digitaliza tu agencia inmobiliaria
             </div>
             
-            {/* Gran Titular */}
             <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-semibold leading-[1.05] tracking-tight mb-8">
               Vende Lujo,<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-300 via-brand-400 to-emerald-400 italic font-bold">No Ladrillo.</span>
             </h1>
             
-            {/* Subtítulo persuasivo */}
             <p className="text-base sm:text-lg text-white/60 max-w-2xl mx-auto mb-12 leading-relaxed font-light tracking-wide px-4">
               El único Luxury CRM diseñado para la agencia inmobiliaria que entiende que la marca propia es su activo más valioso. Eleva la percepción de tu cartera con tecnología inmersiva.
             </p>
             
-            {/* Botones Hero */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-4">
               <button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto group relative px-8 py-4 bg-brand-600 text-white rounded-xl font-bold uppercase tracking-widest text-[12px] hover:bg-brand-500 hover:shadow-[0_0_30px_rgba(59,130,246,0.4)] transition-all duration-300 flex items-center justify-center gap-3">
                 Comenzar 14 días gratis <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform" />
@@ -370,7 +366,6 @@ export default function Landing() {
               </div>
               <p className="text-white/40 text-sm font-light max-w-sm leading-relaxed mb-6">El CRM diseñado exclusivamente para el sector inmobiliario premium. Tecnología, diseño y conversión en un solo lugar.</p>
               <div className="flex items-center gap-4 text-white/30">
-                {/* Redes sociales placeholders */}
                 <a href="#" className="hover:text-white transition"><Globe size={20}/></a>
               </div>
             </div>
@@ -440,7 +435,6 @@ export default function Landing() {
             </div>
           </div>
         )}
-
       </div>
     </>
   );
