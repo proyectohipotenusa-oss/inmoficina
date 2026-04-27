@@ -5,7 +5,7 @@ import {
   Globe, BarChart3, Sparkles, Smartphone, Rss,
   ArrowRight, CheckCircle2, Star, X, Loader2,
   Trophy, Landmark, LayoutDashboard, Send, 
-  MousePointerClick, Mail, Phone, MapPin, Zap
+  MousePointerClick, Mail, Phone, MapPin, Zap, Building2
 } from 'lucide-react';
 
 // URL del nuevo Logo proporcionado
@@ -365,8 +365,8 @@ export default function Landing() {
         <footer id="footer" className="py-12 sm:py-16 px-4 sm:px-6 border-t border-white/5 bg-ink-950 w-full text-center sm:text-left">
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-8 border-b border-white/5 pb-12">
             <div className="md:col-span-2 flex flex-col items-center sm:items-start">
-              <div className="w-[48px] h-[48px] mb-6 opacity-60 hover:opacity-100 transition-opacity">
-                <img src={LOGO_URL} alt="Logo Inmoficina" className="w-full h-full object-contain" />
+              <div className="w-[48px] h-[48px] mb-6 opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
+                <img src={LOGO_URL} alt="Logo Inmoficina" className="w-full h-full object-contain grayscale hover:grayscale-0" />
               </div>
               <p className="text-white/40 text-sm font-light max-w-sm leading-relaxed mb-6">El CRM diseñado exclusivamente para el sector inmobiliario premium. Tecnología, diseño y conversión en un solo lugar.</p>
               <div className="flex items-center gap-4 text-white/30">
@@ -397,7 +397,7 @@ export default function Landing() {
         </footer>
 
         {/* =========================================
-            MODAL DE REGISTRO (MANTENIDO INTACTO)
+            MODAL DE REGISTRO
         ============================================= */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in overflow-y-auto font-sans">
