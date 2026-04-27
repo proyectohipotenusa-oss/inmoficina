@@ -53,9 +53,24 @@ export default function Landing() {
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setContactStatus('loading');
-    const { error } = await supabase.from('mensajes_contacto').insert([contactData]);
-    if (error) { console.error(error); setContactStatus('error'); } 
-    else { setContactStatus('success'); setContactData({ nombre: '', email: '', telefono: '', mensaje: '' }); }
+    
+    // Limpiamos los datos para evitar fallos si un campo opcional está vacío
+    const payload = {
+      nombre: contactData.nombre,
+      email: contactData.email,
+      telefono: contactData.telefono || null,
+      mensaje: contactData.mensaje
+    };
+
+    const { error } = await supabase.from('mensajes_contacto').insert([payload]);
+    
+    if (error) { 
+      console.error("Error al guardar mensaje:", error); 
+      setContactStatus('error'); 
+    } else { 
+      setContactStatus('success'); 
+      setContactData({ nombre: '', email: '', telefono: '', mensaje: '' }); 
+    }
   };
 
   const FAQS = [
@@ -206,8 +221,8 @@ export default function Landing() {
                 <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-transparent to-transparent opacity-80" />
                 <div className="absolute bottom-6 left-6 right-6">
                   <div className="p-4 bg-ink-950/80 backdrop-blur-md rounded-xl border border-white/10 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center shrink-0">
-                      <Star size={18} className="text-white/80" />
+                    <div className="w-10 h-10 bg-brand-500/20 rounded-lg flex items-center justify-center shrink-0 border border-brand-500/30">
+                      <Star size={18} className="text-brand-400" />
                     </div>
                     <div>
                       <p className="text-[9px] font-semibold text-white/50 uppercase tracking-[0.2em] mb-0.5">Blindaje de Marca</p>
@@ -247,14 +262,14 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* PRECIOS (INVERSIÓN) */}
-        <section id="precios" className="py-20 sm:py-24 px-4 sm:px-6 w-full relative bg-indigo-950/20 border-t border-white/5">
+        {/* PRECIOS (NUEVO FONDO MÁS CLARO EN DEGRADADO) */}
+        <section id="precios" className="py-20 sm:py-24 px-4 sm:px-6 w-full relative bg-gradient-to-b from-brand-900/10 via-ink-900/40 to-ink-950 border-t border-white/5">
           <div className="max-w-3xl mx-auto text-center mb-12">
             <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4 text-brand-500">Inversión Inteligente</h2>
-            <p className="text-indigo-200/50 text-sm font-light">Software de nivel empresarial, sin comisiones ocultas ni permanencia.</p>
+            <p className="text-white/60 text-sm font-light">Software de nivel empresarial, sin comisiones ocultas ni permanencia.</p>
           </div>
 
-          <div className="max-w-sm mx-auto bg-ink-950/90 border border-indigo-500/20 p-8 rounded-[2rem] text-center relative shadow-[0_0_40px_rgba(99,102,241,0.1)]">
+          <div className="max-w-sm mx-auto bg-ink-950/90 border border-brand-500/20 p-8 rounded-[2rem] text-center relative shadow-[0_0_40px_rgba(99,102,241,0.15)]">
             <div className="absolute top-0 left-0 right-0 py-1.5 bg-brand-600 border-b border-brand-500 text-[9px] font-semibold text-white uppercase tracking-[0.2em]">
               Pack Agencia Premium
             </div>
@@ -330,13 +345,18 @@ export default function Landing() {
             <div className="bg-ink-900/40 border border-white/5 p-6 rounded-2xl">
               {contactStatus === 'success' ? (
                 <div className="h-full flex flex-col items-center justify-center text-center py-6 animate-fade-in">
-                  <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mb-4"><CheckCircle2 className="text-emerald-400" size={24} /></div>
+                  <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mb-4"><CheckCircle2 className="text-white/80" size={24} /></div>
                   <h3 className="text-lg font-medium mb-2">Mensaje Recibido</h3>
                   <p className="text-white/40 text-xs">Te responderemos a la brevedad.</p>
                   <button onClick={() => setContactStatus('idle')} className="mt-6 px-4 py-1.5 border border-white/10 rounded-lg text-[10px] uppercase tracking-widest hover:bg-white/5 transition text-white/60">Enviar otro</button>
                 </div>
               ) : (
                 <form onSubmit={handleContactSubmit} className="space-y-4">
+                  {contactStatus === 'error' && (
+                    <div className="p-3 text-[10px] bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-center">
+                      Error de conexión. Inténtalo de nuevo.
+                    </div>
+                  )}
                   <div><label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1.5 ml-1">Nombre *</label><input required type="text" className="w-full bg-ink-950 border border-white/5 rounded-lg px-3 py-2 text-xs focus:border-brand-500 transition outline-none" value={contactData.nombre} onChange={e => setContactData({...contactData, nombre: e.target.value})} /></div>
                   <div className="grid grid-cols-2 gap-3">
                     <div><label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1.5 ml-1">Email *</label><input required type="email" className="w-full bg-ink-950 border border-white/5 rounded-lg px-3 py-2 text-xs focus:border-brand-500 transition outline-none" value={contactData.email} onChange={e => setContactData({...contactData, email: e.target.value})} /></div>
@@ -391,12 +411,12 @@ export default function Landing() {
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in overflow-y-auto font-sans">
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => formStatus !== 'loading' && setIsModalOpen(false)} />
-            <div className="relative w-full max-w-sm bg-ink-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-slide-up my-auto">
+            <div className="relative w-full max-w-sm bg-ink-950 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-slide-up my-auto">
               <div className="p-6 sm:p-8">
                 <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-white/30 hover:text-white transition"><X size={18} /></button>
                 {formStatus === 'success' ? (
                   <div className="text-center py-4 animate-fade-in">
-                    <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10"><Send size={20} className="text-emerald-400" /></div>
+                    <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10"><Send size={20} className="text-white/80" /></div>
                     <h3 className="text-lg font-medium mb-2 text-white/90">Solicitud Enviada</h3>
                     <p className="text-white/40 text-xs leading-relaxed font-light mb-6">Revisaremos tu agencia y crearemos tus credenciales VIP. Te avisaremos por email a la brevedad.</p>
                     <button onClick={() => setIsModalOpen(false)} className="w-full py-2.5 bg-brand-600 rounded-lg text-[10px] font-semibold uppercase tracking-widest hover:bg-brand-500 transition text-white">Finalizar</button>
@@ -419,7 +439,7 @@ export default function Landing() {
                         <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Teléfono *</label><input required type="tel" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.telefono} onChange={e => setFormData({...formData, telefono: e.target.value})} /></div>
                         <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Email *</label><input required type="email" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
                       </div>
-                      <button type="submit" disabled={formStatus === 'loading'} className="w-full py-3 mt-4 rounded-lg bg-brand-600 text-white font-semibold text-[10px] uppercase tracking-widest hover:bg-brand-500 transition flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 active:scale-95">
+                      <button type="submit" disabled={formStatus === 'loading'} className="w-full py-3 mt-4 rounded-lg bg-brand-600 text-white font-semibold text-[10px] uppercase tracking-widest hover:bg-brand-500 transition flex items-center justify-center gap-2">
                         {formStatus === 'loading' ? <Loader2 size={14} className="animate-spin" /> : 'Solicitar Acceso VIP'}
                       </button>
                       <p className="text-[9px] text-white/30 text-center uppercase tracking-widest flex items-center justify-center gap-1 mt-2"><CheckCircle2 size={10} className="text-emerald-400"/> Sin tarjeta de crédito</p>
