@@ -20,7 +20,7 @@ interface Solicitud {
 }
 
 interface MensajeContacto {
-  id: string; nombre: string; email: string; mensaje: string; leido: boolean; created_at: string;
+  id: string; nombre: string; email: string; telefono?: string; mensaje: string; leido: boolean; created_at: string;
 }
 
 interface Agente { id: string; email: string; nombre: string; }
@@ -69,24 +69,24 @@ export default function AdminPanel() {
     loadData();
   };
 
-  const marcarMensajeLeido = async (id: string) => {
-    await supabase.from('mensajes_contacto').update({ leido: true }).eq('id', id);
+  const marcarMensajeLeido = async (id: string, estadoLeido: boolean) => {
+    await supabase.from('mensajes_contacto').update({ leido: estadoLeido }).eq('id', id);
     loadData();
   };
 
-  const borrarMensaje = async (id: string) => {
-    if(!confirm('¿Borrar mensaje de contacto?')) return;
-    await supabase.from('mensajes_contacto').delete().eq('id', id);
-    loadData();
-  };
+  // BANDEJA UNIFICADA DE ENTRADA (Leads + Mensajes nuevos)
+  const pendingTrials = solicitudes.filter(s => s.estado === 'pendiente' || s.estado === 'rechazado').map(s => ({ ...s, incomingType: 'trial', sortDate: new Date(s.created_at).getTime() }));
+  const pendingMessages = mensajes.filter(m => !m.leido).map(m => ({ ...m, incomingType: 'message', sortDate: new Date(m.created_at).getTime() }));
+  const unifiedInbox = [...pendingTrials, ...pendingMessages].sort((a, b) => b.sortDate - a.sortDate);
 
-  const pendingLeads = solicitudes.filter(s => s.estado === 'pendiente' || s.estado === 'rechazado');
   const activeTrials = solicitudes.filter(s => s.estado === 'procesado').map(s => {
       const created = new Date(s.created_at);
       const expires = new Date(created.getTime() + 14 * 24 * 60 * 60 * 1000); 
       const daysLeft = Math.ceil((expires.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
       return { ...s, expires, daysLeft };
   }).sort((a, b) => a.daysLeft - b.daysLeft); 
+
+  const readMessages = mensajes.filter(m => m.leido);
 
   return (
     <Layout title="Panel Admin">
@@ -113,49 +113,65 @@ export default function AdminPanel() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
         
-        {/* COLUMNA 1: BANDEJA DE LEADS */}
+        {/* COLUMNA 1: BANDEJA UNIFICADA DE ENTRADA */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60 flex items-center gap-1.5"><Users size={12}/> Bandeja de Leads</h3>
+            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60 flex items-center gap-1.5"><Users size={12}/> Bandeja de Entrada</h3>
             <button onClick={loadData} className="text-[8px] font-bold text-white/40 hover:text-white transition">Actualizar</button>
           </div>
 
-          {loading ? <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-brand-400" size={16} /></div> : pendingLeads.length === 0 ? <div className="card p-4 text-center bg-white/[0.01] text-white/20 text-[9px] font-bold uppercase tracking-widest border-dashed border border-white/10">Bandeja limpia</div> : (
+          {loading ? <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-brand-400" size={16} /></div> : unifiedInbox.length === 0 ? <div className="card p-4 text-center bg-white/[0.01] text-white/20 text-[9px] font-bold uppercase tracking-widest border-dashed border border-white/10">Bandeja limpia</div> : (
             <div className="grid grid-cols-1 gap-2">
-              {pendingLeads.map(s => (
-                <div key={s.id} onClick={() => setSelectedSolicitud(s)} className={`card p-3 bg-ink-900 border-white/5 flex flex-col gap-2 transition-all cursor-pointer hover:border-white/20 ${s.estado === 'rechazado' ? 'opacity-40 grayscale' : 'border-l-2 border-l-brand-500 shadow-md'}`}>
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0 pr-2">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-xs font-black text-white uppercase truncate">{s.nombre_agencia}</span>
-                        <span className={`shrink-0 px-1.5 py-0.5 rounded text-[6px] font-black uppercase tracking-widest ${s.estado === 'pendiente' ? 'bg-amber-500/20 text-amber-500' : 'bg-red-500/20 text-red-500'}`}>{s.estado}</span>
+              {unifiedInbox.map((item: any) => {
+                const isTrial = item.incomingType === 'trial';
+                
+                return (
+                  <div key={`${item.incomingType}-${item.id}`} onClick={() => isTrial ? setSelectedSolicitud(item) : setSelectedMensaje(item)} className={`card p-3 bg-ink-900 border-white/5 flex flex-col gap-2 transition-all cursor-pointer hover:border-white/20 border-l-2 shadow-md ${isTrial ? (item.estado === 'rechazado' ? 'opacity-40 grayscale border-l-red-500' : 'border-l-brand-500') : 'border-l-purple-500'}`}>
+                    <div className="flex items-start justify-between">
+                      <div className="min-w-0 pr-2">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-xs font-black text-white uppercase truncate">{isTrial ? item.nombre_agencia : item.nombre}</span>
+                          <span className={`shrink-0 px-1.5 py-0.5 rounded text-[6px] font-black uppercase tracking-widest ${isTrial ? (item.estado === 'pendiente' ? 'bg-brand-500/20 text-brand-400' : 'bg-red-500/20 text-red-500') : 'bg-purple-500/20 text-purple-400'}`}>
+                            {isTrial ? `TRIAL: ${item.estado}` : 'MENSAJE WEB'}
+                          </span>
+                        </div>
+                        {isTrial ? (
+                          <div className="text-[9px] text-white/50 flex items-center gap-1 truncate"><MapPin size={8} className="text-white/30 shrink-0" /> {item.ciudad} ({item.codigo_postal})</div>
+                        ) : (
+                          <div className="text-[9px] text-white/50 italic truncate">"{item.mensaje}"</div>
+                        )}
                       </div>
-                      <div className="text-[9px] text-white/50 flex items-center gap-1 truncate"><MapPin size={8} className="text-white/30 shrink-0" /> {s.ciudad} ({s.codigo_postal})</div>
+                      <div className="text-right shrink-0">
+                         <p className="text-[7px] text-white/20 uppercase font-black tracking-widest">Recibido</p>
+                         <p className="text-[8px] font-bold text-white/50">{new Date(item.created_at).toLocaleDateString()}</p>
+                      </div>
                     </div>
-                    <div className="text-right shrink-0">
-                       <p className="text-[7px] text-white/20 uppercase font-black tracking-widest">Recibida</p>
-                       <p className="text-[8px] font-bold text-white/50">{new Date(s.created_at).toLocaleDateString()}</p>
+                    
+                    <div className="grid grid-cols-2 gap-1.5 text-[9px] text-white/60 bg-white/[0.02] p-2 rounded-md border border-white/5">
+                       {isTrial && <div className="flex items-center gap-1 truncate"><Users size={8} className="text-brand-400 shrink-0" /> {item.contacto_nombre}</div>}
+                       {item.telefono && <div className="flex items-center gap-1 truncate"><Phone size={8} className="text-brand-400 shrink-0" /> {item.telefono}</div>}
+                       <div className={`${isTrial || !item.telefono ? 'col-span-2' : ''} flex items-center gap-1 truncate`}><Mail size={8} className="text-brand-400 shrink-0" /> {item.email}</div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 pt-1">
+                      {isTrial ? (
+                        item.estado === 'pendiente' ? (
+                          <><button onClick={(e) => { e.stopPropagation(); actualizarEstado(item.id, 'procesado'); }} className="flex-1 py-1 rounded bg-brand-500/20 text-brand-400 hover:bg-brand-500 hover:text-white transition text-[8px] font-black uppercase tracking-widest flex items-center justify-center gap-1"><CheckCircle size={10}/> Activar Trial</button><button onClick={(e) => { e.stopPropagation(); actualizarEstado(item.id, 'rechazado'); }} className="py-1 px-2.5 rounded bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition text-[8px] font-black uppercase tracking-widest"><X size={10}/></button></>
+                        ) : (
+                          <button onClick={(e) => { e.stopPropagation(); actualizarEstado(item.id, 'pendiente'); }} className="w-full py-1 rounded bg-white/5 text-white/40 hover:bg-white/10 transition text-[8px] font-black uppercase tracking-widest">Revertir a Pendiente</button>
+                        )
+                      ) : (
+                        <button onClick={(e) => { e.stopPropagation(); marcarMensajeLeido(item.id, true); }} className="w-full py-1 rounded bg-purple-500/20 text-purple-400 hover:bg-purple-500 hover:text-white transition text-[8px] font-black uppercase tracking-widest flex items-center justify-center gap-1"><CheckCircle size={10}/> Completar Mensaje</button>
+                      )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-1.5 text-[9px] text-white/60 bg-white/[0.02] p-2 rounded-md border border-white/5">
-                     <div className="flex items-center gap-1 truncate"><Users size={8} className="text-brand-400 shrink-0" /> {s.contacto_nombre}</div>
-                     <div className="flex items-center gap-1 truncate"><Phone size={8} className="text-brand-400 shrink-0" /> {s.telefono}</div>
-                     <div className="col-span-2 flex items-center gap-1 truncate"><Mail size={8} className="text-brand-400 shrink-0" /> {s.email}</div>
-                  </div>
-                  <div className="flex items-center gap-1.5 pt-1">
-                    {s.estado === 'pendiente' ? (
-                      <><button onClick={(e) => { e.stopPropagation(); actualizarEstado(s.id, 'procesado'); }} className="flex-1 py-1 rounded bg-brand-500/20 text-brand-400 hover:bg-brand-500 hover:text-white transition text-[8px] font-black uppercase tracking-widest flex items-center justify-center gap-1"><CheckCircle size={10}/> Activar Trial</button><button onClick={(e) => { e.stopPropagation(); actualizarEstado(s.id, 'rechazado'); }} className="py-1 px-2.5 rounded bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition text-[8px] font-black uppercase tracking-widest"><X size={10}/></button></>
-                    ) : (
-                      <button onClick={(e) => { e.stopPropagation(); actualizarEstado(s.id, 'pendiente'); }} className="w-full py-1 rounded bg-white/5 text-white/40 hover:bg-white/10 transition text-[8px] font-black uppercase tracking-widest">Revertir a Pendiente</button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* COLUMNA 2: AGENDA DE SEGUIMIENTO */}
+        {/* COLUMNA 2: AGENDA DE SEGUIMIENTO (TRIAL) */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-1.5"><CalendarDays size={12}/> Agenda de Trials</h3>
@@ -185,21 +201,21 @@ export default function AdminPanel() {
           )}
         </div>
 
-        {/* COLUMNA 3: MENSAJES WEB */}
+        {/* COLUMNA 3: MENSAJES WEB PROCESADOS */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-400 flex items-center gap-1.5"><MessageSquare size={12}/> Mensajes Web</h3>
-            <span className="text-[8px] font-bold text-brand-400/50 bg-brand-400/10 px-1.5 py-0.5 rounded-full">{mensajes.filter(m => !m.leido).length} Nuevos</span>
+            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-purple-400 flex items-center gap-1.5"><MessageSquare size={12}/> Mensajes Web</h3>
+            <span className="text-[8px] font-bold text-purple-400/50 bg-purple-400/10 px-1.5 py-0.5 rounded-full">{readMessages.length} Leídos</span>
           </div>
 
-          {loading ? <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-brand-400" size={16} /></div> : mensajes.length === 0 ? <div className="card p-4 text-center bg-white/[0.01] text-white/20 text-[9px] font-bold uppercase tracking-widest border-dashed border border-white/10">Bandeja limpia</div> : (
+          {loading ? <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-purple-400" size={16} /></div> : readMessages.length === 0 ? <div className="card p-4 text-center bg-white/[0.01] text-white/20 text-[9px] font-bold uppercase tracking-widest border-dashed border border-white/10">Bandeja limpia</div> : (
             <div className="grid grid-cols-1 gap-2">
-              {mensajes.map(m => (
-                <div key={m.id} onClick={() => setSelectedMensaje(m)} className={`card p-3 bg-ink-900 border-white/5 flex flex-col gap-2 transition-all cursor-pointer hover:border-white/20 ${m.leido ? 'opacity-50 grayscale' : 'border-l-2 border-l-brand-400 shadow-md bg-white/[0.02]'}`}>
+              {readMessages.map(m => (
+                <div key={m.id} onClick={() => setSelectedMensaje(m)} className="card p-3 bg-ink-900 border-white/5 flex flex-col gap-2 transition-all cursor-pointer hover:border-white/20 opacity-70 grayscale hover:grayscale-0 hover:opacity-100">
                   <div className="flex justify-between items-start">
                     <div className="min-w-0 pr-2">
                       <div className="text-[11px] font-bold text-white truncate">{m.nombre}</div>
-                      <span className="text-[9px] text-brand-400 truncate">{m.email}</span>
+                      <a href={`mailto:${m.email}`} onClick={e => e.stopPropagation()} className="text-[9px] text-brand-400 hover:underline truncate">{m.email}</a>
                     </div>
                     <div className="text-[8px] text-white/40 shrink-0">{new Date(m.created_at).toLocaleDateString()}</div>
                   </div>
@@ -207,8 +223,7 @@ export default function AdminPanel() {
                     "{m.mensaje}"
                   </div>
                   <div className="flex gap-2 pt-1">
-                    {!m.leido && <button onClick={(e) => { e.stopPropagation(); marcarMensajeLeido(m.id); }} className="flex-1 py-1 rounded bg-brand-500/10 text-brand-400 hover:bg-brand-500 hover:text-white transition text-[8px] font-bold uppercase tracking-widest flex items-center justify-center gap-1"><Check size={10}/> Marcar Leído</button>}
-                    <button onClick={(e) => { e.stopPropagation(); borrarMensaje(m.id); }} className="px-2 py-1 rounded bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition"><Trash2 size={10}/></button>
+                    <button onClick={(e) => { e.stopPropagation(); marcarMensajeLeido(m.id, false); }} className="w-full py-1 rounded bg-white/5 text-white/40 hover:bg-white/10 transition text-[8px] font-black uppercase tracking-widest">Revertir a Pendiente</button>
                   </div>
                 </div>
               ))}
@@ -259,7 +274,7 @@ export default function AdminPanel() {
 
       {selectedAgencia && <AgencyDialog agencia={selectedAgencia} onClose={() => setSelectedAgencia(null)} onSave={() => { setSelectedAgencia(null); loadData(); }} onCreated={(res) => { setSelectedAgencia(null); setResult(res); loadData(); }} />}
       {selectedSolicitud && <SolicitudDialog solicitud={selectedSolicitud} onClose={() => setSelectedSolicitud(null)} onSave={() => { setSelectedSolicitud(null); loadData(); }} />}
-      {selectedMensaje && <MensajeDialog mensaje={selectedMensaje} onClose={() => setSelectedMensaje(null)} onSave={() => { setSelectedMensaje(null); loadData(); }} />}
+      {selectedMensaje && <MensajeDialog mensaje={selectedMensaje} onClose={() => setSelectedMensaje(null)} onSave={() => { setSelectedMensaje(null); loadData(); }} onDelete={() => borrarMensaje(selectedMensaje.id)} />}
       {result && <CredentialsDialog result={result} onClose={() => setResult(null)} />}
     </Layout>
   );
@@ -290,7 +305,7 @@ function SolicitudDialog({ solicitud, onClose, onSave }: { solicitud: Solicitud,
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-lg bg-ink-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl animate-slide-up flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-white/[0.02]">
-          <h3 className="text-sm font-bold text-white">Detalles de Solicitud</h3>
+          <h3 className="text-sm font-bold text-white">Detalles de Solicitud (Trial)</h3>
           <button onClick={onClose} className="text-white/30 hover:text-white"><X size={16}/></button>
         </div>
         <form onSubmit={onSubmit} className="p-5 overflow-y-auto custom-scrollbar space-y-4">
@@ -315,7 +330,7 @@ function SolicitudDialog({ solicitud, onClose, onSave }: { solicitud: Solicitud,
 }
 
 // MODAL PARA EDITAR MENSAJES WEB
-function MensajeDialog({ mensaje, onClose, onSave }: { mensaje: MensajeContacto, onClose: () => void, onSave: () => void }) {
+function MensajeDialog({ mensaje, onClose, onSave, onDelete }: { mensaje: MensajeContacto, onClose: () => void, onSave: () => void, onDelete: () => void }) {
   const [formData, setFormData] = useState({ ...mensaje });
   const [submitting, setSubmitting] = useState(false);
 
@@ -324,6 +339,7 @@ function MensajeDialog({ mensaje, onClose, onSave }: { mensaje: MensajeContacto,
     await supabase.from('mensajes_contacto').update({
       nombre: formData.nombre,
       email: formData.email,
+      telefono: formData.telefono,
       mensaje: formData.mensaje,
       leido: formData.leido
     }).eq('id', mensaje.id);
@@ -335,22 +351,26 @@ function MensajeDialog({ mensaje, onClose, onSave }: { mensaje: MensajeContacto,
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-lg bg-ink-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl animate-slide-up flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-white/[0.02]">
-          <h3 className="text-sm font-bold text-white">Mensaje Web</h3>
+          <h3 className="text-sm font-bold text-white">Mensaje Web de Contacto</h3>
           <button onClick={onClose} className="text-white/30 hover:text-white"><X size={16}/></button>
         </div>
         <form onSubmit={onSubmit} className="p-5 overflow-y-auto custom-scrollbar space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2"><label className="label">Nombre</label><input className="input bg-ink-950 border-white/10 text-sm" value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} /></div>
-            <div className="col-span-2"><label className="label">Email</label><input className="input bg-ink-950 border-white/10 text-sm" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
+            <div><label className="label">Email</label><input className="input bg-ink-950 border-white/10 text-sm" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
+            <div><label className="label">Teléfono</label><input className="input bg-ink-950 border-white/10 text-sm" value={formData.telefono || ''} onChange={e => setFormData({...formData, telefono: e.target.value})} /></div>
             <div className="col-span-2"><label className="label">Mensaje</label><textarea rows={5} className="input bg-ink-950 border-white/10 text-sm resize-none" value={formData.mensaje} onChange={e => setFormData({...formData, mensaje: e.target.value})} /></div>
             <div className="col-span-2 flex items-center gap-2 mt-2">
-              <input type="checkbox" id="leido" checked={formData.leido} onChange={e => setFormData({...formData, leido: e.target.checked})} className="rounded bg-ink-950 border-white/20 text-brand-500 focus:ring-brand-500 focus:ring-offset-ink-900" />
-              <label htmlFor="leido" className="text-sm text-white/80 cursor-pointer">Marcar como leído</label>
+              <input type="checkbox" id="leido" checked={formData.leido} onChange={e => setFormData({...formData, leido: e.target.checked})} className="rounded bg-ink-950 border-white/20 text-brand-500 focus:ring-brand-500 focus:ring-offset-ink-900 w-4 h-4" />
+              <label htmlFor="leido" className="text-sm text-white/80 cursor-pointer">Marcar como leído / Procesado</label>
             </div>
           </div>
-          <div className="pt-4 border-t border-white/5 flex justify-end gap-2 mt-4">
-            <button type="button" onClick={onClose} className="btn-ghost border border-white/10 px-3 py-1.5 text-xs">Cancelar</button>
-            <button type="submit" disabled={submitting} className="btn-primary px-4 py-1.5 text-xs flex items-center gap-2">{submitting ? <Loader2 size={14} className="animate-spin"/> : 'Guardar'}</button>
+          <div className="pt-4 border-t border-white/5 flex justify-between items-center mt-4">
+            <button type="button" onClick={() => { onDelete(); onClose(); }} className="text-red-400 hover:text-red-300 text-xs font-bold flex items-center gap-1"><Trash2 size={14}/> Borrar</button>
+            <div className="flex gap-2">
+              <button type="button" onClick={onClose} className="btn-ghost border border-white/10 px-3 py-1.5 text-xs">Cancelar</button>
+              <button type="submit" disabled={submitting} className="btn-primary px-4 py-1.5 text-xs flex items-center gap-2">{submitting ? <Loader2 size={14} className="animate-spin"/> : 'Guardar Cambios'}</button>
+            </div>
           </div>
         </form>
       </div>
