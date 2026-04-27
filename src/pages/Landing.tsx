@@ -58,10 +58,15 @@ export default function Landing() {
     else { setContactStatus('success'); setContactData({ nombre: '', email: '', mensaje: '' }); }
   };
 
+  // FAQs AMPLIADAS Y OPTIMIZADAS
   const FAQS = [
     { q: "¿Tengo que introducir mi tarjeta de crédito para la prueba gratis?", a: "Absolutamente no. Queremos que pruebes todo el potencial de Inmoficina durante 14 días sin ningún tipo de compromiso ni riesgo." },
+    { q: "¿Es Inmoficina difícil de usar?", a: "Al contrario. Hemos diseñado una interfaz intuitiva, limpia y minimalista. Si sabes usar WhatsApp o el correo electrónico, sabrás usar Inmoficina desde el primer minuto, sin curvas de aprendizaje frustrantes." },
+    { q: "¿Puedo integrar o importar mis propiedades actuales al CRM?", a: "Sí. Contamos con herramientas y soporte dedicado para guiarte en una transición suave, de modo que no pierdas ni un solo dato importante de tu cartera." },
+    { q: "¿En qué se diferencia Inmoficina de los CRM tradicionales?", a: "Mientras los CRM genéricos son bases de datos aburridas, Inmoficina es una herramienta orientada al Cierre y al Branding de lujo. Tus fichas públicas, informes CMA y dossiers parecen diseñados por una agencia de marketing de primer nivel." },
     { q: "¿Hay contratos de permanencia?", a: "No. Creemos en ganar tu confianza mes a mes. Puedes cancelar tu suscripción en cualquier momento con un solo clic, sin preguntas." },
     { q: "¿Tengo que instalar algún programa?", a: "No, Inmoficina es 100% en la nube (Cloud). Puedes acceder desde cualquier ordenador, tablet o móvil solo con tu navegador web." },
+    { q: "¿El plan Premium incluye soporte técnico?", a: "Sí, tendrás acceso a soporte directo. Nuestro equipo está disponible para resolver tus dudas y asegurar que le sacas el máximo partido a cada herramienta." },
     { q: "¿Están seguros los datos de mis clientes?", a: "Tus datos están protegidos con encriptación de grado militar (Row Level Security) en servidores seguros. Nadie más que tu agencia tiene acceso a ellos." }
   ];
 
@@ -189,8 +194,8 @@ export default function Landing() {
                 <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-transparent to-transparent opacity-80" />
                 <div className="absolute bottom-6 left-6 right-6">
                   <div className="p-4 bg-ink-950/80 backdrop-blur-md rounded-xl border border-white/10 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-brand-500/20 rounded-lg flex items-center justify-center shrink-0 border border-brand-500/30">
-                      <Star size={18} className="text-brand-400" />
+                    <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center shrink-0">
+                      <Star size={18} className="text-white/80" />
                     </div>
                     <div>
                       <p className="text-[9px] font-semibold text-white/50 uppercase tracking-[0.2em] mb-0.5">Blindaje de Marca</p>
@@ -218,7 +223,7 @@ export default function Landing() {
                   { title: "Seguridad y Privacidad", desc: "Tus datos y los de tus clientes bajo cifrado de grado militar y bases de datos aisladas." }
                 ].map((item, i) => (
                   <div key={i} className="flex gap-4">
-                    <div className="mt-0.5"><CheckCircle2 className="text-emerald-400" size={18} /></div>
+                    <div className="mt-0.5"><CheckCircle2 className="text-white/40" size={18} /></div>
                     <div>
                       <h4 className="text-sm font-medium mb-1 text-brand-500">{item.title}</h4>
                       <p className="text-white/40 text-xs font-light leading-relaxed">{item.desc}</p>
@@ -264,7 +269,7 @@ export default function Landing() {
                 "Compresión Fotos en la Nube"
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2.5 text-white/60 font-light text-xs">
-                  <CheckCircle2 className="text-brand-500 shrink-0" size={14} /> {item}
+                  <CheckCircle2 className="text-white/20 shrink-0" size={14} /> {item}
                 </div>
               ))}
             </div>
@@ -281,14 +286,14 @@ export default function Landing() {
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4">Preguntas Frecuentes</h2>
-              <p className="text-white/50 text-sm font-light">Todo lo que necesitas saber antes de empezar.</p>
+              <p className="text-brand-500 text-sm font-light">Todo lo que necesitas saber antes de empezar.</p>
             </div>
             <div className="space-y-3">
               {FAQS.map((faq, i) => (
                 <div key={i} className="bg-ink-900/40 border border-white/5 rounded-xl overflow-hidden transition-all">
                   <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full px-6 py-4 flex items-center justify-between text-left text-white/90 hover:text-white transition">
                     <span className="font-medium text-sm">{faq.q}</span>
-                    <ChevronDown size={16} className={`text-white/40 transition-transform duration-300 ${openFaq === i ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={16} className={`text-brand-500 transition-transform duration-300 ${openFaq === i ? 'rotate-180' : ''}`} />
                   </button>
                   <div className={`px-6 overflow-hidden transition-all duration-300 ${openFaq === i ? 'max-h-40 pb-4 opacity-100' : 'max-h-0 opacity-0'}`}>
                     <p className="text-xs text-white/50 leading-relaxed font-light">{faq.a}</p>
@@ -305,7 +310,7 @@ export default function Landing() {
             <div>
               <h2 className="font-serif text-2xl md:text-3xl font-medium mb-4">¿Hablamos?</h2>
               <p className="text-white/50 text-xs font-light leading-relaxed mb-8">
-                Si tienes requerimientos especiales, volumen de agencia o necesitas una demostración, contáctanos.
+                Si tienes dudas, requerimientos especiales, volumen de agencia o necesitas un tutorial de uso, contáctanos.
               </p>
               
               <div className="space-y-5">
@@ -323,7 +328,7 @@ export default function Landing() {
             <div className="bg-ink-900/40 border border-white/5 p-6 rounded-2xl">
               {contactStatus === 'success' ? (
                 <div className="h-full flex flex-col items-center justify-center text-center py-6 animate-fade-in">
-                  <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4"><CheckCircle2 className="text-emerald-400" size={24} /></div>
+                  <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mb-4"><CheckCircle2 className="text-white/80" size={24} /></div>
                   <h3 className="text-lg font-medium mb-2">Mensaje Recibido</h3>
                   <p className="text-white/40 text-xs">Te responderemos a la brevedad.</p>
                   <button onClick={() => setContactStatus('idle')} className="mt-6 px-4 py-1.5 border border-white/10 rounded-lg text-[10px] uppercase tracking-widest hover:bg-white/5 transition text-white/60">Enviar otro</button>
@@ -349,7 +354,7 @@ export default function Landing() {
               <div className="w-[48px] h-[48px] mb-4 opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
                 <img src={LOGO_URL} alt="Logo Inmoficina" className="w-full h-full object-contain grayscale hover:grayscale-0" />
               </div>
-              <p className="text-white/40 text-xs font-light max-w-sm leading-relaxed">El CRM diseñado exclusivamente para el sector inmobiliario profesional. Tecnología y diseño orientados al cierre.</p>
+              <p className="text-white/40 text-xs font-light max-w-sm leading-relaxed">CRM diseñado exclusivamente para profesionalizar más aún tu agencia inmobiliaria.</p>
             </div>
             
             <div className="flex flex-col items-center sm:items-start">
@@ -386,10 +391,10 @@ export default function Landing() {
                 <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-white/30 hover:text-white transition"><X size={18} /></button>
                 {formStatus === 'success' ? (
                   <div className="text-center py-4 animate-fade-in">
-                    <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20"><Send size={20} className="text-emerald-400" /></div>
+                    <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10"><Send size={20} className="text-white/80" /></div>
                     <h3 className="text-lg font-medium mb-2 text-white/90">Solicitud Enviada</h3>
                     <p className="text-white/40 text-xs leading-relaxed font-light mb-6">Revisaremos tu agencia y crearemos tus credenciales VIP. Te avisaremos por email a la brevedad.</p>
-                    <button onClick={() => setIsModalOpen(false)} className="w-full py-2.5 bg-brand-600 rounded-lg text-[10px] font-semibold uppercase tracking-widest hover:bg-brand-500 transition text-white">Finalizar</button>
+                    <button onClick={() => setIsModalOpen(false)} className="w-full py-2.5 bg-white/10 rounded-lg text-[10px] font-semibold uppercase tracking-widest hover:bg-white/20 transition text-white">Finalizar</button>
                   </div>
                 ) : (
                   <>
@@ -398,18 +403,18 @@ export default function Landing() {
                       <p className="text-[9px] text-white/50 uppercase tracking-widest font-medium">14 Días Gratis • Agencia Premium</p>
                     </div>
                     <form onSubmit={handleSubmit} className="space-y-3">
-                      <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Inmobiliaria *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.nombre_agencia} onChange={e => setFormData({...formData, nombre_agencia: e.target.value})} /></div>
-                      <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Dirección *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.direccion} onChange={e => setFormData({...formData, direccion: e.target.value})} /></div>
+                      <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Inmobiliaria *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-white/20 transition-all outline-none" value={formData.nombre_agencia} onChange={e => setFormData({...formData, nombre_agencia: e.target.value})} /></div>
+                      <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Dirección *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-white/20 transition-all outline-none" value={formData.direccion} onChange={e => setFormData({...formData, direccion: e.target.value})} /></div>
                       <div className="grid grid-cols-2 gap-3">
-                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Ciudad *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.ciudad} onChange={e => setFormData({...formData, ciudad: e.target.value})} /></div>
-                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">C.P. *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.codigo_postal} onChange={e => setFormData({...formData, codigo_postal: e.target.value})} /></div>
+                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Ciudad *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-white/20 transition-all outline-none" value={formData.ciudad} onChange={e => setFormData({...formData, ciudad: e.target.value})} /></div>
+                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">C.P. *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-white/20 transition-all outline-none" value={formData.codigo_postal} onChange={e => setFormData({...formData, codigo_postal: e.target.value})} /></div>
                       </div>
-                      <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Responsable *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.contacto_nombre} onChange={e => setFormData({...formData, contacto_nombre: e.target.value})} /></div>
+                      <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Responsable *</label><input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-white/20 transition-all outline-none" value={formData.contacto_nombre} onChange={e => setFormData({...formData, contacto_nombre: e.target.value})} /></div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Teléfono *</label><input required type="tel" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.telefono} onChange={e => setFormData({...formData, telefono: e.target.value})} /></div>
-                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Email *</label><input required type="email" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-500 transition-all outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
+                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Teléfono *</label><input required type="tel" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-white/20 transition-all outline-none" value={formData.telefono} onChange={e => setFormData({...formData, telefono: e.target.value})} /></div>
+                        <div><label className="block text-[9px] font-medium text-white/40 uppercase tracking-widest mb-1 ml-1">Email *</label><input required type="email" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2.5 text-xs text-white focus:border-white/20 transition-all outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
                       </div>
-                      <button type="submit" disabled={formStatus === 'loading'} className="w-full py-3 mt-4 rounded-lg bg-brand-600 text-white font-semibold text-[10px] uppercase tracking-widest hover:bg-brand-500 transition flex items-center justify-center gap-2">
+                      <button type="submit" disabled={formStatus === 'loading'} className="w-full py-3 mt-4 rounded-lg bg-white/10 text-white font-semibold text-[10px] uppercase tracking-widest hover:bg-white/20 transition flex items-center justify-center gap-2">
                         {formStatus === 'loading' ? <Loader2 size={14} className="animate-spin" /> : 'Solicitar Acceso VIP'}
                       </button>
                       <p className="text-[9px] text-white/30 text-center uppercase tracking-widest flex items-center justify-center gap-1 mt-2"><CheckCircle2 size={10} className="text-emerald-400"/> Sin tarjeta de crédito</p>

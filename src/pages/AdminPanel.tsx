@@ -10,56 +10,22 @@ import { EmptyState } from '../components/EmptyState';
 import { supabase } from '../lib/supabase';
 
 interface Agencia {
-  id: string;
-  nombre: string;
-  direccion?: string;
-  ciudad?: string;
-  codigo_postal?: string;
-  contacto_nombre?: string;
-  contacto_email?: string;
-  contacto_telefono?: string;
-  created_at: string;
-  bloqueada?: boolean;
+  id: string; nombre: string; direccion?: string; ciudad?: string; codigo_postal?: string;
+  contacto_nombre?: string; contacto_email?: string; contacto_telefono?: string; created_at: string; bloqueada?: boolean;
 }
 
 interface Solicitud {
-  id: string;
-  estado: string;
-  nombre_agencia: string;
-  direccion: string;
-  ciudad: string;
-  codigo_postal: string;
-  contacto_nombre: string;
-  telefono: string;
-  email: string;
-  created_at: string;
+  id: string; estado: string; nombre_agencia: string; direccion: string; ciudad: string;
+  codigo_postal: string; contacto_nombre: string; telefono: string; email: string; created_at: string;
 }
 
-// NUEVA INTERFAZ PARA LOS MENSAJES DE CONTACTO
 interface MensajeContacto {
-  id: string;
-  nombre: string;
-  email: string;
-  mensaje: string;
-  leido: boolean;
-  created_at: string;
+  id: string; nombre: string; email: string; mensaje: string; leido: boolean; created_at: string;
 }
 
-interface Agente {
-  id: string;
-  email: string;
-  nombre: string;
-}
-
-interface CreatedUser {
-  email: string;
-  password: string;
-}
-
-interface CreatedResult {
-  agencia: Agencia;
-  usuarios: CreatedUser[];
-}
+interface Agente { id: string; email: string; nombre: string; }
+interface CreatedUser { email: string; password: string; }
+interface CreatedResult { agencia: Agencia; usuarios: CreatedUser[]; }
 
 function slugify(raw: string) {
   if (!raw) return '';
@@ -69,34 +35,30 @@ function slugify(raw: string) {
 export default function AdminPanel() {
   const [agencias, setAgencias] = useState<Agencia[]>([]);
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
-  const [mensajes, setMensajes] = useState<MensajeContacto[]>([]); // ESTADO DE MENSAJES
+  const [mensajes, setMensajes] = useState<MensajeContacto[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, ingresos: 0, agencias: 0 });
+  
   const [selectedAgencia, setSelectedAgencia] = useState<Agencia | 'new' | null>(null);
+  const [selectedSolicitud, setSelectedSolicitud] = useState<Solicitud | null>(null);
+  const [selectedMensaje, setSelectedMensaje] = useState<MensajeContacto | null>(null);
   const [result, setResult] = useState<CreatedResult | null>(null);
 
   const loadData = async () => {
     setLoading(true);
-    
     const { data: ags } = await supabase.from('agencias').select('*').order('created_at', { ascending: false });
     if (ags) setAgencias(ags as Agencia[]);
 
     const { data: sols } = await supabase.from('solicitudes_registro').select('*').order('created_at', { ascending: false });
     setSolicitudes((sols as Solicitud[]) || []);
 
-    // CARGAR MENSAJES DEL FORMULARIO
     const { data: msgs } = await supabase.from('mensajes_contacto').select('*').order('created_at', { ascending: false });
     setMensajes((msgs as MensajeContacto[]) || []);
 
     const { data: perfiles } = await supabase.from('perfiles').select('rol');
     const totalAgencias = ags ? ags.filter(a => !a.bloqueada).length : 0;
     
-    setStats({
-      total: perfiles?.length || 0,
-      ingresos: totalAgencias * 49,
-      agencias: totalAgencias
-    });
-    
+    setStats({ total: perfiles?.length || 0, ingresos: totalAgencias * 49, agencias: totalAgencias });
     setLoading(false);
   };
 
@@ -107,7 +69,6 @@ export default function AdminPanel() {
     loadData();
   };
 
-  // FUNCIONES PARA LOS MENSAJES
   const marcarMensajeLeido = async (id: string) => {
     await supabase.from('mensajes_contacto').update({ leido: true }).eq('id', id);
     loadData();
@@ -120,16 +81,12 @@ export default function AdminPanel() {
   };
 
   const pendingLeads = solicitudes.filter(s => s.estado === 'pendiente' || s.estado === 'rechazado');
-  
-  const activeTrials = solicitudes
-    .filter(s => s.estado === 'procesado')
-    .map(s => {
+  const activeTrials = solicitudes.filter(s => s.estado === 'procesado').map(s => {
       const created = new Date(s.created_at);
       const expires = new Date(created.getTime() + 14 * 24 * 60 * 60 * 1000); 
       const daysLeft = Math.ceil((expires.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
       return { ...s, expires, daysLeft };
-    })
-    .sort((a, b) => a.daysLeft - b.daysLeft);
+  }).sort((a, b) => a.daysLeft - b.daysLeft); 
 
   return (
     <Layout title="Panel Admin">
@@ -154,7 +111,6 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* CONVERTIDO A 3 COLUMNAS PARA METER LOS MENSAJES */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
         
         {/* COLUMNA 1: BANDEJA DE LEADS */}
@@ -164,19 +120,17 @@ export default function AdminPanel() {
             <button onClick={loadData} className="text-[8px] font-bold text-white/40 hover:text-white transition">Actualizar</button>
           </div>
 
-          {loading ?
-            <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-brand-400" size={16} /></div> : pendingLeads.length === 0 ?
-            <div className="card p-4 text-center bg-white/[0.01] text-white/20 text-[9px] font-bold uppercase tracking-widest border-dashed border border-white/10">Bandeja limpia</div> : (
+          {loading ? <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-brand-400" size={16} /></div> : pendingLeads.length === 0 ? <div className="card p-4 text-center bg-white/[0.01] text-white/20 text-[9px] font-bold uppercase tracking-widest border-dashed border border-white/10">Bandeja limpia</div> : (
             <div className="grid grid-cols-1 gap-2">
               {pendingLeads.map(s => (
-                <div key={s.id} className={`card p-3 bg-ink-900 border-white/5 flex flex-col gap-2 transition-all ${s.estado === 'rechazado' ? 'opacity-40 grayscale' : 'border-l-2 border-l-brand-500 shadow-md'}`}>
+                <div key={s.id} onClick={() => setSelectedSolicitud(s)} className={`card p-3 bg-ink-900 border-white/5 flex flex-col gap-2 transition-all cursor-pointer hover:border-white/20 ${s.estado === 'rechazado' ? 'opacity-40 grayscale' : 'border-l-2 border-l-brand-500 shadow-md'}`}>
                   <div className="flex items-start justify-between">
                     <div className="min-w-0 pr-2">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-xs font-black text-white uppercase truncate">{s.nombre_agencia}</span>
                         <span className={`shrink-0 px-1.5 py-0.5 rounded text-[6px] font-black uppercase tracking-widest ${s.estado === 'pendiente' ? 'bg-amber-500/20 text-amber-500' : 'bg-red-500/20 text-red-500'}`}>{s.estado}</span>
                       </div>
-                      <div className="text-[9px] text-white/50 flex items-center gap-1 truncate"><MapPin size={8} className="text-white/30 shrink-0" /> {s.direccion} {s.ciudad ? `, ${s.ciudad}` : ''} {s.codigo_postal}</div>
+                      <div className="text-[9px] text-white/50 flex items-center gap-1 truncate"><MapPin size={8} className="text-white/30 shrink-0" /> {s.ciudad} ({s.codigo_postal})</div>
                     </div>
                     <div className="text-right shrink-0">
                        <p className="text-[7px] text-white/20 uppercase font-black tracking-widest">Recibida</p>
@@ -190,9 +144,9 @@ export default function AdminPanel() {
                   </div>
                   <div className="flex items-center gap-1.5 pt-1">
                     {s.estado === 'pendiente' ? (
-                      <><button onClick={() => actualizarEstado(s.id, 'procesado')} className="flex-1 py-1 rounded bg-brand-500/20 text-brand-400 hover:bg-brand-500 hover:text-white transition text-[8px] font-black uppercase tracking-widest flex items-center justify-center gap-1"><CheckCircle size={10}/> Activar Trial</button><button onClick={() => actualizarEstado(s.id, 'rechazado')} className="py-1 px-2.5 rounded bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition text-[8px] font-black uppercase tracking-widest"><X size={10}/></button></>
+                      <><button onClick={(e) => { e.stopPropagation(); actualizarEstado(s.id, 'procesado'); }} className="flex-1 py-1 rounded bg-brand-500/20 text-brand-400 hover:bg-brand-500 hover:text-white transition text-[8px] font-black uppercase tracking-widest flex items-center justify-center gap-1"><CheckCircle size={10}/> Activar Trial</button><button onClick={(e) => { e.stopPropagation(); actualizarEstado(s.id, 'rechazado'); }} className="py-1 px-2.5 rounded bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition text-[8px] font-black uppercase tracking-widest"><X size={10}/></button></>
                     ) : (
-                      <button onClick={() => actualizarEstado(s.id, 'pendiente')} className="w-full py-1 rounded bg-white/5 text-white/40 hover:bg-white/10 transition text-[8px] font-black uppercase tracking-widest">Revertir a Pendiente</button>
+                      <button onClick={(e) => { e.stopPropagation(); actualizarEstado(s.id, 'pendiente'); }} className="w-full py-1 rounded bg-white/5 text-white/40 hover:bg-white/10 transition text-[8px] font-black uppercase tracking-widest">Revertir a Pendiente</button>
                     )}
                   </div>
                 </div>
@@ -204,19 +158,18 @@ export default function AdminPanel() {
         {/* COLUMNA 2: AGENDA DE SEGUIMIENTO */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-1.5"><CalendarDays size={12}/> Agenda de Seguimiento</h3>
+            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-1.5"><CalendarDays size={12}/> Agenda de Trials</h3>
             <span className="text-[8px] font-bold text-emerald-400/50 bg-emerald-400/10 px-1.5 py-0.5 rounded-full">{activeTrials.length} Activos</span>
           </div>
 
-          {loading ? <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-emerald-400" size={16} /></div> : activeTrials.length === 0 ?
-            <div className="card p-4 text-center bg-white/[0.01] text-white/20 text-[9px] font-bold uppercase tracking-widest border-dashed border border-white/10">No hay trials activos</div> : (
+          {loading ? <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-emerald-400" size={16} /></div> : activeTrials.length === 0 ? <div className="card p-4 text-center bg-white/[0.01] text-white/20 text-[9px] font-bold uppercase tracking-widest border-dashed border border-white/10">No hay trials activos</div> : (
             <div className="grid grid-cols-1 gap-2">
               {activeTrials.map(t => {
                 const isExpired = t.daysLeft <= 0;
                 const isUrgent = !isExpired && t.daysLeft <= 3;
                 const colorClass = isExpired ? 'text-red-400 bg-red-400/10 border-red-400/20' : isUrgent ? 'text-amber-400 bg-amber-400/10 border-amber-400/20' : 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
                 return (
-                  <div key={t.id} className="card p-2.5 bg-ink-900 border-white/5 flex items-center justify-between gap-3">
+                  <div key={t.id} onClick={() => setSelectedSolicitud(t)} className="card p-2.5 bg-ink-900 border-white/5 flex items-center justify-between gap-3 cursor-pointer hover:border-white/20 transition-colors">
                     <div className="min-w-0 flex-1">
                       <div className="text-[11px] font-bold text-white uppercase truncate mb-0.5">{t.nombre_agencia}</div>
                       <div className="text-[8px] text-white/50 flex items-center gap-1.5 truncate"><span><Users size={7} className="inline mr-0.5 opacity-50"/>{t.contacto_nombre}</span><span><Phone size={7} className="inline mr-0.5 opacity-50"/>{t.telefono}</span></div>
@@ -232,7 +185,7 @@ export default function AdminPanel() {
           )}
         </div>
 
-        {/* COLUMNA 3: MENSAJES DEL FORMULARIO WEB */}
+        {/* COLUMNA 3: MENSAJES WEB */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-400 flex items-center gap-1.5"><MessageSquare size={12}/> Mensajes Web</h3>
@@ -242,11 +195,11 @@ export default function AdminPanel() {
           {loading ? <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-brand-400" size={16} /></div> : mensajes.length === 0 ? <div className="card p-4 text-center bg-white/[0.01] text-white/20 text-[9px] font-bold uppercase tracking-widest border-dashed border border-white/10">Bandeja limpia</div> : (
             <div className="grid grid-cols-1 gap-2">
               {mensajes.map(m => (
-                <div key={m.id} className={`card p-3 bg-ink-900 border-white/5 flex flex-col gap-2 transition-all ${m.leido ? 'opacity-50 grayscale' : 'border-l-2 border-l-brand-400 shadow-md bg-white/[0.02]'}`}>
+                <div key={m.id} onClick={() => setSelectedMensaje(m)} className={`card p-3 bg-ink-900 border-white/5 flex flex-col gap-2 transition-all cursor-pointer hover:border-white/20 ${m.leido ? 'opacity-50 grayscale' : 'border-l-2 border-l-brand-400 shadow-md bg-white/[0.02]'}`}>
                   <div className="flex justify-between items-start">
                     <div className="min-w-0 pr-2">
                       <div className="text-[11px] font-bold text-white truncate">{m.nombre}</div>
-                      <a href={`mailto:${m.email}`} className="text-[9px] text-brand-400 hover:underline truncate">{m.email}</a>
+                      <span className="text-[9px] text-brand-400 truncate">{m.email}</span>
                     </div>
                     <div className="text-[8px] text-white/40 shrink-0">{new Date(m.created_at).toLocaleDateString()}</div>
                   </div>
@@ -254,24 +207,21 @@ export default function AdminPanel() {
                     "{m.mensaje}"
                   </div>
                   <div className="flex gap-2 pt-1">
-                    {!m.leido && <button onClick={() => marcarMensajeLeido(m.id)} className="flex-1 py-1 rounded bg-brand-500/10 text-brand-400 hover:bg-brand-500 hover:text-white transition text-[8px] font-bold uppercase tracking-widest flex items-center justify-center gap-1"><Check size={10}/> Marcar Leído</button>}
-                    <button onClick={() => borrarMensaje(m.id)} className="px-2 py-1 rounded bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition"><Trash2 size={10}/></button>
+                    {!m.leido && <button onClick={(e) => { e.stopPropagation(); marcarMensajeLeido(m.id); }} className="flex-1 py-1 rounded bg-brand-500/10 text-brand-400 hover:bg-brand-500 hover:text-white transition text-[8px] font-bold uppercase tracking-widest flex items-center justify-center gap-1"><Check size={10}/> Marcar Leído</button>}
+                    <button onClick={(e) => { e.stopPropagation(); borrarMensaje(m.id); }} className="px-2 py-1 rounded bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition"><Trash2 size={10}/></button>
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
-
       </div>
 
       <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60 mb-2 flex items-center gap-1.5"><Building2 size={12}/> Base de Datos de Agencias</h3>
       <div className="card p-0 overflow-hidden shadow-xl border-white/5 bg-ink-900/50 mb-8">
-        {loading ?
-        (
+        {loading ? (
           <div className="py-12 flex justify-center text-white/20"><Loader2 className="animate-spin" size={16} /></div>
-        ) : agencias.length === 0 ?
-        (
+        ) : agencias.length === 0 ? (
           <EmptyState icon={Shield} title="Todavía no has creado agencias" description="Crea una agencia para generar sus credenciales de acceso." />
         ) : (
           <div className="overflow-x-auto">
@@ -308,8 +258,103 @@ export default function AdminPanel() {
       </div>
 
       {selectedAgencia && <AgencyDialog agencia={selectedAgencia} onClose={() => setSelectedAgencia(null)} onSave={() => { setSelectedAgencia(null); loadData(); }} onCreated={(res) => { setSelectedAgencia(null); setResult(res); loadData(); }} />}
+      {selectedSolicitud && <SolicitudDialog solicitud={selectedSolicitud} onClose={() => setSelectedSolicitud(null)} onSave={() => { setSelectedSolicitud(null); loadData(); }} />}
+      {selectedMensaje && <MensajeDialog mensaje={selectedMensaje} onClose={() => setSelectedMensaje(null)} onSave={() => { setSelectedMensaje(null); loadData(); }} />}
       {result && <CredentialsDialog result={result} onClose={() => setResult(null)} />}
     </Layout>
+  );
+}
+
+// MODAL PARA EDITAR SOLICITUDES / TRIALS
+function SolicitudDialog({ solicitud, onClose, onSave }: { solicitud: Solicitud, onClose: () => void, onSave: () => void }) {
+  const [formData, setFormData] = useState({ ...solicitud });
+  const [submitting, setSubmitting] = useState(false);
+
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault(); setSubmitting(true);
+    await supabase.from('solicitudes_registro').update({
+      nombre_agencia: formData.nombre_agencia,
+      direccion: formData.direccion,
+      ciudad: formData.ciudad,
+      codigo_postal: formData.codigo_postal,
+      contacto_nombre: formData.contacto_nombre,
+      telefono: formData.telefono,
+      email: formData.email,
+      estado: formData.estado
+    }).eq('id', solicitud.id);
+    setSubmitting(false); onSave();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-lg bg-ink-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl animate-slide-up flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-white/[0.02]">
+          <h3 className="text-sm font-bold text-white">Detalles de Solicitud</h3>
+          <button onClick={onClose} className="text-white/30 hover:text-white"><X size={16}/></button>
+        </div>
+        <form onSubmit={onSubmit} className="p-5 overflow-y-auto custom-scrollbar space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2"><label className="label">Agencia</label><input className="input bg-ink-950 border-white/10 text-sm" value={formData.nombre_agencia} onChange={e => setFormData({...formData, nombre_agencia: e.target.value})} /></div>
+            <div className="col-span-2"><label className="label">Dirección</label><input className="input bg-ink-950 border-white/10 text-sm" value={formData.direccion} onChange={e => setFormData({...formData, direccion: e.target.value})} /></div>
+            <div><label className="label">Ciudad</label><input className="input bg-ink-950 border-white/10 text-sm" value={formData.ciudad} onChange={e => setFormData({...formData, ciudad: e.target.value})} /></div>
+            <div><label className="label">C.P.</label><input className="input bg-ink-950 border-white/10 text-sm" value={formData.codigo_postal} onChange={e => setFormData({...formData, codigo_postal: e.target.value})} /></div>
+            <div className="col-span-2"><label className="label">Contacto</label><input className="input bg-ink-950 border-white/10 text-sm" value={formData.contacto_nombre} onChange={e => setFormData({...formData, contacto_nombre: e.target.value})} /></div>
+            <div><label className="label">Teléfono</label><input className="input bg-ink-950 border-white/10 text-sm" value={formData.telefono} onChange={e => setFormData({...formData, telefono: e.target.value})} /></div>
+            <div><label className="label">Email</label><input className="input bg-ink-950 border-white/10 text-sm" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
+            <div className="col-span-2"><label className="label">Estado</label><select className="input bg-ink-950 border-white/10 text-sm" value={formData.estado} onChange={e => setFormData({...formData, estado: e.target.value})}><option value="pendiente">Pendiente</option><option value="procesado">Procesado (Trial Activo)</option><option value="rechazado">Rechazado</option></select></div>
+          </div>
+          <div className="pt-4 border-t border-white/5 flex justify-end gap-2 mt-4">
+            <button type="button" onClick={onClose} className="btn-ghost border border-white/10 px-3 py-1.5 text-xs">Cancelar</button>
+            <button type="submit" disabled={submitting} className="btn-primary px-4 py-1.5 text-xs flex items-center gap-2">{submitting ? <Loader2 size={14} className="animate-spin"/> : 'Guardar'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// MODAL PARA EDITAR MENSAJES WEB
+function MensajeDialog({ mensaje, onClose, onSave }: { mensaje: MensajeContacto, onClose: () => void, onSave: () => void }) {
+  const [formData, setFormData] = useState({ ...mensaje });
+  const [submitting, setSubmitting] = useState(false);
+
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault(); setSubmitting(true);
+    await supabase.from('mensajes_contacto').update({
+      nombre: formData.nombre,
+      email: formData.email,
+      mensaje: formData.mensaje,
+      leido: formData.leido
+    }).eq('id', mensaje.id);
+    setSubmitting(false); onSave();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-lg bg-ink-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl animate-slide-up flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-white/[0.02]">
+          <h3 className="text-sm font-bold text-white">Mensaje Web</h3>
+          <button onClick={onClose} className="text-white/30 hover:text-white"><X size={16}/></button>
+        </div>
+        <form onSubmit={onSubmit} className="p-5 overflow-y-auto custom-scrollbar space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2"><label className="label">Nombre</label><input className="input bg-ink-950 border-white/10 text-sm" value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} /></div>
+            <div className="col-span-2"><label className="label">Email</label><input className="input bg-ink-950 border-white/10 text-sm" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
+            <div className="col-span-2"><label className="label">Mensaje</label><textarea rows={5} className="input bg-ink-950 border-white/10 text-sm resize-none" value={formData.mensaje} onChange={e => setFormData({...formData, mensaje: e.target.value})} /></div>
+            <div className="col-span-2 flex items-center gap-2 mt-2">
+              <input type="checkbox" id="leido" checked={formData.leido} onChange={e => setFormData({...formData, leido: e.target.checked})} className="rounded bg-ink-950 border-white/20 text-brand-500 focus:ring-brand-500 focus:ring-offset-ink-900" />
+              <label htmlFor="leido" className="text-sm text-white/80 cursor-pointer">Marcar como leído</label>
+            </div>
+          </div>
+          <div className="pt-4 border-t border-white/5 flex justify-end gap-2 mt-4">
+            <button type="button" onClick={onClose} className="btn-ghost border border-white/10 px-3 py-1.5 text-xs">Cancelar</button>
+            <button type="submit" disabled={submitting} className="btn-primary px-4 py-1.5 text-xs flex items-center gap-2">{submitting ? <Loader2 size={14} className="animate-spin"/> : 'Guardar'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
 
