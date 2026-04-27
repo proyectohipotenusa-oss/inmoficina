@@ -36,7 +36,7 @@ export default function Inversion() {
     const load = async () => {
       if (!perfil?.agencia_id) return;
       const { data } = await supabase.from('propiedades').select('*').eq('agencia_id', perfil.agencia_id).order('titulo');
-      setPropiedades((data as PropiedadInv[]) || []);
+      setPropiedades(data || []);
       setLoading(false);
     };
     load();
@@ -121,83 +121,84 @@ function InvestmentReport({ propiedad, onClose }: { propiedad: PropiedadInv, onC
 
   return (
     <div className="fixed inset-0 z-[100] bg-ink-950 overflow-y-auto print:static print:h-auto print:w-full print:bg-white print:overflow-visible print:text-slate-800">
+      <style>{`@media print { @page { size: A4; margin: 12mm; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white !important; } .print\\:hidden { display: none !important; } }`}</style>
+      
       <div className="sticky top-0 bg-ink-900 border-b border-white/10 px-6 py-3 flex justify-between items-center z-20 print:hidden">
         <button onClick={onClose} className="text-white/50 hover:text-white flex items-center gap-2 text-[13px]"><X size={16}/> Cerrar</button>
         <button onClick={handlePrint} className="btn-primary text-[11px] py-1.5 px-4"><Printer size={14} /> Imprimir Dossier</button>
       </div>
 
-      <div className="max-w-[800px] mx-auto p-4 sm:p-6 print:p-0 print:max-w-none print:transform print:scale-[0.90] print:origin-top-left print:w-[111%]">
-        <div className="flex justify-between items-end border-b border-white/10 pb-4 mb-6 print:border-slate-300">
+      <div className="max-w-[800px] mx-auto p-4 sm:p-6 print:p-0 print:max-w-full print:transform print:scale-[0.90] print:origin-top-left print:w-[111%]">
+        <div className="flex justify-between items-end border-b border-white/10 pb-3 mb-4 print:border-slate-300">
           <div>
-            <div className="text-brand-400 font-black text-2xl tracking-tighter uppercase">{nombreAgenciaFijo}</div>
-            <div className="text-[8px] uppercase tracking-[0.2em] text-white/40 font-bold print:text-[10px] print:text-slate-500">Investment & Financial Report • {displayId}</div>
+            <div className="text-brand-400 font-black text-xl sm:text-2xl tracking-tighter uppercase print:text-brand-600">{nombreAgenciaFijo}</div>
+            <div className="text-[8px] uppercase tracking-[0.2em] text-white/40 font-bold print:text-[9px] print:text-slate-500">Investment & Financial Report • {displayId}</div>
           </div>
           <div className="text-right">
-            <div className="text-[9px] text-white/60 uppercase print:text-xs">Confidencial • {new Date().getFullYear()}</div>
+            <div className="text-[8px] text-white/60 uppercase print:text-[9px] print:text-slate-500">Confidencial • {new Date().getFullYear()}</div>
           </div>
         </div>
 
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-white mb-1 print:text-2xl print:text-black leading-tight">{propiedad.titulo}</h1>
-          <p className="text-white/50 flex items-center gap-1.5 text-xs mb-4 print:text-sm print:text-slate-600"><MapPin size={14}/> {propiedad.direccion}, {propiedad.ciudad} {propiedad.codigo_postal}</p>
-          <div className="h-40 rounded-xl overflow-hidden border border-white/10 mb-6 print:border-slate-300">
-            {propiedad.fotos?.[0] ? <img src={propiedad.fotos[0]} className="w-full h-full object-cover" /> : <div className="flex h-full items-center justify-center text-white/10"><Building2 size={32}/></div>}
+        <div className="mb-5">
+          <h1 className="text-lg sm:text-xl font-bold text-white mb-1 print:text-lg print:text-black leading-tight">{propiedad.titulo}</h1>
+          <p className="text-white/50 flex items-center gap-1.5 text-[11px] mb-3 print:text-[10px] print:text-slate-600"><MapPin size={12}/> {propiedad.direccion}, {propiedad.ciudad} {propiedad.codigo_postal}</p>
+          <div className="h-32 sm:h-40 rounded-xl overflow-hidden border border-white/10 mb-4 print:h-32 print:border-slate-300">
+            {propiedad.fotos?.[0] ? <img src={propiedad.fotos[0]} className="w-full h-full object-cover" /> : <div className="flex h-full items-center justify-center text-white/10"><Building2 size={24}/></div>}
           </div>
           
-          <div className="p-4 rounded-xl bg-white/5 border border-white/5 print:bg-slate-50 print:border-slate-200">
-            <div className="text-[10px] text-white/40 uppercase font-bold mb-1 print:text-[10px] print:text-slate-500">Precio de Adquisición</div>
-            <div className="text-2xl font-black text-white print:text-2xl print:text-black">{formatEUR(precioCompra)}</div>
+          <div className="p-3 rounded-xl bg-white/5 border border-white/5 print:bg-slate-50 print:border-slate-200">
+            <div className="text-[9px] text-white/40 uppercase font-bold mb-0.5 print:text-[9px] print:text-slate-500">Precio de Adquisición</div>
+            <div className="text-xl font-black text-white print:text-xl print:text-black">{formatEUR(precioCompra)}</div>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-6 print:break-inside-avoid">
-          <div className="text-center p-4 rounded-xl bg-brand-500/10 border border-brand-500/20 print:bg-slate-50 print:border-slate-200">
-            <Percent className="mx-auto mb-1.5 text-brand-400 print:text-blue-600" size={20} />
-            <div className="text-xl font-black text-white print:text-xl print:text-black">{yieldNeto.toFixed(2)}%</div>
-            <div className="text-[8px] text-white/40 uppercase font-bold print:text-[10px] print:text-slate-500">Yield Neto Anual</div>
+        <div className="grid grid-cols-3 gap-3 mb-5 print:break-inside-avoid">
+          <div className="text-center p-3 rounded-xl bg-brand-500/10 border border-brand-500/20 print:bg-slate-50 print:border-slate-200">
+            <Percent className="mx-auto mb-1 text-brand-400 print:text-blue-600" size={16} />
+            <div className="text-lg font-black text-white print:text-lg print:text-black">{yieldNeto.toFixed(2)}%</div>
+            <div className="text-[7px] text-white/40 uppercase font-bold print:text-[8px] print:text-slate-500">Yield Neto Anual</div>
           </div>
-          <div className="text-center p-4 rounded-xl bg-brand-500/10 border border-brand-500/20 print:bg-slate-50 print:border-slate-200">
-            <BarChart3 className="mx-auto mb-1.5 text-emerald-400 print:text-emerald-600" size={20} />
-            <div className="text-xl font-black text-white print:text-xl print:text-black">{formatEUR(ingresosAlquilerMes)}</div>
-            <div className="text-[8px] text-white/40 uppercase font-bold print:text-[10px] print:text-slate-500">Alquiler Mes (Est.)</div>
+          <div className="text-center p-3 rounded-xl bg-brand-500/10 border border-brand-500/20 print:bg-slate-50 print:border-slate-200">
+            <BarChart3 className="mx-auto mb-1 text-emerald-400 print:text-emerald-600" size={16} />
+            <div className="text-lg font-black text-white print:text-lg print:text-black">{formatEUR(ingresosAlquilerMes)}</div>
+            <div className="text-[7px] text-white/40 uppercase font-bold print:text-[8px] print:text-slate-500">Alquiler Mes (Est.)</div>
           </div>
-          <div className="text-center p-4 rounded-xl bg-brand-500/10 border border-brand-500/20 print:bg-slate-50 print:border-slate-200">
-            <Coins className="mx-auto mb-1.5 text-amber-400 print:text-amber-600" size={20} />
-            <div className="text-xl font-black text-white print:text-xl print:text-black">{formatEUR(ingresosNetosAnuales)}</div>
-            <div className="text-[8px] text-white/40 uppercase font-bold print:text-[10px] print:text-slate-500">Cash Flow Anual</div>
+          <div className="text-center p-3 rounded-xl bg-brand-500/10 border border-brand-500/20 print:bg-slate-50 print:border-slate-200">
+            <Coins className="mx-auto mb-1 text-amber-400 print:text-amber-600" size={16} />
+            <div className="text-lg font-black text-white print:text-lg print:text-black">{formatEUR(ingresosNetosAnuales)}</div>
+            <div className="text-[7px] text-white/40 uppercase font-bold print:text-[8px] print:text-slate-500">Cash Flow Anual</div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6 print:break-inside-avoid">
-          <div className="space-y-3">
-            <h3 className="text-[10px] font-bold text-white uppercase tracking-widest flex items-center gap-1.5 print:text-xs print:text-slate-800"><Landmark size={14} className="text-brand-400 print:text-blue-600" /> Desglose</h3>
-            <div className="space-y-2 p-4 rounded-xl bg-white/[0.02] border border-white/5 print:bg-slate-50 print:border-slate-200 text-[11px] print:text-sm">
+        <div className="grid grid-cols-2 gap-3 mb-5 print:break-inside-avoid">
+          <div className="space-y-2">
+            <h3 className="text-[9px] font-bold text-white uppercase tracking-widest flex items-center gap-1.5 print:text-[10px] print:text-slate-800"><Landmark size={12} className="text-brand-400 print:text-blue-600" /> Desglose</h3>
+            <div className="space-y-1.5 p-3 rounded-xl bg-white/[0.02] border border-white/5 print:bg-slate-50 print:border-slate-200 text-[10px] print:text-[11px]">
               <div className="flex justify-between print:text-slate-700"><span>Precio Inmueble</span> <span className="font-bold print:text-black">{formatEUR(precioCompra)}</span></div>
               <div className="flex justify-between text-white/40 print:text-slate-600"><span>Gastos Adq. (12%)</span> <span>{formatEUR(gastosCompra)}</span></div>
-              <div className="flex justify-between pt-2 border-t border-white/10 print:border-slate-300 font-black text-sm text-brand-400 print:text-base print:text-blue-600"><span>INVERSIÓN TOTAL</span> <span>{formatEUR(inversionTotal)}</span></div>
+              <div className="flex justify-between pt-1.5 border-t border-white/10 print:border-slate-300 font-black text-[11px] text-brand-400 print:text-[12px] print:text-blue-600"><span>INVERSIÓN TOTAL</span> <span>{formatEUR(inversionTotal)}</span></div>
             </div>
           </div>
-          <div className="space-y-3">
-            <h3 className="text-[10px] font-bold text-white uppercase tracking-widest flex items-center gap-1.5 print:text-xs print:text-slate-800"><PieChart size={14} className="text-brand-400 print:text-blue-600" /> A 5 años</h3>
-            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 print:bg-slate-50 print:border-slate-200 flex items-center justify-between">
-              <div><div className="text-[9px] text-white/40 uppercase font-bold mb-0.5 print:text-[10px] print:text-slate-500">Retorno Total Est.</div><div className="text-xl font-black text-emerald-400 print:text-xl print:text-emerald-600">{formatEUR(ingresosNetosAnuales * 5)}</div></div>
-              <ArrowUpRight size={24} className="text-emerald-500/20 print:text-emerald-200" />
+          <div className="space-y-2">
+            <h3 className="text-[9px] font-bold text-white uppercase tracking-widest flex items-center gap-1.5 print:text-[10px] print:text-slate-800"><PieChart size={12} className="text-brand-400 print:text-blue-600" /> A 5 años</h3>
+            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 print:bg-slate-50 print:border-slate-200 flex items-center justify-between">
+              <div><div className="text-[8px] text-white/40 uppercase font-bold mb-0.5 print:text-[9px] print:text-slate-500">Retorno Total Est.</div><div className="text-lg font-black text-emerald-400 print:text-lg print:text-emerald-600">{formatEUR(ingresosNetosAnuales * 5)}</div></div>
+              <ArrowUpRight size={20} className="text-emerald-500/20 print:text-emerald-200" />
             </div>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-brand-500/10 border border-brand-500/20 print:bg-slate-100 print:border-slate-200 text-center print:break-inside-avoid">
-          <p className="text-white/60 italic text-[11px] print:text-xs print:text-slate-700">"Activo con perfil de riesgo bajo y rentabilidad estable. Ideal para diversificación patrimonial."</p>
+        <div className="p-3 rounded-xl bg-brand-500/10 border border-brand-500/20 print:bg-slate-100 print:border-slate-200 text-center print:break-inside-avoid">
+          <p className="text-white/60 italic text-[10px] print:text-[10px] print:text-slate-700">"Activo con perfil de riesgo bajo y rentabilidad estable. Ideal para diversificación patrimonial."</p>
         </div>
 
-        <div className="mt-8 p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-6 print:bg-slate-50 print:border-slate-300 print:break-inside-avoid">
-           <img src={qrUrl} alt="QR Ficha VIP" className="w-20 h-20 rounded-lg print:border print:border-slate-200" />
+        <div className="mt-6 p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-4 print:bg-slate-50 print:border-slate-300 print:break-inside-avoid">
+           <img src={qrUrl} alt="QR Ficha VIP" className="w-16 h-16 rounded-lg print:border print:border-slate-200" />
            <div>
-             <h4 className="text-sm font-bold text-white print:text-black flex items-center gap-1.5"><QrCode size={16} className="text-brand-400 print:text-brand-600"/> Ficha Interactiva VIP</h4>
-             <p className="text-[11px] text-white/60 print:text-slate-600 mt-1 max-w-sm">Escanea este código con la cámara de tu móvil para acceder a la galería completa, detalles inmersivos y contacto directo con la agencia.</p>
+             <h4 className="text-[11px] font-bold text-white print:text-black flex items-center gap-1.5"><QrCode size={14} className="text-brand-400 print:text-brand-600"/> Ficha Interactiva VIP</h4>
+             <p className="text-[9px] text-white/60 print:text-slate-600 mt-0.5 max-w-sm">Escanea este código para acceder a la galería y contacto directo con la agencia.</p>
            </div>
         </div>
-
       </div>
     </div>
   );

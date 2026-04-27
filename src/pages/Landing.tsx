@@ -22,8 +22,7 @@ export default function Landing() {
     e.preventDefault();
     setFormStatus('loading');
     const { error } = await supabase.from('solicitudes_registro').insert([formData]);
-    if (error) { console.error(error); setFormStatus('error'); } 
-    else { setFormStatus('success'); }
+    if (error) { console.error(error); setFormStatus('error'); } else { setFormStatus('success'); }
   };
 
   return (
@@ -31,7 +30,7 @@ export default function Landing() {
       <nav className="fixed top-0 left-0 right-0 z-40 bg-ink-950/70 backdrop-blur-xl border-b border-white/5 w-full">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5 group cursor-pointer">
-            <div className="w-[48px] h-[48px] rounded-md overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-500">
+            <div className="w-[40px] h-[40px] sm:w-[48px] sm:h-[48px] rounded-md overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-500">
               <img src={LOGO_URL} alt="Logo Inmoficina" className="w-full h-full object-contain" />
             </div>
             <span className="text-xs sm:text-sm font-bold tracking-tight uppercase group-hover:text-brand-400 transition-colors">INMOFICINA<span className="text-brand-400">.</span></span>
@@ -42,6 +41,7 @@ export default function Landing() {
             <a href="#tarifa" className="hover:text-white transition-colors">Inversión</a>
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
+            {/* AQUÍ ESTÁ EL BOTÓN DE LOGIN VISIBLE EN MÓVILES TAMBIÉN */}
             <Link href="/login" className="text-[10px] font-bold uppercase tracking-widest hover:text-brand-400 transition text-white/80">Login</Link>
             <button onClick={() => setIsModalOpen(true)} className="px-3 sm:px-4 py-1.5 rounded-md bg-brand-600 text-white text-[9px] font-semibold uppercase tracking-widest hover:bg-brand-500 transition shadow-lg shadow-brand-500/20 active:scale-95 whitespace-nowrap">
               Probar Gratis
@@ -208,7 +208,6 @@ export default function Landing() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

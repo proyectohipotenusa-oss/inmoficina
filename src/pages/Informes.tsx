@@ -149,90 +149,92 @@ function CMAReport({ propiedad, onClose }: { propiedad: PropiedadCMA, onClose: (
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-ink-950 overflow-y-auto print:static print:bg-white print:text-black">
+    <div className="fixed inset-0 z-[100] bg-ink-950 overflow-y-auto print:static print:bg-white print:text-black w-full">
+      <style>{`@media print { @page { size: A4; margin: 12mm; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white !important; } .print\\:hidden { display: none !important; } }`}</style>
+      
       <div className="sticky top-0 bg-ink-900 border-b border-white/10 px-6 py-3 flex justify-between items-center z-20 print:hidden">
         <button onClick={onClose} className="text-white/50 hover:text-white flex items-center gap-2 text-[13px]"><X size={16}/> Cerrar</button>
         <button onClick={handlePrint} className="btn-primary text-[11px] py-1.5 px-4"><Printer size={14} /> Imprimir Informe</button>
       </div>
 
-      <div className="max-w-[800px] mx-auto p-4 sm:p-6 print:p-0 print:max-w-none print:transform print:scale-[0.70] print:origin-top-left print:w-[142%]">
-        <div className="flex justify-between items-end border-b border-white/10 pb-4 mb-6 print:border-slate-300">
+      <div className="max-w-[800px] mx-auto p-4 sm:p-6 print:p-0 print:max-w-full print:transform print:scale-[0.70] print:origin-top-left print:w-[142%]">
+        <div className="flex justify-between items-end border-b border-white/10 pb-3 mb-4 print:border-slate-300">
           <div>
-            <div className="text-brand-400 font-black text-2xl tracking-tighter uppercase">{nombreAgenciaFijo}</div>
-            <div className="text-[8px] uppercase tracking-[0.2em] text-white/40 font-bold print:text-xs print:text-slate-500">Luxury CRM • Análisis de Mercado • {displayId}</div>
+            <div className="text-brand-400 font-black text-xl sm:text-2xl tracking-tighter uppercase print:text-brand-600">{nombreAgenciaFijo}</div>
+            <div className="text-[8px] uppercase tracking-[0.2em] text-white/40 font-bold print:text-[9px] print:text-slate-500">Luxury CRM • Análisis de Mercado • {displayId}</div>
           </div>
           <div className="text-right">
-            <div className="text-[9px] text-white/60 uppercase print:text-xs">Fecha</div>
-            <div className="text-xs font-bold text-white print:text-sm print:text-black">{new Date().toLocaleDateString()}</div>
+            <div className="text-[8px] text-white/60 uppercase print:text-[9px] print:text-slate-500">Fecha</div>
+            <div className="text-[11px] font-bold text-white print:text-xs print:text-black">{new Date().toLocaleDateString()}</div>
           </div>
         </div>
 
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-white mb-1 print:text-2xl print:text-black leading-tight">{propiedad.titulo}</h1>
-          <p className="text-white/50 flex items-center gap-1.5 text-xs mb-4 print:text-sm print:text-slate-600"><MapPin size={14}/> {propiedad.direccion}, {propiedad.ciudad} {propiedad.codigo_postal}</p>
-          <div className="h-40 rounded-xl overflow-hidden border border-white/10 mb-6 print:border-slate-300">
-            {propiedad.fotos?.[0] ? <img src={propiedad.fotos[0]} className="w-full h-full object-cover" /> : <div className="flex h-full items-center justify-center text-white/10"><Building2 size={32}/></div>}
+        <div className="mb-4">
+          <h1 className="text-lg sm:text-xl font-bold text-white mb-1 print:text-lg print:text-black leading-tight">{propiedad.titulo}</h1>
+          <p className="text-white/50 flex items-center gap-1.5 text-[11px] mb-3 print:text-[10px] print:text-slate-600"><MapPin size={12}/> {propiedad.direccion}, {propiedad.ciudad} {propiedad.codigo_postal}</p>
+          <div className="h-32 sm:h-40 rounded-xl overflow-hidden border border-white/10 mb-4 print:h-28 print:border-slate-300">
+            {propiedad.fotos?.[0] ? <img src={propiedad.fotos[0]} className="w-full h-full object-cover" /> : <div className="flex h-full items-center justify-center text-white/10"><Building2 size={24}/></div>}
           </div>
 
           <div className="grid grid-cols-4 gap-2">
             {[ {icon: Home, val: propiedad.tipo, label: 'Tipo'}, {icon: Square, val: `${propiedad.metros_cuadrados}m²`, label: 'Superficie'}, {icon: BedDouble, val: propiedad.habitaciones, label: 'Hab.'}, {icon: Bath, val: propiedad.banos, label: 'Baños'} ].map((item, i) => (
-              <div key={i} className="p-2 rounded-lg bg-white/5 border border-white/5 print:bg-slate-50 print:border-slate-200 text-center">
-                <item.icon className="mx-auto mb-1 text-white/40 print:text-slate-400" size={16} />
-                <div className="text-[11px] font-bold text-white print:text-sm print:text-black truncate capitalize">{item.val || '-'}</div>
-                <div className="text-[7px] uppercase text-white/40 print:text-[10px]">{item.label}</div>
+              <div key={i} className="p-1.5 rounded-lg bg-white/5 border border-white/5 print:bg-slate-50 print:border-slate-200 text-center">
+                <item.icon className="mx-auto mb-0.5 text-white/40 print:text-slate-400" size={14} />
+                <div className="text-[10px] font-bold text-white print:text-[11px] print:text-black truncate capitalize">{item.val || '-'}</div>
+                <div className="text-[6px] uppercase text-white/40 print:text-[7px]">{item.label}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="mb-6">
-          <h3 className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2 flex items-center gap-1.5 print:text-xs"><FileSignature size={14} /> Memoria Descriptiva</h3>
-          <div className="p-3 rounded-lg bg-white/[0.02] border border-white/5 print:border-l-2 print:border-brand-500 print:pl-3 print:p-0">
-            <p className="text-[11px] text-white/70 leading-relaxed print:text-sm print:text-slate-700">{propiedad.descripcion || 'Propiedad pendiente de descripción.'}</p>
+        <div className="mb-4">
+          <h3 className="text-[9px] font-bold text-brand-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 print:text-[10px]"><FileSignature size={12} /> Memoria Descriptiva</h3>
+          <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/5 print:border-l-2 print:border-brand-500 print:pl-3 print:p-0">
+            <p className="text-[10px] text-white/70 leading-relaxed print:text-[10px] print:text-slate-700">{propiedad.descripcion || 'Propiedad pendiente de descripción.'}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6 print:break-inside-avoid">
+        <div className="grid grid-cols-2 gap-3 mb-4 print:break-inside-avoid">
           <div>
-            <h3 className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2 flex items-center gap-1.5 print:text-xs"><TrendingUp size={14} /> Valoración</h3>
-            <div className="p-4 rounded-lg bg-brand-500/10 border border-brand-500/20 mb-2 print:bg-slate-50">
-              <div className="text-[8px] text-white/60 uppercase font-bold mb-0.5 print:text-[10px]">Sugerido</div>
-              <div className="text-2xl font-black text-brand-400 print:text-2xl print:text-slate-900">{formatEUR(valorEstimado)}</div>
+            <h3 className="text-[9px] font-bold text-brand-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 print:text-[10px]"><TrendingUp size={12} /> Valoración</h3>
+            <div className="p-3 rounded-lg bg-brand-500/10 border border-brand-500/20 mb-2 print:bg-slate-50">
+              <div className="text-[7px] text-white/60 uppercase font-bold mb-0.5 print:text-[8px]">Sugerido</div>
+              <div className="text-xl font-black text-brand-400 print:text-lg print:text-slate-900">{formatEUR(valorEstimado)}</div>
             </div>
-            <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/5 flex justify-between items-center">
-              <div className="text-[8px] text-white/40 uppercase font-bold print:text-[10px]">Precio/m²</div>
-              <div className="text-xs font-bold text-white print:text-sm print:text-black">{formatEUR(precioM2Calculado)}</div>
+            <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5 flex justify-between items-center">
+              <div className="text-[7px] text-white/40 uppercase font-bold print:text-[8px]">Precio/m²</div>
+              <div className="text-[11px] font-bold text-white print:text-[11px] print:text-black">{formatEUR(precioM2Calculado)}</div>
             </div>
           </div>
           <div>
-            <h3 className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2 flex items-center gap-1.5 print:text-xs"><Info size={14} /> Estrategia</h3>
-            <div className="p-4 rounded-lg bg-ink-950 border border-white/5 print:bg-slate-50 space-y-3">
+            <h3 className="text-[9px] font-bold text-brand-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 print:text-[10px]"><Info size={12} /> Estrategia</h3>
+            <div className="p-3 rounded-lg bg-ink-950 border border-white/5 print:bg-slate-50 space-y-2.5">
               {[ {label: 'Rápida (0-3m)', val: valorEstimado * 0.93, color: 'bg-emerald-500', w: 'w-[70%]'}, {label: 'Óptima (3-6m)', val: valorEstimado, color: 'bg-brand-500', w: 'w-[85%]'}, {label: 'Aspiracional', val: valorEstimado * 1.07, color: 'bg-amber-500', w: 'w-full'} ].map((s, i) => (
-                <div key={i}><div className="flex justify-between text-[9px] mb-1 print:text-xs"><span className="text-white/50 print:text-slate-600">{s.label}</span><span className="font-bold print:text-black">{formatEUR(s.val)}</span></div>
-                <div className="h-1.5 bg-white/10 rounded-full print:bg-slate-200"><div className={`h-full ${s.color} rounded-full ${s.w}`} style={{printColorAdjust:'exact'}}/></div></div>
+                <div key={i}><div className="flex justify-between text-[8px] mb-1 print:text-[8px]"><span className="text-white/50 print:text-slate-600">{s.label}</span><span className="font-bold print:text-black">{formatEUR(s.val)}</span></div>
+                <div className="h-1 bg-white/10 rounded-full print:bg-slate-200"><div className={`h-full ${s.color} rounded-full ${s.w}`} style={{printColorAdjust:'exact'}}/></div></div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 print:bg-slate-50 print:border-slate-300">
-          <h3 className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-3 flex items-center gap-1.5 print:text-xs"><CheckCircle2 size={14} /> Resumen Neto</h3>
-          <div className="space-y-1.5 text-[11px] print:text-sm">
+        <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 print:bg-slate-50 print:border-slate-300">
+          <h3 className="text-[9px] font-bold text-brand-400 uppercase tracking-widest mb-2 flex items-center gap-1.5 print:text-[10px]"><CheckCircle2 size={12} /> Resumen Neto</h3>
+          <div className="space-y-1 text-[10px] print:text-[10px]">
             <div className="flex justify-between text-white/60 print:text-slate-600"><span>Precio de Venta</span> <span className="font-semibold">{formatEUR(valorEstimado)}</span></div>
             <div className="flex justify-between text-red-400/80 print:text-red-600"><span>Honorarios e Impuestos (Est.)</span> <span className="font-semibold">- {formatEUR(comisionAgencia + impuestosAprox)}</span></div>
-            <div className="flex justify-between pt-2 mt-1 border-t border-white/10 print:border-slate-300 text-sm font-black text-white print:text-base print:text-slate-900"><span>NETO ESTIMADO PROPIETARIO</span> <span className="text-brand-400">{formatEUR(netoPropietario)}</span></div>
+            <div className="flex justify-between pt-1.5 mt-1 border-t border-white/10 print:border-slate-300 text-[11px] font-black text-white print:text-[11px] print:text-slate-900"><span>NETO ESTIMADO PROPIETARIO</span> <span className="text-brand-400">{formatEUR(netoPropietario)}</span></div>
           </div>
         </div>
 
-        <div className="mt-8 p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-6 print:bg-slate-50 print:border-slate-300 print:break-inside-avoid">
-           <img src={qrUrl} alt="QR Ficha VIP" className="w-20 h-20 rounded-lg print:border print:border-slate-200" />
+        <div className="mt-6 p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-4 print:bg-slate-50 print:border-slate-300 print:break-inside-avoid">
+           <img src={qrUrl} alt="QR Ficha VIP" className="w-16 h-16 rounded-lg print:border print:border-slate-200" />
            <div>
-             <h4 className="text-sm font-bold text-white print:text-black flex items-center gap-1.5"><QrCode size={16} className="text-brand-400 print:text-brand-600"/> Ficha Interactiva VIP</h4>
-             <p className="text-[11px] text-white/60 print:text-slate-600 mt-1 max-w-sm">Escanea este código con la cámara de tu móvil para acceder a la galería completa, detalles inmersivos y contacto directo con la agencia.</p>
+             <h4 className="text-[11px] font-bold text-white print:text-black flex items-center gap-1.5"><QrCode size={14} className="text-brand-400 print:text-brand-600"/> Ficha Interactiva VIP</h4>
+             <p className="text-[9px] text-white/60 print:text-slate-600 mt-0.5 max-w-sm">Escanea este código para acceder a la galería y contacto directo con la agencia.</p>
            </div>
         </div>
 
-        <div className="mt-8 text-center text-[7px] text-white/20 uppercase tracking-[0.2em] print:text-[9px] print:text-slate-400">Documento confidencial generado por tecnología INMOFICINA.</div>
+        <div className="mt-4 text-center text-[6px] text-white/20 uppercase tracking-[0.2em] print:text-[7px] print:text-slate-400">Documento generado por INMOFICINA.</div>
       </div>
     </div>
   );

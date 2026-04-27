@@ -47,7 +47,7 @@ export function Layout({ children, title }: LayoutProps) {
   const isAdmin = perfil?.rol === 'admin';
 
   return (
-    <div className="min-h-screen bg-ink-950 flex font-sans selection:bg-brand-500/30">
+    <div className="min-h-screen bg-ink-950 flex font-sans selection:bg-brand-500/30 overflow-x-hidden w-full">
       <button className="lg:hidden fixed top-3 left-3 z-50 h-10 w-10 rounded-xl bg-ink-900 border border-white/10 flex items-center justify-center text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
         {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
@@ -109,10 +109,10 @@ export function Layout({ children, title }: LayoutProps) {
         </div>
       </aside>
 
-      <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 lg:pl-64`}>
+      <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 lg:pl-64 max-w-full overflow-x-hidden`}>
         <header className="h-16 bg-ink-950/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-4 md:px-6 border-b border-white/5">
           <div className="flex items-center gap-4">
-            <h1 className="text-lg md:text-xl font-bold tracking-tight hidden md:flex items-baseline gap-2">
+            <h1 className="text-lg md:text-xl font-bold tracking-tight hidden md:flex items-baseline gap-2 pl-12 lg:pl-0">
               <span className="text-white">Inmoficina</span>
               <span className="text-brand-400 text-xs tracking-widest uppercase font-semibold">Luxury CRM</span>
             </h1>
