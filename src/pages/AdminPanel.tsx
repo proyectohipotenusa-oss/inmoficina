@@ -138,7 +138,7 @@ export default function AdminPanel() {
   const pendingMessages = mensajes.filter(m => !m.leido).map(m => ({ ...m, tipoEntrada: 'mensaje', sortDate: new Date(m.created_at).getTime() }));
   const bandejaEntrada = [...pendingTrials, ...pendingMessages].sort((a, b) => b.sortDate - a.sortDate);
 
-  // ARREGLADO: Ahora sí se llama activeTrials (antes decía agendaTrials y rompía el HTML)
+  // AQUÍ ESTÁ EL ARREGLO: La variable vuelve a llamarse activeTrials para coincidir con el HTML
   const activeTrials = solicitudes
     .filter(s => s.estado === 'procesado')
     .map(s => {
