@@ -30,6 +30,17 @@ export default function Landing() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+    if (link) link.href = LOGO_URL;
+    else {
+      const newLink = document.createElement('link');
+      newLink.rel = 'icon';
+      newLink.href = LOGO_URL;
+      document.head.appendChild(newLink);
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus('loading');
@@ -40,7 +51,15 @@ export default function Landing() {
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setContactStatus('loading');
-    const { error } = await supabase.from('mensajes_contacto').insert([contactData]);
+    
+    const payload = {
+      nombre: contactData.nombre,
+      email: contactData.email,
+      telefono: contactData.telefono || null,
+      mensaje: contactData.mensaje
+    };
+
+    const { error } = await supabase.from('mensajes_contacto').insert([payload]);
     if (error) setContactStatus('error'); 
     else { setContactStatus('success'); setContactData({ nombre: '', email: '', telefono: '', mensaje: '' }); }
   };
@@ -54,23 +73,13 @@ export default function Landing() {
     { q: "¿Están seguros mis datos?", a: "Cifrado de grado militar (Row Level Security). Tu información es privada y exclusiva de tu agencia." }
   ];
 
-  const FEATURES = [
-    { text: "Licencia para 3 usuarios", icon: Users, color: "text-blue-400" },
-    { text: "Fichas VIP Inmersivas", icon: Globe, color: "text-emerald-400" },
-    { text: "Informes CMA Pro", icon: FileText, color: "text-amber-400" },
-    { text: "Multipublicación Portales", icon: Rss, color: "text-orange-400" },
-    { text: "Dossiers de Inversión", icon: Landmark, color: "text-purple-400" },
-    { text: "IA de Redacción", icon: Sparkles, color: "text-brand-400" },
-    { text: "Catálogo Público", icon: LayoutDashboard, color: "text-pink-400" },
-    { text: "Pipeline Kanban", icon: MousePointerClick, color: "text-indigo-400" },
-    { text: "Códigos QR Dinámicos", icon: QrCode, color: "text-cyan-400" },
-    { text: "Compresión en Nube", icon: Zap, color: "text-yellow-400" }
-  ];
-
   return (
     <div className="min-h-screen bg-ink-950 text-white font-sans selection:bg-brand-500/30 overflow-x-hidden w-full relative">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap'); .font-sans { font-family: 'Inter', sans-serif; } .font-serif { font-family: 'Playfair Display', serif; } html { scroll-behavior: smooth; }`}</style>
       
+      <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-brand-500/10 blur-[120px] pointer-events-none" />
+      <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/5 blur-[120px] pointer-events-none" />
+
       {/* NAVBAR */}
       <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 w-full ${scrolled ? 'bg-ink-950/90 backdrop-blur-xl border-b border-white/5 py-1' : 'bg-transparent py-3'}`}>
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
@@ -164,24 +173,77 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* PRECIOS - FONDO MEJORADO */}
-      <section id="precios" className="py-20 bg-gradient-to-b from-brand-900/10 via-ink-900/40 to-ink-950 border-t border-white/5">
-        <div className="max-w-3xl mx-auto text-center mb-12 px-4">
+      {/* PRECIOS A DOS COLUMNAS */}
+      <section id="precios" className="py-24 bg-gradient-to-b from-brand-900/10 via-ink-900/40 to-ink-950 border-t border-white/5">
+        <div className="max-w-4xl mx-auto text-center mb-16 px-4">
           <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4 text-brand-500">Inversión Inteligente</h2>
-          <p className="text-white/50 text-sm font-light">Software de nivel empresarial. Sin tarjeta de crédito.</p>
+          <p className="text-white/50 text-sm font-light">Escala las herramientas de tu agencia a medida que creces. Sin permanencia.</p>
         </div>
-        <div className="max-w-sm mx-auto bg-ink-900/40 border border-brand-500/20 p-8 rounded-[2rem] text-center relative shadow-2xl">
-          <div className="absolute top-0 left-0 right-0 py-1.5 bg-brand-600 border-b border-brand-500 text-[9px] font-semibold text-white uppercase tracking-[0.2em]">Pack Agencia Premium</div>
-          <div className="mt-6 mb-8"><div className="flex items-start justify-center gap-1"><span className="text-xl font-medium text-brand-400/50 mt-1">€</span><span className="text-5xl font-semibold text-white/90">49</span><span className="text-sm text-brand-400/50 self-end mb-1.5">/mes</span></div></div>
-          <div className="space-y-3.5 text-left mb-8">
-            {FEATURES.map((item, i) => (
-              <div key={i} className="flex items-center gap-3 text-white/80 font-light text-xs border-b border-white/5 pb-2.5 last:border-0">
-                <item.icon size={14} className={item.color} /> {item.text}
+        
+        <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          
+          {/* PLAN ESTÁNDAR */}
+          <div className="bg-ink-900/40 border border-white/10 p-8 rounded-[2rem] relative shadow-lg">
+            <div className="text-center mb-8">
+              <h3 className="text-lg font-medium text-white/80 mb-2">Plan Estándar</h3>
+              <div className="flex items-start justify-center gap-1">
+                <span className="text-xl font-medium text-white/40 mt-1">€</span>
+                <span className="text-5xl font-semibold text-white/90">29</span>
+                <span className="text-sm text-white/40 self-end mb-1.5">/mes</span>
               </div>
-            ))}
+            </div>
+            
+            <div className="space-y-4 text-left mb-8">
+              <div className="flex items-center gap-3 text-white/80 font-light text-xs"><CheckCircle2 size={16} className="text-emerald-400 shrink-0"/> Licencia para 1 usuario</div>
+              <div className="flex items-center gap-3 text-white/80 font-light text-xs"><CheckCircle2 size={16} className="text-emerald-400 shrink-0"/> Fichas VIP Inmersivas</div>
+              <div className="flex items-center gap-3 text-white/80 font-light text-xs"><CheckCircle2 size={16} className="text-emerald-400 shrink-0"/> Multipublicación Portales</div>
+              <div className="flex items-center gap-3 text-white/80 font-light text-xs"><CheckCircle2 size={16} className="text-emerald-400 shrink-0"/> Pipeline y Gestión de Leads</div>
+              <div className="flex items-center gap-3 text-white/80 font-light text-xs"><CheckCircle2 size={16} className="text-emerald-400 shrink-0"/> Códigos QR Dinámicos</div>
+              <div className="flex items-center gap-3 text-white/80 font-light text-xs border-b border-white/5 pb-4"><CheckCircle2 size={16} className="text-emerald-400 shrink-0"/> Compresión en la Nube</div>
+              
+              {/* Funciones Capadas */}
+              <div className="flex items-center gap-3 text-white/30 font-light text-xs line-through"><X size={16} className="text-red-500/50 shrink-0"/> Informes CMA Ilimitados</div>
+              <div className="flex items-center gap-3 text-white/30 font-light text-xs line-through"><X size={16} className="text-red-500/50 shrink-0"/> Dossiers de Inversión Pro</div>
+              <div className="flex items-center gap-3 text-white/30 font-light text-xs line-through"><X size={16} className="text-red-500/50 shrink-0"/> IA de Redacción Integrada</div>
+              <div className="flex items-center gap-3 text-white/30 font-light text-xs line-through"><X size={16} className="text-red-500/50 shrink-0"/> Catálogo Público Digital</div>
+            </div>
           </div>
-          <button onClick={() => setIsModalOpen(true)} className="w-full py-3 rounded-lg bg-brand-600 text-white font-semibold text-[11px] uppercase tracking-[0.1em] hover:bg-brand-500 transition-all">Comenzar Prueba Gratuita</button>
-          <p className="mt-4 text-[9px] text-white/30 uppercase flex items-center justify-center gap-1"><CheckCircle2 size={10} className="text-emerald-400"/> Sin tarjeta de crédito</p>
+
+          {/* PLAN PREMIUM (DESTACADO) */}
+          <div className="bg-ink-950 border border-brand-500/30 p-8 rounded-[2rem] text-center relative shadow-[0_0_40px_rgba(99,102,241,0.15)] md:scale-105 z-10">
+            <div className="absolute top-0 left-0 right-0 py-1.5 bg-brand-600 border-b border-brand-500 text-[9px] font-semibold text-white uppercase tracking-[0.2em] rounded-t-[2rem]">
+              Pack Agencia Premium
+            </div>
+            
+            <div className="mt-8 mb-8">
+              <div className="flex items-start justify-center gap-1 mb-2">
+                <span className="text-xl font-medium text-brand-400/50 mt-1">€</span>
+                <span className="text-5xl font-semibold text-white/90">49</span>
+                <span className="text-sm text-brand-400/50 self-end mb-1.5">/mes</span>
+              </div>
+            </div>
+
+            <div className="space-y-4 text-left mb-8">
+              <div className="flex items-center gap-3 text-white/90 font-light text-xs"><CheckCircle2 size={16} className="text-brand-400 shrink-0"/> Licencia para 3 usuarios</div>
+              <div className="flex items-center gap-3 text-white/90 font-light text-xs"><CheckCircle2 size={16} className="text-brand-400 shrink-0"/> Fichas VIP Inmersivas</div>
+              <div className="flex items-center gap-3 text-white/90 font-light text-xs"><CheckCircle2 size={16} className="text-brand-400 shrink-0"/> Multipublicación Portales</div>
+              <div className="flex items-center gap-3 text-white/90 font-light text-xs"><CheckCircle2 size={16} className="text-brand-400 shrink-0"/> Pipeline y Gestión de Leads</div>
+              <div className="flex items-center gap-3 text-white/90 font-light text-xs"><CheckCircle2 size={16} className="text-brand-400 shrink-0"/> Códigos QR Dinámicos</div>
+              <div className="flex items-center gap-3 text-white/90 font-light text-xs border-b border-white/5 pb-4"><CheckCircle2 size={16} className="text-brand-400 shrink-0"/> Compresión en la Nube</div>
+              
+              {/* Funciones Extra */}
+              <div className="flex items-center gap-3 text-white/90 font-medium text-xs"><CheckCircle2 size={16} className="text-emerald-400 shrink-0"/> Informes CMA Ilimitados</div>
+              <div className="flex items-center gap-3 text-white/90 font-medium text-xs"><CheckCircle2 size={16} className="text-emerald-400 shrink-0"/> Dossiers de Inversión Pro</div>
+              <div className="flex items-center gap-3 text-white/90 font-medium text-xs"><CheckCircle2 size={16} className="text-emerald-400 shrink-0"/> IA de Redacción Integrada</div>
+              <div className="flex items-center gap-3 text-white/90 font-medium text-xs"><CheckCircle2 size={16} className="text-emerald-400 shrink-0"/> Catálogo Público Digital</div>
+            </div>
+
+            <button onClick={() => setIsModalOpen(true)} className="w-full py-4 rounded-xl bg-brand-600 text-white font-bold text-[11px] uppercase tracking-widest hover:bg-brand-500 transition-all shadow-lg shadow-brand-500/20">
+              Prueba 14 días gratis de este plan
+            </button>
+            <p className="mt-4 text-[9px] text-white/30 uppercase flex items-center justify-center gap-1"><CheckCircle2 size={10} className="text-emerald-400"/> Sin tarjeta de crédito</p>
+          </div>
+
         </div>
       </section>
 
@@ -222,6 +284,11 @@ export default function Landing() {
               <div className="text-center py-6 animate-fade-in"><CheckCircle2 className="text-emerald-400 mx-auto mb-4" size={32} /><h3 className="text-lg font-medium text-white/90">Mensaje Recibido</h3><p className="text-white/40 text-xs mt-2">Te responderemos a la brevedad.</p><button onClick={() => setContactStatus('idle')} className="mt-6 px-4 py-1.5 border border-white/10 rounded-lg text-[10px] uppercase text-white/60">Enviar otro</button></div>
             ) : (
               <form onSubmit={handleContactSubmit} className="space-y-4">
+                {contactStatus === 'error' && (
+                  <div className="p-3 text-[10px] bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-center">
+                    Error de conexión. Inténtalo de nuevo.
+                  </div>
+                )}
                 <div><label className="label-xs">Nombre *</label><input required className="input bg-ink-950 border-white/5 text-xs px-3 py-2 w-full rounded-lg" value={contactData.nombre} onChange={e => setContactData({...contactData, nombre: e.target.value})} /></div>
                 <div className="grid grid-cols-2 gap-3">
                   <div><label className="label-xs">Email *</label><input required type="email" className="input bg-ink-950 border-white/5 text-xs px-3 py-2 w-full rounded-lg" value={contactData.email} onChange={e => setContactData({...contactData, email: e.target.value})} /></div>
@@ -242,7 +309,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-white/5 pb-10">
           <div className="md:col-span-2">
             <img src={LOGO_URL} className="w-[48px] h-[48px] mb-4 opacity-80 mx-auto sm:mx-0" />
-            <p className="text-white/40 text-xs font-light max-w-sm">CRM diseñado exclusivamente para profesionalizar más aún tu agencia inmobiliaria.</p>
+            <p className="text-white/40 text-xs font-light max-w-sm mx-auto sm:mx-0">CRM diseñado exclusivamente para profesionalizar más aún tu agencia inmobiliaria.</p>
           </div>
           <div><h4 className="text-[9px] font-semibold uppercase text-white/60 mb-4">Menú</h4><div className="flex flex-col gap-2.5 text-white/40 text-xs"><a href="#servicios">Funcionalidades</a><a href="#por-que-nosotros">La Diferencia</a><a href="#precios">Inversión</a><a href="#faq">Q&A</a><a href="#contacto">Contacto</a></div></div>
           <div><h4 className="text-[9px] font-semibold uppercase text-white/60 mb-4">Legal</h4><div className="flex flex-col gap-2.5 text-white/40 text-xs"><a href={TEMPORARY_LEGAL_URL}>Política de Cookies</a><a href={TEMPORARY_LEGAL_URL}>Privacidad</a><a href={TEMPORARY_LEGAL_URL}>Aviso Legal</a><a href={TEMPORARY_LEGAL_URL}>Condiciones de Uso</a><a href={TEMPORARY_LEGAL_URL}>Contratación</a></div></div>
@@ -263,7 +330,7 @@ export default function Landing() {
               <div className="text-center py-4"><CheckCircle2 className="text-emerald-400 mx-auto mb-4" size={32} /><h3 className="text-lg font-medium text-white">Solicitud Enviada</h3><p className="text-white/40 text-xs mt-3 leading-relaxed">Revisaremos tu agencia y crearemos tus credenciales VIP. Te avisaremos por email a la brevedad.</p><button onClick={() => setIsModalOpen(false)} className="mt-6 w-full py-2.5 bg-brand-600 rounded-lg text-xs font-bold text-white uppercase tracking-widest">Finalizar</button></div>
             ) : (
               <>
-                <div className="text-center mb-6"><h3 className="text-lg font-medium text-white/90">Solicitar Acceso</h3><p className="text-[9px] text-white/50 uppercase tracking-widest font-medium">14 Días Gratis • Sin tarjeta de crédito</p></div>
+                <div className="text-center mb-6"><h3 className="text-lg font-medium text-white/90">Solicitar Acceso</h3><p className="text-[9px] text-white/50 uppercase tracking-widest font-medium">14 Días Gratis • Pack Premium</p></div>
                 <form onSubmit={handleSubmit} className="space-y-3">
                   <div><label className="label-xs">Inmobiliaria *</label><input required className="input bg-ink-900 border-white/5 text-xs px-3 py-2 w-full rounded-lg" value={formData.nombre_agencia} onChange={e => setFormData({...formData, nombre_agencia: e.target.value})} /></div>
                   <div><label className="label-xs">Dirección *</label><input required className="input bg-ink-900 border-white/5 text-xs px-3 py-2 w-full rounded-lg" value={formData.direccion} onChange={e => setFormData({...formData, direccion: e.target.value})} /></div>

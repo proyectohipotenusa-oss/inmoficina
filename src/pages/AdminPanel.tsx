@@ -9,19 +9,14 @@ import { PageHeader } from '../components/PageHeader';
 import { EmptyState } from '../components/EmptyState';
 import { supabase } from '../lib/supabase';
 
-interface Agencia {
-  id: string; nombre: string; direccion?: string; ciudad?: string; codigo_postal?: string;
-  contacto_nombre?: string; contacto_email?: string; contacto_telefono?: string; created_at: string; bloqueada?: boolean; plan?: string;
-}
+interface Agencia { id: string; nombre: string; direccion?: string; ciudad?: string; codigo_postal?: string; contacto_nombre?: string; contacto_email?: string; contacto_telefono?: string; created_at: string; bloqueada?: boolean; plan?: string; }
+interface Solicitud { id: string; estado: string; nombre_agencia: string; direccion: string; ciudad: string; codigo_postal: string; contacto_nombre: string; telefono: string; email: string; created_at: string; }
+interface MensajeContacto { id: string; nombre: string; email: string; telefono?: string; mensaje: string; leido: boolean; created_at: string; }
+interface Agente { id: string; email: string; nombre: string; }
+interface CreatedUser { email: string; password: string; }
+interface CreatedResult { agencia: Agencia; usuarios: CreatedUser[]; }
 
-interface Solicitud {
-  id: string; estado: string; nombre_agencia: string; direccion: string; ciudad: string;
-  codigo_postal: string; contacto_nombre: string; telefono: string; email: string; created_at: string;
-}
-
-interface MensajeContacto {
-  id: string; nombre: string; email: string; telefono?: string; mensaje: string; leido: boolean; created_at: string;
-}
+function slugify(raw: string) { return String(raw).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40); }
 
 export default function AdminPanel() {
   const [agencias, setAgencias] = useState<Agencia[]>([]);
@@ -33,19 +28,16 @@ export default function AdminPanel() {
   const [selectedAgencia, setSelectedAgencia] = useState<Agencia | 'new' | null>(null);
   const [selectedSolicitud, setSelectedSolicitud] = useState<Solicitud | null>(null);
   const [selectedMensaje, setSelectedMensaje] = useState<MensajeContacto | null>(null);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<CreatedResult | null>(null);
 
   const loadData = async () => {
     setLoading(true);
     const { data: ags } = await supabase.from('agencias').select('*').order('created_at', { ascending: false });
-    if (ags) setAgencias(ags);
-
+    if (ags) setAgencias(ags as Agencia[]);
     const { data: sols } = await supabase.from('solicitudes_registro').select('*').order('created_at', { ascending: false });
-    setSolicitudes(sols || []);
-
+    setSolicitudes((sols as Solicitud[]) || []);
     const { data: msgs } = await supabase.from('mensajes_contacto').select('*').order('created_at', { ascending: false });
-    setMensajes(msgs || []);
-
+    setMensajes((msgs as MensajeContacto[]) || []);
     const { data: perfiles } = await supabase.from('perfiles').select('rol');
     const totalAgencias = ags ? ags.filter(a => !a.bloqueada).length : 0;
     setStats({ total: perfiles?.length || 0, ingresos: totalAgencias * 49, agencias: totalAgencias });
@@ -54,35 +46,20 @@ export default function AdminPanel() {
 
   useEffect(() => { loadData(); }, []);
 
-  const actualizarEstadoTrial = async (id: string, nuevoEstado: string) => {
-    await supabase.from('solicitudes_registro').update({ estado: nuevoEstado }).eq('id', id);
-    loadData();
-  };
+  const actualizarEstadoTrial = async (id: string, nuevoEstado: string) => { await supabase.from('solicitudes_registro').update({ estado: nuevoEstado }).eq('id', id); loadData(); };
+  const marcarMensajeLeido = async (id: string, estadoLeido: boolean) => { await supabase.from('mensajes_contacto').update({ leido: estadoLeido }).eq('id', id); loadData(); };
+  const borrarMensaje = async (id: string) => { if(!confirm('¿Borrar este mensaje definitivamente?')) return; await supabase.from('mensajes_contacto').delete().eq('id', id); loadData(); };
 
-  const marcarMensajeLeido = async (id: string, estadoLeido: boolean) => {
-    await supabase.from('mensajes_contacto').update({ leido: estadoLeido }).eq('id', id);
-    loadData();
-  };
-
-  const borrarMensaje = async (id: string) => {
-    if(!confirm('¿Borrar este mensaje definitivamente?')) return;
-    await supabase.from('mensajes_contacto').delete().eq('id', id);
-    loadData();
-  };
-
-  // BANDEJA DE ENTRADA UNIFICADA (Nuevos registros y Mensajes no leídos)
   const pendingTrials = solicitudes.filter(s => s.estado === 'pendiente' || s.estado === 'rechazado').map(s => ({ ...s, tipoEntrada: 'trial', sortDate: new Date(s.created_at).getTime() }));
   const pendingMessages = mensajes.filter(m => !m.leido).map(m => ({ ...m, tipoEntrada: 'mensaje', sortDate: new Date(m.created_at).getTime() }));
   const bandejaEntrada = [...pendingTrials, ...pendingMessages].sort((a, b) => b.sortDate - a.sortDate);
 
-  // TRIALS ACTIVOS PARA AGENDA
   const agendaTrials = solicitudes.filter(s => s.estado === 'procesado').map(s => {
     const expires = new Date(new Date(s.created_at).getTime() + 14 * 24 * 60 * 60 * 1000);
     const daysLeft = Math.ceil((expires.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
     return { ...s, expires, daysLeft };
   }).sort((a, b) => a.daysLeft - b.daysLeft);
 
-  // HISTORIAL DE MENSAJES LEÍDOS
   const historialMensajes = mensajes.filter(m => m.leido);
 
   return (
@@ -96,8 +73,7 @@ export default function AdminPanel() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-        
-        {/* COLUMNA 1: BANDEJA DE ENTRADA UNIFICADA */}
+        {/* BANDEJA DE ENTRADA UNIFICADA */}
         <div className="space-y-3">
           <h3 className="text-[9px] font-black uppercase text-white/60 flex items-center gap-1.5"><Users size={12}/> Bandeja de Entrada</h3>
           {loading ? <Loader2 className="animate-spin text-brand-400 mx-auto" size={16} /> : bandejaEntrada.length === 0 ? <div className="p-4 border-dashed border border-white/10 text-center text-[9px] text-white/20">Vacía</div> : (
@@ -112,7 +88,7 @@ export default function AdminPanel() {
                     </div>
                     <div className="text-[8px] text-white/40 shrink-0">{new Date(item.created_at).toLocaleDateString()}</div>
                   </div>
-                  <div className="text-[9px] text-white/50 flex items-center gap-1 truncate"><Mail size={8} /> {item.email}</div>
+                  {isTrial ? <div className="text-[9px] text-white/50 flex items-center gap-1 truncate"><MapPin size={8} /> {item.ciudad}</div> : <div className="text-[9px] text-white/50 italic truncate">"{item.mensaje}"</div>}
                   <div className="flex gap-1.5 pt-1">
                     {isTrial ? <button onClick={(e) => { e.stopPropagation(); actualizarEstadoTrial(item.id, 'procesado'); }} className="flex-1 py-1 rounded bg-brand-500/20 text-brand-400 text-[8px] font-bold hover:bg-brand-500 hover:text-white transition uppercase">Activar Trial</button> : <button onClick={(e) => { e.stopPropagation(); marcarMensajeLeido(item.id, true); }} className="flex-1 py-1 rounded bg-purple-500/20 text-purple-400 text-[8px] font-bold hover:bg-purple-500 hover:text-white transition uppercase">Marcar Leído</button>}
                   </div>
@@ -122,7 +98,7 @@ export default function AdminPanel() {
           )}
         </div>
 
-        {/* COLUMNA 2: AGENDA DE TRIALS */}
+        {/* AGENDA DE TRIALS */}
         <div className="space-y-3">
           <h3 className="text-[9px] font-black uppercase text-emerald-400 flex items-center gap-1.5"><CalendarDays size={12}/> Agenda de Trials</h3>
           {agendaTrials.map(t => (
@@ -133,7 +109,7 @@ export default function AdminPanel() {
           ))}
         </div>
 
-        {/* COLUMNA 3: HISTORIAL MENSAJES WEB */}
+        {/* HISTORIAL MENSAJES WEB */}
         <div className="space-y-3">
           <h3 className="text-[9px] font-black uppercase text-purple-400 flex items-center gap-1.5"><MessageSquare size={12}/> Mensajes Web</h3>
           {historialMensajes.map(m => (
@@ -145,17 +121,17 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* LISTA DE AGENCIAS */}
+      {/* BASE DE DATOS DE AGENCIAS */}
       <h3 className="text-[9px] font-black uppercase text-white/60 mb-2 flex items-center gap-1.5"><Building2 size={12}/> Base de Datos de Agencias</h3>
       <div className="card p-0 overflow-hidden bg-ink-900/50">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead><tr className="text-[8px] uppercase tracking-widest text-white/30 border-b border-white/5 bg-white/[0.01]"><th className="px-3 py-2 font-bold">Agencia</th><th className="px-3 py-2 font-bold">Plan</th><th className="px-3 py-2 font-bold">Slug</th><th className="px-3 py-2 font-bold">Alta</th><th className="px-3 py-2"></th></tr></thead>
+            <thead><tr className="text-[8px] uppercase tracking-widest text-white/30 border-b border-white/5 bg-white/[0.01]"><th className="px-3 py-2 font-bold">Agencia</th><th className="px-3 py-2 font-bold">Plan</th><th className="px-3 py-2 font-bold">Slug</th><th className="px-3 py-2 font-bold">Contacto</th><th className="px-3 py-2 font-bold">Alta</th><th className="px-3 py-2"></th></tr></thead>
             <tbody>
               {agencias.map((a) => (
                 <tr key={a.id} onClick={() => setSelectedAgencia(a)} className={`hover:bg-white/[0.03] transition-colors group cursor-pointer ${a.bloqueada ? 'bg-red-500/[0.02]' : ''}`}>
                   <td className="px-3 py-2.5"><div className="text-[10px] font-bold text-white uppercase">{a.nombre}</div></td>
-                  <td className="px-3 py-2.5"><div className={`text-[8px] font-bold px-1.5 py-0.5 rounded w-fit uppercase ${a.plan === 'premium' ? 'bg-amber-500/10 text-amber-500' : 'bg-white/5 text-white/40'}`}>{a.plan}</div></td>
+                  <td className="px-3 py-2.5"><div className={`text-[8px] font-bold px-1.5 py-0.5 rounded w-fit uppercase ${a.plan === 'premium' ? 'bg-amber-500/10 text-amber-500' : 'bg-white/5 text-white/40'}`}>{a.plan || 'ESTÁNDAR'}</div></td>
                   <td className="px-3 py-2.5"><code className="text-[8px] text-white/40">{a.id}</code></td>
                   <td className="px-3 py-2.5 text-[9px] text-white/30">{new Date(a.created_at).toLocaleDateString()}</td>
                   <td className="px-3 py-2.5 text-right"><ChevronRight size={12} className="text-white/10 group-hover:text-white/30 ml-auto" /></td>
@@ -166,8 +142,7 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* MODALES */}
-      {selectedAgencia && <AgencyDialog agencia={selectedAgencia} onClose={() => setSelectedAgencia(null)} onSave={() => { setSelectedAgencia(null); loadData(); }} onCreated={(res) => { setSelectedAgencia(null); setResult(res); loadData(); }} />}
+      {selectedAgencia && <AgencyDialog agencia={selectedAgencia} onClose={() => setSelectedAgencia(null)} onSave={() => { setSelectedAgencia(null); loadData(); }} onCreated={(res: CreatedResult) => { setSelectedAgencia(null); setResult(res); loadData(); }} />}
       {selectedSolicitud && <SolicitudDialog solicitud={selectedSolicitud} onClose={() => setSelectedSolicitud(null)} onSave={() => { setSelectedSolicitud(null); loadData(); }} />}
       {selectedMensaje && <MensajeDialog mensaje={selectedMensaje} onClose={() => setSelectedMensaje(null)} onSave={() => { setSelectedMensaje(null); loadData(); }} onDelete={() => borrarMensaje(selectedMensaje.id)} />}
       {result && <CredentialsDialog result={result} onClose={() => setResult(null)} />}
@@ -183,6 +158,9 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
   const [ciudad, setCiudad] = useState(ag?.ciudad || '');
   const [cp, setCp] = useState(ag?.codigo_postal || '');
   const [plan, setPlan] = useState(ag?.plan || 'premium');
+  const [cNombre, setCNombre] = useState(ag?.contacto_nombre || '');
+  const [cEmail, setCEmail] = useState(ag?.contacto_email || '');
+  const [cTel, setCTel] = useState(ag?.contacto_telefono || '');
   const [bloqueada, setBloqueada] = useState(ag?.bloqueada || false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -190,7 +168,7 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault(); setSubmitting(true);
-    const payload = { id: effectiveSlug, nombre, direccion, ciudad, codigo_postal: cp, plan, bloqueada };
+    const payload = { id: effectiveSlug, nombre, direccion, ciudad, codigo_postal: cp, plan, contacto_nombre: cNombre, contacto_email: cEmail, contacto_telefono: cTel, bloqueada };
     if (isEdit) await supabase.from('agencias').update(payload).eq('id', ag.id);
     else {
       await supabase.from('agencias').insert([payload]);
@@ -214,18 +192,18 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-lg bg-ink-900 border border-white/10 rounded-xl overflow-hidden animate-slide-up">
-        <div className="p-5 border-b border-white/5 flex justify-between">
-          <h3 className="text-sm font-bold text-white">{isEdit ? 'Ficha de Agencia' : 'Nueva Agencia'}</h3>
-          <button onClick={onClose}><X size={16}/></button>
-        </div>
-        <form onSubmit={onSubmit} className="p-5 space-y-4">
-          <div><label className="label">Nombre</label><input required className="input bg-ink-950 border-white/10 text-sm" value={nombre} onChange={e => setNombre(e.target.value)} /></div>
-          <div className="grid grid-cols-2 gap-3">
+      <div className="relative w-full max-w-2xl bg-ink-900 border border-white/10 rounded-xl overflow-hidden animate-slide-up">
+        <div className="p-5 border-b border-white/5 flex justify-between"><h3 className="text-sm font-bold text-white">{isEdit ? 'Ficha de Agencia' : 'Nueva Agencia'}</h3><button onClick={onClose}><X size={16}/></button></div>
+        <form onSubmit={onSubmit} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto custom-scrollbar">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2"><label className="label">Nombre de Agencia</label><input required className="input bg-ink-950 border-white/10 text-sm" value={nombre} onChange={e => setNombre(e.target.value)} /></div>
             <div><label className="label">Ciudad</label><input className="input bg-ink-950 border-white/10 text-sm" value={ciudad} onChange={e => setCiudad(e.target.value)} /></div>
-            <div><label className="label">Plan</label><select className="input bg-ink-950 border-white/10 text-sm" value={plan} onChange={e => setPlan(e.target.value)}><option value="estandar">Estándar (29€)</option><option value="premium">Premium (49€)</option></select></div>
+            <div><label className="label">Plan Contratado</label><select className="input bg-ink-950 border-white/10 text-sm" value={plan} onChange={e => setPlan(e.target.value)}><option value="estandar">Estándar (29€)</option><option value="premium">Premium (49€)</option></select></div>
+            <div><label className="label">Responsable</label><input className="input bg-ink-950 border-white/10 text-sm" value={cNombre} onChange={e => setCNombre(e.target.value)} /></div>
+            <div><label className="label">Teléfono</label><input className="input bg-ink-950 border-white/10 text-sm" value={cTel} onChange={e => setCTel(e.target.value)} /></div>
+            <div className="col-span-2"><label className="label">Email de contacto</label><input className="input bg-ink-950 border-white/10 text-sm" value={cEmail} onChange={e => setCEmail(e.target.value)} /></div>
           </div>
-          <div className="flex items-center gap-2 pt-2"><input type="checkbox" checked={bloqueada} onChange={e => setBloqueada(e.target.checked)} /> <label className="text-xs text-white/60">Bloquear acceso (Suspender)</label></div>
+          <div className="flex items-center gap-2 pt-2 border-t border-white/5"><input type="checkbox" checked={bloqueada} onChange={e => setBloqueada(e.target.checked)} /> <label className="text-xs text-white/60">Suspender acceso de esta agencia</label></div>
           <button type="submit" className="btn-primary w-full py-2.5 text-xs font-bold uppercase mt-4" disabled={submitting}>{submitting ? <Loader2 className="animate-spin mx-auto" size={14}/> : 'Guardar Agencia'}</button>
         </form>
       </div>
