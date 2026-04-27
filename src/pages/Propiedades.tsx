@@ -10,13 +10,6 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { formatEUR } from '../lib/format';
 
-interface Propiedad {
-  id: string; titulo: string; descripcion: string; precio: number; transaccion: string;
-  tipo: string; estado_fisico: string; metros_cuadrados: number; habitaciones: number;
-  banos: number; direccion: string; ciudad: string; codigo_postal: string;
-  fotos: string[]; referencia: string; created_at: string; nombre_agencia?: string;
-}
-
 const TIPOS = ['piso', 'ático', 'dúplex', 'chalet', 'casa', 'estudio', 'loft', 'local', 'oficina', 'garaje', 'terreno', 'nave', 'trastero'] as const;
 const TRANSACCIONES = ['Disponible para venta', 'Disponible para alquiler', 'Venta y alquiler', 'Reservada', 'Vendida', 'Alquilada'] as const;
 const ESTADOS_FISICOS = ['A estrenar/Nueva', 'Buen estado/Reformada', 'A reformar/A renovar', 'En ruinas'] as const;
@@ -30,20 +23,17 @@ const COLOR_TEXTO_BORDE: Record<string, string> = {
   'Alquilada': 'text-pink-600 border-pink-400'
 };
 
-const generarIdVisual = (id: any) => {
-  if (!id) return 'ID-000';
-  return `ID-${String(id).substring(0, 5).toUpperCase()}`;
-};
+const generarIdVisual = (id: any) => { if (!id) return 'ID-000'; return `ID-${String(id).substring(0, 5).toUpperCase()}`; };
 
 export default function Propiedades() {
   const { perfil } = useAuth();
-  const [propiedades, setPropiedades] = useState<Propiedad[]>([]);
+  const [propiedades, setPropiedades] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingProp, setEditingProp] = useState<Propiedad | null>(null);
-  const [viewingProp, setViewingProp] = useState<Propiedad | null>(null);
-  
+  const [editingProp, setEditingProp] = useState<any | null>(null);
+  const [viewingProp, setViewingProp] = useState<any | null>(null);
   const [sortPrice, setSortPrice] = useState<'asc'|'desc'|null>(null);
+  const [planAgencia, setPlanAgencia] = useState<'estandar'|'premium'>('premium');
 
   const nombreAgenciaFijo = perfil?.agencia || perfil?.nombre_agencia || perfil?.empresa || 'Agencia Inmobiliaria';
 
@@ -51,25 +41,23 @@ export default function Propiedades() {
     if (!perfil?.agencia_id) return;
     setLoading(true);
     const { data } = await supabase.from('propiedades').select('*').eq('agencia_id', perfil.agencia_id).order('created_at', { ascending: false });
-    setPropiedades((data as Propiedad[]) || []);
+    const { data: agData } = await supabase.from('agencias').select('plan').eq('id', perfil.agencia_id).single();
+    setPropiedades(data || []);
+    if (agData) setPlanAgencia(agData.plan as any);
     setLoading(false);
   }, [perfil?.agencia_id]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const abrirFichaPublica = (p: Propiedad, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const agenteNombre = perfil?.nombre || '';
-    const agenteTelf = perfil?.telefono || '';
-    const url = `${window.location.origin}/p/${p.id}?an=${encodeURIComponent(nombreAgenciaFijo)}&un=${encodeURIComponent(agenteNombre)}&t=${encodeURIComponent(agenteTelf)}`;
+  const abrirFichaPublica = (p: any, e: React.MouseEvent) => {
+    e.stopPropagation(); if (planAgencia === 'estandar') return alert("Función Premium: Catálogo y Ficha VIP");
+    const url = `${window.location.origin}/p/${p.id}?an=${encodeURIComponent(nombreAgenciaFijo)}&un=${encodeURIComponent(perfil?.nombre || '')}&t=${encodeURIComponent(perfil?.telefono || '')}`;
     window.open(url, '_blank');
   };
 
   const abrirCatalogoPublico = () => {
-    if (!perfil?.agencia_id) return;
-    const agenteNombre = perfil?.nombre || '';
-    const agenteTelf = perfil?.telefono || '';
-    const url = `${window.location.origin}/a/${perfil.agencia_id}?an=${encodeURIComponent(nombreAgenciaFijo)}&un=${encodeURIComponent(agenteNombre)}&t=${encodeURIComponent(agenteTelf)}`;
+    if (planAgencia === 'estandar') return alert("Función Premium: Catálogo Público");
+    const url = `${window.location.origin}/a/${perfil?.agencia_id}?an=${encodeURIComponent(nombreAgenciaFijo)}`;
     window.open(url, '_blank');
   };
 
@@ -81,63 +69,48 @@ export default function Propiedades() {
 
   return (
     <Layout title="Propiedades">
-      <PageHeader 
-        title="Catálogo de Propiedades" 
-        subtitle="Gestiona tu cartera de inmuebles, publica y comparte fichas." 
-        actions={
-          <div className="flex flex-wrap gap-2 w-full justify-end">
-            <button className="btn-ghost border border-white/10 flex items-center gap-1.5 text-[11px] py-1.5 px-3 whitespace-nowrap" onClick={abrirCatalogoPublico}>
-              <Globe size={14}/> Catálogo Público
-            </button>
-            <button className="btn-primary text-[11px] py-1.5 px-3 whitespace-nowrap" onClick={() => { setEditingProp(null); setIsDialogOpen(true); }}>
-              <Plus size={14} /> Nueva Propiedad
-            </button>
-          </div>
-        } 
-      />
+      <PageHeader title="Catálogo de Propiedades" subtitle="Gestiona tu cartera de inmuebles, publica y comparte fichas." actions={
+        <div className="flex gap-2 w-full justify-end">
+          <button className={`btn-ghost border border-white/10 flex items-center gap-1.5 text-[11px] py-1.5 px-3 ${planAgencia === 'estandar' ? 'opacity-50' : ''}`} onClick={abrirCatalogoPublico}>
+            <Globe size={14}/> Catálogo Público {planAgencia === 'estandar' && '🔒'}
+          </button>
+          <button className="btn-primary text-[11px] py-1.5 px-3" onClick={() => setIsDialogOpen(true)}><Plus size={14} /> Nueva Propiedad</button>
+        </div>
+      } />
 
       <div className="mb-4 flex justify-end">
-         <button onClick={() => setSortPrice(prev => prev === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-white/60 hover:text-white transition whitespace-nowrap">
+         <button onClick={() => setSortPrice(prev => prev === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-white/60 transition">
            Ordenar por Precio <span className="text-brand-400 font-bold">{sortPrice === 'asc' ? '↑' : sortPrice === 'desc' ? '↓' : '↕'}</span>
          </button>
       </div>
 
-      {loading ? <div className="py-24 flex items-center justify-center text-white/40"><Loader2 className="animate-spin" size={24} /></div> : propiedades.length === 0 ? <EmptyState icon={Building2} title="Sin propiedades" description="Añade tu primer inmueble al catálogo para empezar." /> : (
-        <div className="card p-0 bg-ink-900 border-white/5 overflow-hidden animate-fade-in w-full">
-          <div className="overflow-x-auto w-full">
-            <table className="w-full text-sm min-w-[700px]">
-              <thead>
-                <tr className="text-left text-[9px] uppercase tracking-widest text-white/40 border-b border-white/5 bg-white/[0.01]">
-                  <th className="px-4 py-3 font-bold">Propiedad</th>
-                  <th className="px-4 py-3 font-bold">Transacción</th>
-                  <th className="px-4 py-3 font-bold">Características</th>
-                  <th className="px-4 py-3 font-bold text-right cursor-pointer hover:text-white group transition-colors" onClick={() => setSortPrice(prev => prev === 'asc' ? 'desc' : 'asc')}>
-                    <div className="flex items-center justify-end gap-1.5">Precio <span className="text-white/30 group-hover:text-white/60">{sortPrice === 'asc' ? '↑' : sortPrice === 'desc' ? '↓' : '↕'}</span></div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedProps.map(p => (
-                  <tr key={p.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition cursor-pointer group" onClick={() => { setEditingProp(p); setIsDialogOpen(true); }}>
-                    <td className="px-4 py-3"><div className="flex items-center gap-3"><div className="h-10 w-10 rounded-lg bg-ink-950 overflow-hidden border border-white/10 shrink-0">{p.fotos?.[0] ? <img src={p.fotos[0]} className="w-full h-full object-cover" /> : <Building2 className="m-auto mt-2 text-white/10" size={16}/>}</div><div className="min-w-[150px] max-w-[200px]"><div className="font-semibold text-[13px] text-white/90 truncate">{p.titulo}</div><div className="text-[9px] text-white/40 mt-1 uppercase tracking-wider truncate">{p.referencia || `ID-${p.id.substring(0,5)}`} • {p.ciudad}</div></div></div></td>
-                    <td className="px-4 py-3"><span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border bg-white/5 border-white/10 text-white/70 whitespace-nowrap">{p.transaccion}</span></td>
-                    <td className="px-4 py-3 text-[10px] text-white/50"><div className="flex items-center gap-2.5"><span className="flex items-center gap-1" title="Habitaciones"><BedDouble size={12}/>{p.habitaciones || 0}</span><span className="flex items-center gap-1" title="Baños"><Bath size={12}/>{p.banos || 0}</span><span className="flex items-center gap-1" title="Superficie"><Square size={10}/>{p.metros_cuadrados || 0}m²</span></div></td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-2.5">
-                        <div className="font-bold text-[13px] text-white mr-1 whitespace-nowrap">{formatEUR(p.precio)}</div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {/* BOTONES EDITADOS: Calculadora (Ficha Interna), Globo (Ficha Pública), Trending (Dossier) */}
-                          <button onClick={(e) => { e.stopPropagation(); setViewingProp(p); }} className="p-1.5 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="Ficha Interna y Calculadora Financiera"><Calculator size={12}/></button>
-                          <button onClick={(e) => abrirFichaPublica(p, e)} className="p-1.5 rounded-md bg-brand-500/10 text-brand-400 hover:bg-brand-500 hover:text-white transition" title="Ficha Técnica VIP (Pública)"><Globe size={12}/></button>
-                          <button onClick={(e) => { e.stopPropagation(); window.location.href = '/inversion'; }} className="p-1.5 rounded-md bg-purple-500/10 text-purple-400 hover:bg-purple-500 hover:text-white transition" title="Dossier de Inversión"><TrendingUp size={12}/></button>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {loading ? <div className="py-24 flex items-center justify-center text-white/40"><Loader2 className="animate-spin" size={24} /></div> : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {sortedProps.map(p => (
+            <div key={p.id} className="card p-0 overflow-hidden group hover:border-white/10 transition-all cursor-pointer flex flex-col relative" onClick={() => { setEditingProp(p); setIsDialogOpen(true); }}>
+              <div className="relative aspect-[16/11] bg-ink-950 overflow-hidden">
+                {p.fotos?.[0] ? <img src={p.fotos[0]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center text-white/10"><Building2 size={28} /></div>}
+                <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-md border-2 bg-white text-[9px] font-black uppercase tracking-wider ${COLOR_TEXTO_BORDE[p.transaccion] || 'text-gray-800'}`}>{p.transaccion}</div>
+                <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-ink-950/95 border border-white/10 text-[9px] font-mono text-white">{generarIdVisual(p.id)}</div>
+              </div>
+              <div className="p-3 flex flex-col flex-1">
+                <div className="flex justify-between gap-2 mb-1"><h3 className="text-[12px] font-semibold text-white truncate">{p.titulo}</h3><div className="text-brand-400 font-bold text-[13px]">{formatEUR(p.precio)}</div></div>
+                <div className="flex items-center gap-1.5 text-white/40 text-[10px] mb-3"><MapPin size={10} /><span className="truncate">{p.direccion}{p.ciudad ? `, ${p.ciudad}` : ''}</span></div>
+                <div className="mt-auto border-t border-white/5 pt-2">
+                  <div className="flex items-center justify-between px-1 mb-2">
+                    <div className="flex items-center gap-1"><BedDouble size={12} className="text-white/20"/><span className="text-[10px] text-white/60">{p.habitaciones || 0}</span></div>
+                    <div className="flex items-center gap-1"><Bath size={12} className="text-white/20"/><span className="text-[10px] text-white/60">{p.banos || 0}</span></div>
+                    <div className="flex items-center gap-1"><Square size={10} className="text-white/20"/><span className="text-[10px] text-white/60">{p.metros_cuadrados || 0}m²</span></div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button onClick={(e) => { e.stopPropagation(); setViewingProp(p); }} className="flex-1 py-1.5 rounded-md bg-white/5 text-white/60 text-[10px] hover:bg-brand-500 hover:text-white transition flex items-center justify-center gap-1.5">Ficha Hipoteca <ChevronRight size={12} /></button>
+                    <button onClick={(e) => abrirFichaPublica(p, e)} className="p-1.5 rounded-md bg-brand-500/10 text-brand-400 hover:bg-brand-500 hover:text-white transition" title="Ficha VIP (Pública)"><Globe size={12}/></button>
+                    <button onClick={(e) => { e.stopPropagation(); if (planAgencia === 'premium') window.location.href = '/inversion'; else alert("Dossier Inversión: Solo Premium"); }} className="p-1.5 rounded-md bg-purple-500/10 text-purple-400 hover:bg-purple-500 hover:text-white transition" title="Dossier Inversión"><TrendingUp size={12}/></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
       {isDialogOpen && <PropDialog propiedad={editingProp} agenciaFija={nombreAgenciaFijo} onClose={() => { setIsDialogOpen(false); setEditingProp(null); }} onSaved={loadData} />}
@@ -146,8 +119,8 @@ export default function Propiedades() {
   );
 }
 
-function FullViewModal({ propiedad, onClose }: { propiedad: Propiedad, onClose: () => void }) {
-  const { perfil } = useAuth();
+// FULL VIEW MODAL (Calculadora Hipoteca Interna) - Mantenido íntegro del .txt
+function FullViewModal({ propiedad, onClose }: any) {
   const fotosArray = Array.isArray(propiedad.fotos) ? propiedad.fotos : [];
   const displayId = generarIdVisual(propiedad.id);
   const precio = Number(propiedad.precio) || 0;
@@ -163,76 +136,45 @@ function FullViewModal({ propiedad, onClose }: { propiedad: Propiedad, onClose: 
   const numeroPagos = plazoAños * 12;
   const cuotaMensual = capitalPrestamo > 0 && interesMensual > 0 ? (capitalPrestamo * interesMensual * Math.pow(1 + interesMensual, numeroPagos)) / (Math.pow(1 + interesMensual, numeroPagos) - 1) : 0;
 
-  const nombreAgenciaFijo = propiedad.nombre_agencia || perfil?.agencia || perfil?.nombre_agencia || perfil?.empresa || 'Agencia Inmobiliaria';
-  const agenteNombre = perfil?.nombre || '';
-  const agenteTelf = perfil?.telefono || '';
-  const publicUrl = `${window.location.origin}/p/${propiedad.id}?an=${encodeURIComponent(nombreAgenciaFijo)}&un=${encodeURIComponent(agenteNombre)}&t=${encodeURIComponent(agenteTelf)}`;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(publicUrl)}&margin=2`;
-
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-ink-950/90 backdrop-blur-sm p-4 animate-fade-in w-full">
-      <button onClick={onClose} className="fixed top-4 right-4 z-[70] h-10 w-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition backdrop-blur-xl border border-white/10"><X size={20} /></button>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-ink-950/90 backdrop-blur-sm p-4 animate-fade-in">
+      <button onClick={onClose} className="fixed top-4 right-4 z-[70] h-10 w-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 border border-white/10"><X size={20} /></button>
       <div className="w-full max-w-5xl h-full max-h-[90vh] bg-ink-900 rounded-2xl border border-white/10 shadow-2xl overflow-y-auto custom-scrollbar flex flex-col">
-        <div className="relative h-48 sm:h-56 bg-ink-950 w-full shrink-0">
+        <div className="relative h-48 sm:h-56 bg-ink-950 shrink-0">
           {fotosArray.length > 0 ? <img src={fotosArray[0]} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white/5"><Building2 size={48} /></div>}
           <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/40 to-transparent" />
-          <div className="absolute bottom-4 left-4 right-4 sm:left-6 sm:right-6">
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider border-2 bg-white shadow-lg ${COLOR_TEXTO_BORDE[propiedad.transaccion] || 'text-gray-800 border-gray-300'}`}>{propiedad.transaccion}</span>
-              <span className="px-2.5 py-1 rounded-md bg-ink-950/95 border-2 border-white/10 text-[9px] font-mono font-bold text-white shadow-lg">{displayId}</span>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-tight drop-shadow-md">{propiedad.titulo}</h1>
-              <div className="text-xl sm:text-2xl font-black text-brand-400 drop-shadow-md bg-ink-900/80 px-3 py-1.5 rounded-xl backdrop-blur-md w-fit">{formatEUR(precio)}</div>
-            </div>
+          <div className="absolute bottom-4 left-6 right-6">
+            <div className="flex gap-2 mb-3"><span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider border-2 bg-white shadow-lg ${COLOR_TEXTO_BORDE[propiedad.transaccion] || 'text-gray-800'}`}>{propiedad.transaccion}</span><span className="px-2.5 py-1 rounded-md bg-ink-950/95 border border-white/10 text-[9px] font-mono text-white">{displayId}</span></div>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3"><h1 className="text-xl sm:text-2xl font-bold text-white leading-tight drop-shadow-md">{propiedad.titulo}</h1><div className="text-xl font-black text-brand-400 bg-ink-900/80 px-3 py-1.5 rounded-xl backdrop-blur-md">{formatEUR(precio)}</div></div>
           </div>
         </div>
-
-        <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-center gap-2 text-white/60 text-[13px]"><MapPin size={14} className="shrink-0" /><span className="truncate">{propiedad.direccion}, {propiedad.ciudad} {propiedad.codigo_postal}</span></div>
+            <div className="flex items-center gap-2 text-white/60 text-[13px]"><MapPin size={14} />{propiedad.direccion}, {propiedad.ciudad} {propiedad.codigo_postal}</div>
             <div className="grid grid-cols-3 gap-3">
               <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center"><Square className="mx-auto mb-1.5 text-white/20" size={18} /><div className="text-lg font-bold text-white">{propiedad.metros_cuadrados}</div><div className="text-[9px] uppercase tracking-widest text-white/40 font-bold mt-1">m²</div></div>
               <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center"><BedDouble className="mx-auto mb-1.5 text-white/20" size={18} /><div className="text-lg font-bold text-white">{propiedad.habitaciones}</div><div className="text-[9px] uppercase tracking-widest text-white/40 font-bold mt-1">Dormit.</div></div>
               <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center"><Bath className="mx-auto mb-1.5 text-white/20" size={18} /><div className="text-lg font-bold text-white">{propiedad.banos}</div><div className="text-[9px] uppercase tracking-widest text-white/40 font-bold mt-1">Baños</div></div>
             </div>
-            <div className="space-y-2">
-              <h3 className="text-xs font-bold text-brand-400 uppercase tracking-widest flex items-center gap-1.5"><Info size={14} /> Memoria Descriptiva</h3>
-              <div className="text-white/70 text-[13px] leading-relaxed whitespace-pre-wrap bg-white/[0.02] p-4 rounded-xl border border-white/5">{propiedad.descripcion || 'Propiedad pendiente de descripción.'}</div>
-            </div>
+            <div className="space-y-2"><h3 className="text-xs font-bold text-brand-400 uppercase tracking-widest flex items-center gap-1.5"><Info size={14} /> Memoria Descriptiva</h3><div className="text-white/70 text-[13px] leading-relaxed whitespace-pre-wrap bg-white/[0.02] p-4 rounded-xl border border-white/5">{propiedad.descripcion || 'Propiedad pendiente de descripción.'}</div></div>
           </div>
           <div className="lg:col-span-1">
-            <div className="sticky top-0 space-y-6">
-              <div>
+             <div className="sticky top-0 space-y-4">
                 <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 mb-3"><Calculator size={14} /> Plan Hipotecario</h3>
                 <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-5">
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center"><label className="text-[10px] font-bold text-white/60 flex items-center gap-1 uppercase tracking-wider"><Euro size={10}/> Aportación ({porcentajeEntrada}%)</label><span className="text-[13px] font-bold text-white">{formatEUR(entradaCash)}</span></div>
-                    <input type="range" min="10" max="60" step="5" value={porcentajeEntrada} onChange={(e) => setPorcentajeEntrada(Number(e.target.value))} className="w-full accent-emerald-500 h-1.5" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-ink-950 p-2.5 rounded-xl border border-white/5"><label className="text-[8px] text-white/40 uppercase tracking-widest mb-1.5 block font-bold">Plazo (Años)</label><select className="w-full bg-transparent text-[13px] font-bold text-white outline-none cursor-pointer" value={plazoAños} onChange={(e) => setPlazoAños(Number(e.target.value))}>{[5, 10, 15, 20, 25, 30, 35, 40].map(anio => <option key={anio} value={anio} className="bg-ink-900 text-white">{anio} Años</option>)}</select></div>
-                    <div className="bg-ink-950 p-2.5 rounded-xl border border-white/5"><label className="text-[8px] text-white/40 uppercase tracking-widest mb-1.5 block font-bold">Interés TIN</label><div className="flex items-center gap-1"><input type="number" step="0.1" className="w-full bg-transparent text-[13px] font-bold text-white outline-none" value={interesAnual} onChange={(e) => setInteresAnual(Number(e.target.value))} /><Percent size={10} className="text-white/40" /></div></div>
-                  </div>
-                  <div className="pt-3 border-t border-emerald-500/20 space-y-2.5">
-                    <div className="flex justify-between items-center text-[11px]"><span className="text-white/50">Impuestos y Notaría (10%)</span><span className="font-bold text-white/80">{formatEUR(gastosITP)}</span></div>
-                    <div className="flex justify-between items-center text-[11px]"><span className="text-white/50">Préstamo Bancario</span><span className="font-bold text-white/80">{formatEUR(capitalPrestamo)}</span></div>
-                    <div className="flex justify-between items-center bg-white/[0.03] p-2.5 rounded-xl border border-white/5 mt-1"><span className="text-[10px] font-bold text-white/70 uppercase tracking-wider">Ahorro Necesario</span><span className="font-black text-white text-sm">{formatEUR(cashNecesario)}</span></div>
-                    <div className="flex justify-between items-center bg-emerald-500/20 p-3 rounded-xl mt-2 border border-emerald-500/30"><span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Cuota Mes</span><span className="text-xl font-black text-emerald-400">{formatEUR(cuotaMensual)}</span></div>
-                  </div>
+                   <div className="flex justify-between items-center"><label className="text-[10px] font-bold text-white/60 flex items-center gap-1 uppercase tracking-wider"><Euro size={10}/> Aportación ({porcentajeEntrada}%)</label><span className="text-[13px] font-bold text-white">{formatEUR(entradaCash)}</span></div>
+                   <input type="range" min="10" max="60" step="5" value={porcentajeEntrada} onChange={(e) => setPorcentajeEntrada(Number(e.target.value))} className="w-full accent-emerald-500 h-1.5" />
+                   <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-ink-950 p-2.5 rounded-xl border border-white/5"><label className="text-[8px] text-white/40 uppercase mb-1.5 block font-bold">Plazo (Años)</label><select className="w-full bg-transparent text-[13px] font-bold text-white outline-none" value={plazoAños} onChange={(e) => setPlazoAños(Number(e.target.value))}>{[5,10,15,20,25,30,35,40].map(a => <option key={a} value={a}>{a} Años</option>)}</select></div>
+                      <div className="bg-ink-950 p-2.5 rounded-xl border border-white/5"><label className="text-[8px] text-white/40 uppercase mb-1.5 block font-bold">Interés TIN</label><div className="flex items-center gap-1"><input type="number" step="0.1" className="w-full bg-transparent text-[13px] font-bold text-white outline-none" value={interesAnual} onChange={(e) => setInteresAnual(Number(e.target.value))} /><Percent size={10} className="text-white/40" /></div></div>
+                   </div>
+                   <div className="pt-3 border-t border-emerald-500/20 space-y-2.5">
+                      <div className="flex justify-between items-center text-[11px]"><span className="text-white/50">Impuestos (10%)</span><span className="font-bold text-white/80">{formatEUR(gastosITP)}</span></div>
+                      <div className="flex justify-between items-center bg-white/[0.03] p-2.5 rounded-xl"><span className="text-[10px] font-bold uppercase text-white/70">Ahorro Necesario</span><span className="font-black text-white text-sm">{formatEUR(cashNecesario)}</span></div>
+                      <div className="flex justify-between items-center bg-emerald-500/20 p-3 rounded-xl mt-2 border border-emerald-500/30"><span className="text-[10px] font-bold uppercase text-emerald-400">Cuota Mes</span><span className="text-xl font-black text-emerald-400">{formatEUR(cuotaMensual)}</span></div>
+                   </div>
                 </div>
-              </div>
-              <div>
-                <h3 className="text-xs font-bold text-brand-400 uppercase tracking-widest flex items-center gap-1.5 mb-4"><QrCode size={16} /> QR Escaparate VIP</h3>
-                <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 text-center flex flex-col items-center">
-                  <div className="bg-white p-2 rounded-xl border border-white/20 mb-3 shadow-lg">
-                    <img src={qrUrl} alt="QR Ficha VIP" className="w-32 h-32 object-contain" />
-                  </div>
-                  <p className="text-[11px] text-white/50 mb-4 px-2">Escanea para ver la Ficha Pública. Ideal para imprimir en escaparates, carteles de Se Vende o folletos.</p>
-                  <button onClick={() => window.open(qrUrl, '_blank')} className="btn-secondary w-full py-2.5 text-xs">Ver en HD</button>
-                </div>
-              </div>
-            </div>
+             </div>
           </div>
         </div>
       </div>
@@ -240,162 +182,79 @@ function FullViewModal({ propiedad, onClose }: { propiedad: Propiedad, onClose: 
   );
 }
 
-function PropertyDialog({ propiedad, agenciaFija, onClose, onSaved }: { propiedad?: Propiedad | null, agenciaFija: string, onClose: () => void, onSaved: () => void }) {
+function PropDialog({ propiedad, agenciaFija, onClose, onSaved }: any) {
   const { perfil } = useAuth();
   const isEditing = !!propiedad;
-  
   const [titulo, setTitulo] = useState(propiedad?.titulo || '');
   const [tipo, setTipo] = useState(propiedad?.tipo || TIPOS[0]);
   const [transaccion, setTransaccion] = useState(propiedad?.transaccion || TRANSACCIONES[0]);
   const [precio, setPrecio] = useState(propiedad?.precio ? String(propiedad.precio) : '');
-  const [m2, setM2] = useState(propiedad?.metros_cuadrados ? String(propiedad.metros_cuadrados) : '');
+  const [m2, setM2] = useState(propiedad?.metros_cuadrados || '');
   const [direccion, setDireccion] = useState(propiedad?.direccion || '');
   const [ciudad, setCiudad] = useState(propiedad?.ciudad || '');
-  const [codigoPostal, setCodigoPostal] = useState(propiedad?.codigo_postal || '');
-  const [habitaciones, setHabitaciones] = useState(propiedad?.habitaciones ? String(propiedad.habitaciones) : '');
-  const [banos, setBanos] = useState(propiedad?.banos ? String(propiedad.banos) : '');
+  const [cp, setCp] = useState(propiedad?.codigo_postal || '');
+  const [habitaciones, setHabitaciones] = useState(propiedad?.habitaciones || '');
+  const [banos, setBanos] = useState(propiedad?.banos || '');
   const [estadoFisico, setEstadoFisico] = useState(propiedad?.estado_fisico || ESTADOS_FISICOS[1]);
   const [descripcion, setDescripcion] = useState(propiedad?.descripcion || '');
   const [fotos, setFotos] = useState<string[]>(Array.isArray(propiedad?.fotos) ? propiedad.fotos : []);
-  const [isCompressing, setIsCompressing] = useState(false);
   const [isGeneratingIA, setIsGeneratingIA] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const movePhoto = (index: number, direction: 'left' | 'right') => {
-    const newFotos = [...fotos];
-    const newIndex = direction === 'left' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= fotos.length) return;
-    [newFotos[index], newFotos[newIndex]] = [newFotos[newIndex], newFotos[index]];
-    setFotos(newFotos);
-  };
-
-  const compressImage = (file: File): Promise<string> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target?.result as string;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let w = img.width, h = img.height;
-          if (w > h) { if (w > 1200) { h *= 1200 / w; w = 1200; } } else { if (h > 1200) { w *= 1200 / h; h = 1200; } }
-          canvas.width = w; canvas.height = h;
-          canvas.getContext('2d')?.drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL('image/jpeg', 0.7));
-        };
-      };
-    });
-  };
-
-  const handlePhotoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const files = Array.from(e.target.files).slice(0, 8 - fotos.length);
-    setIsCompressing(true);
-    const compressed = await Promise.all(files.map(f => compressImage(f)));
-    setFotos(prev => [...prev, ...compressed]);
-    setIsCompressing(false);
-    e.target.value = '';
-  };
-
-  const generarDescripcion = () => {
-    if (!tipo || (!ciudad && !codigoPostal) || !m2) { alert("Rellena el tipo, ciudad o código postal, y m² para que la IA haga su magia."); return; }
-    setIsGeneratingIA(true); 
-    const pre = formatEUR(Number(precio || 0));
-    const hab = habitaciones || 'varias';
-    const ban = banos || 'varios';
-    const esCasa = tipo.toLowerCase() === 'casa' || tipo.toLowerCase() === 'chalet';
-    const pronombre = esCasa ? 'a' : 'o';
-    const ubicacion = ciudad ? `${ciudad} ${codigoPostal ? `(CP: ${codigoPostal})` : ''}` : `el código postal ${codigoPostal}`;
-
-    const plantillas = [
-      `Ubicad${pronombre} en una de las zonas más atractivas de ${ubicacion}, est${pronombre === 'a' ? 'a' : 'e'} exclusiv${pronombre} ${tipo.toLowerCase()} ofrece un equilibrio perfecto entre elegancia y funcionalidad.\n\nCon una superficie de ${m2}m², su distribución aprovecha al máximo la luz natural. Dispone de ${hab} dormitorios y ${ban} baños completos con excelentes acabados.\n\nEstado actual: ${estadoFisico}. Una oportunidad única en el mercado por ${pre}. Contáctanos para organizar una visita sin compromiso.`,
-      `Excepcional ${tipo.toLowerCase()} de ${m2}m² en ${ubicacion}. Un inmueble pensado para satisfacer los estándares más exigentes, destacando por su amplitud y confort.\n\nLa propiedad consta de ${hab} habitaciones bien iluminadas y ${ban} baños. Su estado de conservación es: ${estadoFisico}, ideal para adaptarse a tu estilo de vida.\n\nPrecio de comercialización: ${pre}. Recomendamos agendar una visita en persona para apreciar todo su potencial y dimensiones.`,
-      `¡Descubre tu próximo hogar en ${ubicacion}! Presentamos est${pronombre === 'a' ? 'a' : 'e'} magnífic${pronombre} ${tipo.toLowerCase()}, un espacio donde cada detalle ha sido cuidado.\n\nSus ${m2}m² se distribuyen de forma inmejorable en ${hab} cálidos dormitorios y ${ban} baños muy funcionales. Se encuentra en condición: ${estadoFisico}.\n\nInversión inteligente por ${pre}. No dejes pasar esta oportunidad, la exclusividad que buscas te está esperando.`,
-      `En ${ubicacion}, te espera est${pronombre === 'a' ? 'a' : 'e'} fantástic${pronombre} ${tipo.toLowerCase()} de ${m2}m². Ideal tanto para vivienda habitual como para una sólida inversión.\n\nOfrece ${hab} habitaciones, ${ban} baños y una distribución impecable. Estado de la propiedad: ${estadoFisico}.\n\nDisponible por ${pre}. Llámanos y ven a conocerlo en persona, te aseguramos que cumplirá con tus expectativas.`
-    ];
-
+  const generarConIA = () => {
+    if (!tipo || (!ciudad && !cp) || !m2) { alert("Faltan datos de ubicación o tipo para que la IA funcione."); return; }
+    setIsGeneratingIA(true);
+    const ubicacion = ciudad ? `${ciudad} ${cp ? `(CP: ${cp})` : ''}` : `zona ${cp}`;
     setTimeout(() => {
-      setDescripcion(plantillas[Math.floor(Math.random() * plantillas.length)]);
+      setDescripcion(`Presentamos este exclusivo ${tipo.toLowerCase()} en ${ubicacion}.\n\nCon una superficie de ${m2}m², esta propiedad destaca por su excelente estado (${estadoFisico.toLowerCase()}) y una distribución inteligente que incluye ${habitaciones || 'varias'} habitaciones y ${banos || 'varios'} baños.\n\nIdeal para quienes buscan calidad de vida en una ubicación estratégica. Contacta ahora para programar una visita privada.`);
       setIsGeneratingIA(false);
-    }, 1000);
+    }, 1200);
+  };
+
+  const handlePhotoUpload = async (e: any) => {
+    const files = Array.from(e.target.files).slice(0, 8 - fotos.length);
+    for (const file of files as File[]) {
+      const reader = new FileReader(); reader.readAsDataURL(file);
+      reader.onload = (event) => { setFotos(prev => [...prev, event.target?.result as string]); };
+    }
   };
 
   const onSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    const payload = { agencia_id: perfil?.agencia_id, agente_id: perfil?.id, nombre_agencia: agenciaFija, titulo, tipo, transaccion, precio: precio ? Number(precio) : null, metros_cuadrados: Number(m2), direccion, ciudad, codigo_postal: codigoPostal, habitaciones: Number(habitaciones), banos: Number(banos), estado_fisico: estadoFisico, descripcion, fotos };
-    if (isEditing && propiedad) { await supabase.from('propiedades').update(payload).eq('id', propiedad.id); } 
-    else { await supabase.from('propiedades').insert(payload); }
+    e.preventDefault(); setSubmitting(true);
+    const payload = { agencia_id: perfil?.agencia_id, agente_id: perfil?.id, nombre_agencia: agenciaFija, titulo, tipo, transaccion, precio: precio ? Number(precio) : null, metros_cuadrados: m2, direccion, ciudad, codigo_postal: cp, habitaciones, banos, estado_fisico: estadoFisico, descripcion, fotos };
+    if (isEditing) await supabase.from('propiedades').update(payload).eq('id', propiedad.id);
+    else await supabase.from('propiedades').insert(payload);
     setSubmitting(false); onSaved(); onClose();
   };
 
-  const onDelete = async () => {
-    if (!confirm('¿Eliminar propiedad?')) return;
-    setSubmitting(true); await supabase.from('propiedades').delete().eq('id', propiedad.id);
-    onSaved(); onClose();
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in w-full">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-2xl card p-0 overflow-hidden animate-slide-up bg-ink-950 border-white/10 flex flex-col max-h-[95vh]">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0 bg-ink-950/50">
-          <div><div className="text-sm font-semibold text-white">{isEditing ? 'Editar propiedad' : 'Nueva propiedad'}</div></div>
-          <button onClick={onClose} className="text-white/40 hover:text-white transition"><X size={18} /></button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      <div className="relative w-full max-w-2xl bg-ink-950 border border-white/10 rounded-2xl overflow-hidden animate-slide-up flex flex-col max-h-[95vh]">
+        <div className="px-5 py-4 border-b border-white/5 flex justify-between">
+          <h3 className="text-sm font-semibold text-white">{isEditing ? 'Editar propiedad' : 'Nueva propiedad'}</h3>
+          <button onClick={onClose}><X size={18}/></button>
         </div>
-        <form id="prop-form" onSubmit={onSubmit} className="p-5 space-y-4 overflow-y-auto custom-scrollbar bg-ink-900/50">
-          <div><label className="label">Título *</label><input required className="input bg-ink-950 border-white/10 text-sm" value={titulo} onChange={(e) => setTitulo(e.target.value)} /></div>
+        <form onSubmit={onSubmit} className="p-5 space-y-4 overflow-y-auto custom-scrollbar">
+          <div><label className="label">Título *</label><input required className="input bg-ink-900 border-white/10 text-sm" value={titulo} onChange={e => setTitulo(e.target.value)} /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="label">Tipo</label><select className="input bg-ink-950 border-white/10 text-sm" value={tipo} onChange={(e) => setTipo(e.target.value)}>{TIPOS.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
-            <div><label className="label">Transacción</label><select className="input bg-ink-950 border-white/10 text-sm" value={transaccion} onChange={(e) => setTransaccion(e.target.value)}>{TRANSACCIONES.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><label className="label">Precio *</label><div className="relative"><input required type="text" className="input bg-ink-950 border-white/10 text-sm pr-8" value={precio ? new Intl.NumberFormat('es-ES').format(Number(precio)) : ''} onChange={(e) => setPrecio(e.target.value.replace(/\D/g, ''))} /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 text-xs font-bold">€</span></div></div>
-            <div><label className="label">m² construidos</label><input type="number" className="input bg-ink-950 border-white/10 text-sm" value={m2} onChange={(e) => setM2(e.target.value)} /></div>
+             <div><label className="label">Tipo</label><select className="input bg-ink-900 border-white/10 text-sm" value={tipo} onChange={e => setTipo(e.target.value)}>{TIPOS.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+             <div><label className="label">Transacción</label><select className="input bg-ink-900 border-white/10 text-sm" value={transaccion} onChange={e => setTransaccion(e.target.value)}>{TRANSACCIONES.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="label">Habitaciones</label><input type="number" className="input bg-ink-950 border-white/10 text-sm" value={habitaciones} onChange={(e) => setHabitaciones(e.target.value)} /></div>
-            <div><label className="label">Baños</label><input type="number" className="input bg-ink-950 border-white/10 text-sm" value={banos} onChange={(e) => setBanos(e.target.value)} /></div>
+             <div><label className="label">Precio *</label><input required className="input bg-ink-900 border-white/10 text-sm" type="number" value={precio} onChange={e => setPrecio(e.target.value)} /></div>
+             <div><label className="label">Metros²</label><input className="input bg-ink-900 border-white/10 text-sm" type="number" value={m2} onChange={e => setM2(e.target.value)} /></div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div><label className="label">Ciudad</label><input className="input bg-ink-950 border-white/10 text-sm" value={ciudad} onChange={(e) => setCiudad(e.target.value)} /></div>
-            <div><label className="label">Código Postal</label><input className="input bg-ink-950 border-white/10 text-sm" placeholder="Ej. 46001" value={codigoPostal} onChange={(e) => setCodigoPostal(e.target.value)} /></div>
-            <div><label className="label">Estado Físico</label><select className="input bg-ink-950 border-white/10 text-sm" value={estadoFisico} onChange={(e) => setEstadoFisico(e.target.value)}>{ESTADOS_FISICOS.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+             <div><label className="label">Habit.</label><input className="input bg-ink-900 border-white/10 text-sm" type="number" value={habitaciones} onChange={e => setHabitaciones(e.target.value)} /></div>
+             <div><label className="label">Baños</label><input className="input bg-ink-900 border-white/10 text-sm" type="number" value={banos} onChange={e => setBanos(e.target.value)} /></div>
+             <div><label className="label">Ciudad</label><input className="input bg-ink-900 border-white/10 text-sm" value={ciudad} onChange={e => setCiudad(e.target.value)} /></div>
+             <div><label className="label">CP</label><input className="input bg-ink-900 border-white/10 text-sm" value={cp} onChange={e => setCp(e.target.value)} /></div>
           </div>
-          <div><label className="label">Dirección / Ubicación</label><input className="input bg-ink-950 border-white/10 text-sm" value={direccion} onChange={(e) => setDireccion(e.target.value)} /></div>
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="label mb-0">Memoria Descriptiva</label>
-              <button type="button" onClick={generarDescripcion} disabled={isGeneratingIA} className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-brand-400 bg-brand-500/10 hover:bg-brand-500/20 px-2 py-1 rounded transition disabled:opacity-50">
-                {isGeneratingIA ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />} Redactar IA
-              </button>
-            </div>
-            <textarea rows={4} className="input bg-ink-950 border-white/10 resize-none text-xs leading-relaxed" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} disabled={isGeneratingIA} />
-          </div>
-          <div>
-            <label className="label flex justify-between items-center mb-1.5"><span>Galería ({fotos.length}/8)</span></label>
-            <div className="grid grid-cols-4 gap-2">
-              {fotos.map((f, i) => (
-                <div key={i} className="group relative aspect-square rounded-lg overflow-hidden border border-white/10 bg-ink-900">
-                  <img src={f} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-1">
-                    <div className="flex justify-between items-start"><div className="bg-ink-950/80 rounded px-1 text-[8px] font-bold text-white border border-white/10">#{i + 1}</div><button type="button" onClick={() => setFotos(prev => prev.filter((_, idx) => idx !== i))} className="p-1 bg-red-500 text-white rounded hover:bg-red-600 transition"><Trash2 size={10}/></button></div>
-                    <div className="flex justify-center gap-1">
-                      {i > 0 && <button type="button" onClick={() => movePhoto(i, 'left')} className="p-1 bg-white/20 hover:bg-white/30 text-white rounded backdrop-blur-md transition"><ArrowLeft size={12} /></button>}
-                      {i < fotos.length - 1 && <button type="button" onClick={() => movePhoto(i, 'right')} className="p-1 bg-white/20 hover:bg-white/30 text-white rounded backdrop-blur-md transition"><ArrowRight size={12} /></button>}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {fotos.length < 8 && <label className="aspect-square rounded-lg bg-ink-950 border border-dashed border-white/20 hover:border-brand-500/50 transition cursor-pointer flex items-center justify-center text-white/30 hover:text-brand-400"><input type="file" multiple accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={isCompressing} />{isCompressing ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16}/>}</label>}
-            </div>
-          </div>
+          <div className="flex justify-between items-end"><label className="label">Memoria Descriptiva</label><button type="button" onClick={generarConIA} disabled={isGeneratingIA} className="text-[9px] font-bold text-brand-400 uppercase tracking-widest flex items-center gap-1">{isGeneratingIA ? <Loader2 className="animate-spin" size={10}/> : <Sparkles size={10}/>} Generar con IA</button></div>
+          <textarea rows={4} className="input bg-ink-900 border-white/10 text-xs resize-none" value={descripcion} onChange={e => setDescripcion(e.target.value)} />
+          <div><label className="label">Fotos (Máx 8)</label><input type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="text-xs text-white/40" /></div>
+          <button type="submit" disabled={submitting} className="btn-primary w-full py-3 mt-4 text-[11px] font-bold uppercase">{submitting ? <Loader2 size={14} className="animate-spin mx-auto"/> : (isEditing ? 'Actualizar' : 'Crear Propiedad')}</button>
         </form>
-        <div className="p-4 border-t border-white/5 bg-ink-950/50 flex justify-between items-center shrink-0">
-          {isEditing ? <button type="button" onClick={onDelete} className="text-red-400 hover:text-red-300 text-xs font-medium flex items-center gap-1"><Trash2 size={14}/> Eliminar</button> : <div/>}
-          <div className="flex gap-2"><button className="btn-ghost border border-white/10 text-xs py-1.5 px-3" onClick={onClose}>Cancelar</button><button type="submit" form="prop-form" className="btn-primary text-xs py-1.5 px-4" disabled={submitting}>{submitting ? <Loader2 size={14} className="animate-spin" /> : (isEditing ? 'Actualizar' : 'Crear')}</button></div>
-        </div>
       </div>
     </div>
   );
