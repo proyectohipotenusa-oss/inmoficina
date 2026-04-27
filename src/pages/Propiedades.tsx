@@ -39,6 +39,7 @@ export default function Propiedades() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProp, setEditingProp] = useState<Propiedad | null>(null);
   const [viewingProp, setViewingProp] = useState<Propiedad | null>(null);
+  
   const [sortPrice, setSortPrice] = useState<'asc'|'desc'|null>(null);
   const [planAgencia, setPlanAgencia] = useState<'estandar'|'premium'>('premium');
 
@@ -83,7 +84,10 @@ export default function Propiedades() {
 
   return (
     <Layout title="Propiedades">
-      <PageHeader title="Catálogo de Propiedades" subtitle="Gestiona tu cartera de inmuebles, publica y comparte fichas." actions={
+      <PageHeader 
+        title="Catálogo de Propiedades" 
+        subtitle="Gestiona tu cartera de inmuebles, publica y comparte fichas." 
+        actions={
           <div className="flex flex-wrap gap-2 w-full justify-end">
             <button className={`btn-ghost border border-white/10 flex items-center gap-1.5 text-[11px] py-1.5 px-3 whitespace-nowrap ${planAgencia === 'estandar' ? 'opacity-50' : ''}`} onClick={abrirCatalogoPublico}>
               <Globe size={14}/> Catálogo Público {planAgencia === 'estandar' && '🔒'}
@@ -101,13 +105,20 @@ export default function Propiedades() {
          </button>
       </div>
 
-      {loading ? <div className="py-24 flex items-center justify-center text-white/40"><Loader2 className="animate-spin" size={24} /></div> : propiedades.length === 0 ? <EmptyState icon={Building2} title="Sin propiedades" description="Añade tu primer inmueble al catálogo para empezar." /> : (
+      {loading ? (
+        <div className="py-24 flex items-center justify-center text-white/40"><Loader2 className="animate-spin" size={24} /></div>
+      ) : propiedades.length === 0 ? (
+        <EmptyState icon={Building2} title="Sin propiedades" description="Añade tu primer inmueble al catálogo para empezar." />
+      ) : (
         <div className="card p-0 bg-ink-900 border-white/5 overflow-hidden animate-fade-in w-full">
           <div className="overflow-x-auto w-full">
             <table className="w-full text-sm min-w-[700px]">
               <thead>
                 <tr className="text-left text-[9px] uppercase tracking-widest text-white/40 border-b border-white/5 bg-white/[0.01]">
-                  <th className="px-4 py-3 font-bold">Propiedad</th><th className="px-4 py-3 font-bold">Transacción</th><th className="px-4 py-3 font-bold">Características</th><th className="px-4 py-3 font-bold text-right cursor-pointer hover:text-white group transition-colors" onClick={() => setSortPrice(prev => prev === 'asc' ? 'desc' : 'asc')}>
+                  <th className="px-4 py-3 font-bold">Propiedad</th>
+                  <th className="px-4 py-3 font-bold">Transacción</th>
+                  <th className="px-4 py-3 font-bold">Características</th>
+                  <th className="px-4 py-3 font-bold text-right cursor-pointer hover:text-white group transition-colors" onClick={() => setSortPrice(prev => prev === 'asc' ? 'desc' : 'asc')}>
                     <div className="flex items-center justify-end gap-1.5">Precio <span className="text-white/30 group-hover:text-white/60">{sortPrice === 'asc' ? '↑' : sortPrice === 'desc' ? '↓' : '↕'}</span></div>
                   </th>
                 </tr>
@@ -115,13 +126,30 @@ export default function Propiedades() {
               <tbody>
                 {sortedProps.map(p => (
                   <tr key={p.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition cursor-pointer group" onClick={() => { setEditingProp(p); setIsDialogOpen(true); }}>
-                    <td className="px-4 py-3"><div className="flex items-center gap-3"><div className="h-10 w-10 rounded-lg bg-ink-950 overflow-hidden border border-white/10 shrink-0">{p.fotos?.[0] ? <img src={p.fotos[0]} className="w-full h-full object-cover" /> : <Building2 className="m-auto mt-2 text-white/10" size={16}/>}</div><div className="min-w-[150px] max-w-[200px]"><div className="font-semibold text-[13px] text-white/90 truncate">{p.titulo}</div><div className="text-[9px] text-white/40 mt-1 uppercase tracking-wider truncate">{p.referencia || `ID-${p.id.substring(0,5)}`} • {p.ciudad}</div></div></div></td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-ink-950 overflow-hidden border border-white/10 shrink-0">
+                          {p.fotos?.[0] ? <img src={p.fotos[0]} className="w-full h-full object-cover" /> : <Building2 className="m-auto mt-2 text-white/10" size={16}/>}
+                        </div>
+                        <div className="min-w-[150px] max-w-[200px]">
+                          <div className="font-semibold text-[13px] text-white/90 truncate">{p.titulo}</div>
+                          <div className="text-[9px] text-white/40 mt-1 uppercase tracking-wider truncate">{p.referencia || `ID-${p.id.substring(0,5)}`} • {p.ciudad}</div>
+                        </div>
+                      </div>
+                    </td>
                     <td className="px-4 py-3"><span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border bg-white/5 border-white/10 text-white/70 whitespace-nowrap">{p.transaccion}</span></td>
-                    <td className="px-4 py-3 text-[10px] text-white/50"><div className="flex items-center gap-2.5"><span className="flex items-center gap-1" title="Habitaciones"><BedDouble size={12}/>{p.habitaciones || 0}</span><span className="flex items-center gap-1" title="Baños"><Bath size={12}/>{p.banos || 0}</span><span className="flex items-center gap-1" title="Superficie"><Square size={10}/>{p.metros_cuadrados || 0}m²</span></div></td>
+                    <td className="px-4 py-3 text-[10px] text-white/50">
+                      <div className="flex items-center gap-2.5">
+                        <span className="flex items-center gap-1" title="Habitaciones"><BedDouble size={12}/>{p.habitaciones || 0}</span>
+                        <span className="flex items-center gap-1" title="Baños"><Bath size={12}/>{p.banos || 0}</span>
+                        <span className="flex items-center gap-1" title="Superficie"><Square size={10}/>{p.metros_cuadrados || 0}m²</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2.5">
                         <div className="font-bold text-[13px] text-white mr-1 whitespace-nowrap">{formatEUR(p.precio)}</div>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {/* BOTONES EDITADOS: Calculadora (Ficha Interna), Globo (Ficha Pública), Trending (Dossier) */}
                           <button onClick={(e) => { e.stopPropagation(); setViewingProp(p); }} className="p-1.5 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="Ficha Interna y Calculadora Financiera"><Calculator size={12}/></button>
                           <button onClick={(e) => abrirFichaPublica(p, e)} className={`p-1.5 rounded-md transition ${planAgencia === 'estandar' ? 'bg-white/5 text-white/20' : 'bg-brand-500/10 text-brand-400 hover:bg-brand-500 hover:text-white'}`} title="Ficha Técnica VIP (Pública)"><Globe size={12}/></button>
                           <button onClick={(e) => { e.stopPropagation(); if (planAgencia === 'premium') window.location.href = '/inversion'; else alert("Función Premium: Actualiza tu plan para crear Dossiers de Inversión."); }} className={`p-1.5 rounded-md transition ${planAgencia === 'estandar' ? 'bg-white/5 text-white/20' : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500 hover:text-white'}`} title="Dossier de Inversión"><TrendingUp size={12}/></button>
@@ -135,7 +163,7 @@ export default function Propiedades() {
           </div>
         </div>
       )}
-      {isDialogOpen && <PropDialog propiedad={editingProp} agenciaFija={nombreAgenciaFijo} onClose={() => { setIsDialogOpen(false); setEditingProp(null); }} onSaved={loadData} />}
+      {isDialogOpen && <PropertyDialog propiedad={editingProp} agenciaFija={nombreAgenciaFijo} onClose={() => { setIsDialogOpen(false); setEditingProp(null); }} onSaved={loadData} />}
       {viewingProp && <FullViewModal propiedad={viewingProp} onClose={() => setViewingProp(null)} />}
     </Layout>
   );
@@ -235,7 +263,7 @@ function FullViewModal({ propiedad, onClose }: { propiedad: Propiedad, onClose: 
   );
 }
 
-function PropDialog({ propiedad, agenciaFija, onClose, onSaved }: { propiedad?: Propiedad | null, agenciaFija: string, onClose: () => void, onSaved: () => void }) {
+function PropertyDialog({ propiedad, agenciaFija, onClose, onSaved }: { propiedad?: Propiedad | null, agenciaFija: string, onClose: () => void, onSaved: () => void }) {
   const { perfil } = useAuth();
   const isEditing = !!propiedad;
   

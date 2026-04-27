@@ -66,7 +66,7 @@ interface CreatedResult {
 
 function slugify(raw: string) {
   if (!raw) return '';
-  return String(raw).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+  return String(raw).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
 }
 
 export default function AdminPanel() {
@@ -138,7 +138,8 @@ export default function AdminPanel() {
   const pendingMessages = mensajes.filter(m => !m.leido).map(m => ({ ...m, tipoEntrada: 'mensaje', sortDate: new Date(m.created_at).getTime() }));
   const bandejaEntrada = [...pendingTrials, ...pendingMessages].sort((a, b) => b.sortDate - a.sortDate);
 
-  const agendaTrials = solicitudes
+  // ARREGLADO: Ahora sí se llama activeTrials (antes decía agendaTrials y rompía el HTML)
+  const activeTrials = solicitudes
     .filter(s => s.estado === 'procesado')
     .map(s => {
       const created = new Date(s.created_at);
