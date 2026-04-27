@@ -21,7 +21,7 @@ export function Layout({ children, title }: LayoutProps) {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [planAgencia, setPlanAgencia] = useState<'estandar' | 'premium'>('premium');
 
-  // Cargamos el plan de la agencia
+  // Cargamos el plan de la agencia para saber si bloqueamos opciones
   useEffect(() => {
     if (perfil?.agencia_id) {
       supabase.from('agencias').select('plan').eq('id', perfil.agencia_id).single()
@@ -31,6 +31,7 @@ export function Layout({ children, title }: LayoutProps) {
     }
   }, [perfil?.agencia_id]);
 
+  // CIERRE DE SESIÓN SUAVE
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -56,20 +57,17 @@ export function Layout({ children, title }: LayoutProps) {
 
     return (
       <Link href={isLocked ? '#' : href}>
-        <a 
-          onClick={handleClick}
-          className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
-            active ? 'bg-brand-500/10 text-brand-400' : 'text-white/50 hover:bg-white/5 hover:text-white'
-          } ${isBottom ? 'mt-auto border-t border-white/5 pt-4' : ''} ${isLocked ? 'cursor-default' : ''}`}
-        >
-          <Icon size={16} className={active ? 'text-brand-400' : 'text-white/40'} />
-          <span className="font-medium text-[13px]">{label}</span>
+        <a onClick={handleClick} className={`group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+          active ? 'bg-brand-500/10 text-brand-400' : 'text-white/50 hover:bg-white/5 hover:text-white'
+        } ${isBottom ? 'mt-auto border-t border-white/5 pt-4' : ''} ${isLocked ? 'cursor-default' : ''}`}>
+          <Icon size={18} className={active ? 'text-brand-400' : 'text-white/40'} />
+          <span className="font-medium text-sm">{label}</span>
           
           {isLocked && (
             <div className="ml-auto relative flex items-center">
-              <Lock size={12} className="text-amber-500/50 group-hover:text-amber-500 transition-colors" />
-              {/* TOOLTIP: El mensajito al pasar el cursor */}
-              <div className="absolute left-full ml-2 px-2 py-1 bg-amber-600 text-[10px] text-white font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-xl">
+              <Lock size={14} className="text-amber-500/50 group-hover:text-amber-500 transition-colors" />
+              {/* TOOLTIP */}
+              <div className="absolute left-full ml-2 px-3 py-1.5 bg-amber-600 text-[10px] text-white font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-xl">
                 Funcionalidad Premium
               </div>
             </div>
@@ -85,17 +83,21 @@ export function Layout({ children, title }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-ink-950 flex font-sans selection:bg-brand-500/30 overflow-x-hidden w-full">
+      <button className="lg:hidden fixed top-4 left-4 z-50 h-10 w-10 rounded-xl bg-ink-900 border border-white/10 flex items-center justify-center text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+        {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+      </button>
+
       <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-ink-900 border-r border-white/5 flex flex-col transition-transform duration-300 lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="h-16 flex items-center justify-center border-b border-white/5 shrink-0 pt-2 pb-2">
-          <Logo size={48} />
+        <div className="h-20 flex items-center justify-center border-b border-white/5 shrink-0 pt-2 pb-2">
+          <Logo size={60} />
         </div>
 
-        <div className="flex-1 flex flex-col px-3 py-4 overflow-y-auto custom-scrollbar">
-          <div className="text-[9px] uppercase tracking-widest text-white/30 font-bold mb-3 px-3">
+        <div className="flex-1 flex flex-col px-4 py-6 overflow-y-auto custom-scrollbar">
+          <div className="text-[10px] uppercase tracking-widest text-white/30 font-bold mb-4 px-4">
             {isAdmin ? 'ADMINISTRACIÓN' : 'AGENCIA'}
           </div>
           
-          <div className="flex flex-col flex-1 gap-0.5">
+          <div className="flex flex-col flex-1 gap-1">
             {isAdmin ? (
               <NavItem href="/admin" icon={LayoutDashboard} label="Panel Admin" />
             ) : (
@@ -113,31 +115,54 @@ export function Layout({ children, title }: LayoutProps) {
               </>
             )}
             
-            <div className="mt-auto pt-4 pb-1 space-y-0.5">
+            {/* Sección Inferior de Cuenta y Soporte */}
+            <div className="mt-auto pt-6 pb-2 space-y-1">
               <NavItem href="/perfil" icon={UserCircle} label="Perfil" />
-              <a href="mailto:admin@inmoficina.es" className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-white/50 hover:bg-white/5 hover:text-white">
-                <LifeBuoy size={16} className="text-white/40" />
-                <span className="font-medium text-[13px]">Soporte Técnico</span>
+              <a 
+                href="mailto:admin@inmoficina.es?subject=Necesito%20ayuda%20con..." 
+                className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-white/50 hover:bg-white/5 hover:text-white"
+              >
+                <LifeBuoy size={18} className="text-white/40" />
+                <span className="font-medium text-sm">Soporte Técnico</span>
               </a>
             </div>
           </div>
         </div>
+
+        <div className="p-4 border-t border-white/5 shrink-0 bg-ink-900">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-brand-500/10 flex items-center justify-center border border-brand-500/20 text-brand-400 font-bold shrink-0 overflow-hidden">
+              {perfil?.avatar_url ? <img src={perfil.avatar_url} alt="Avatar" className="w-full h-full object-cover" /> : (perfil?.nombre || 'U')[0].toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-white truncate">{perfil?.nombre}</div>
+              <div className="text-[10px] text-white/40 truncate">{perfil?.email}</div>
+            </div>
+            <button onClick={handleSignOut} className="h-8 w-8 flex items-center justify-center rounded-lg text-white/40 hover:text-red-400 hover:bg-red-400/10 transition shrink-0" title="Cerrar sesión">
+              <LogOut size={16} />
+            </button>
+          </div>
+        </div>
       </aside>
 
-      <main className="flex-1 flex flex-col min-h-screen transition-all duration-300 lg:pl-64 max-w-full overflow-x-hidden">
-        <header className="h-16 bg-ink-950/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-4 md:px-6 border-b border-white/5">
+      <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 lg:pl-64 max-w-full overflow-x-hidden`}>
+        <header className="h-20 bg-ink-950/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-6 md:px-10 border-b border-white/5">
           <button className="lg:hidden p-2 text-white" onClick={() => setIsMobileMenuOpen(true)}><Menu size={20}/></button>
           <div className="flex items-center gap-4">
-            <h1 className="text-lg md:text-xl font-bold tracking-tight flex items-baseline gap-2">
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight hidden md:flex items-baseline gap-2">
               <span className="text-white">Inmoficina</span>
-              <span className="text-brand-400 text-xs tracking-widest uppercase font-semibold">Luxury CRM</span>
+              <span className="text-brand-400 text-sm tracking-widest uppercase font-semibold">Luxury CRM</span>
             </h1>
           </div>
         </header>
-        <div className="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">{children}</div>
+        <div className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full">
+          {children}
+        </div>
       </main>
 
-      {/* MODAL DE MEJORA (UPGRADE) */}
+      {isMobileMenuOpen && <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />}
+
+      {/* MODAL DE UPSELL PREMIUM */}
       {showUpgradeModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="relative w-full max-w-sm bg-ink-900 border border-white/10 rounded-[2rem] p-8 text-center shadow-2xl animate-slide-up">
@@ -151,7 +176,7 @@ export function Layout({ children, title }: LayoutProps) {
             <div className="space-y-3">
               <button 
                 onClick={() => window.location.href = 'mailto:admin@inmoficina.es?subject=Mejorar%20mi%20plan%20a%20Premium'}
-                className="w-full py-3 bg-brand-600 text-white rounded-xl font-bold uppercase tracking-widest text-[11px] hover:bg-brand-500 transition-all"
+                className="w-full py-3 bg-brand-600 text-white rounded-xl font-bold uppercase tracking-widest text-[11px] hover:bg-brand-500 transition-all shadow-lg shadow-brand-500/20"
               >
                 Hablar con soporte
               </button>

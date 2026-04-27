@@ -133,11 +133,13 @@ export default function AdminPanel() {
     loadData();
   };
 
+  // BANDEJA UNIFICADA DE ENTRADA (Leads + Mensajes nuevos)
   const pendingTrials = solicitudes.filter(s => s.estado === 'pendiente' || s.estado === 'rechazado').map(s => ({ ...s, tipoEntrada: 'trial', sortDate: new Date(s.created_at).getTime() }));
   const pendingMessages = mensajes.filter(m => !m.leido).map(m => ({ ...m, tipoEntrada: 'mensaje', sortDate: new Date(m.created_at).getTime() }));
   const bandejaEntrada = [...pendingTrials, ...pendingMessages].sort((a, b) => b.sortDate - a.sortDate);
 
-  const agendaTrials = solicitudes
+  // LA VARIABLE ESTABA AQUÍ: AHORA SE LLAMA activeTrials PARA QUE COINCIDA CON EL HTML
+  const activeTrials = solicitudes
     .filter(s => s.estado === 'procesado')
     .map(s => {
       const created = new Date(s.created_at);
@@ -437,7 +439,7 @@ export default function AdminPanel() {
 }
 
 // -------------------------------------------------------------
-// MODAL: CREAR / EDITAR AGENCIA (REDISEÑO PREMIUM)
+// MODAL: CREAR / EDITAR AGENCIA
 // -------------------------------------------------------------
 function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
   const isEdit = agencia !== 'new';
@@ -514,7 +516,6 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm animate-fade-in">
       <div className="relative w-full max-w-2xl bg-ink-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-slide-up flex flex-col max-h-[90vh]">
         
-        {/* HEADER DEL MODAL */}
         <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
           <div className="flex items-center gap-3">
              <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
@@ -530,54 +531,31 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
           </button>
         </div>
 
-        {/* CUERPO DEL FORMULARIO */}
         <form id="agency-form" onSubmit={onSubmit} className="p-6 overflow-y-auto custom-scrollbar space-y-6">
-           
-           {/* Sección: Nombre */}
            <div className="space-y-2">
               <label className="text-[11px] font-bold uppercase tracking-widest text-white/60">Nombre de la agencia *</label>
-              <input 
-                required 
-                className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all outline-none" 
-                placeholder="Ej. Inmobiliaria Centro Madrid" 
-                value={nombre} 
-                onChange={e => setNombre(e.target.value)} 
-              />
+              <input required className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all outline-none" placeholder="Ej. Inmobiliaria Centro Madrid" value={nombre} onChange={e => setNombre(e.target.value)} />
            </div>
 
-           {/* Sección: Slug */}
            <div className="space-y-2">
               <label className="text-[11px] font-bold uppercase tracking-widest text-white/60">Slug / ID</label>
-              <input 
-                className="w-full bg-ink-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-white/40 font-mono cursor-not-allowed" 
-                value={effectiveSlug} 
-                readOnly 
-              />
+              <input className="w-full bg-ink-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-white/40 font-mono cursor-not-allowed" value={effectiveSlug} readOnly />
               {!isEdit && effectiveSlug && (
                 <p className="text-[11px] text-white/40 pt-1">
-                  Usuarios que se crearán: <span className="font-mono text-white/60">{effectiveSlug}-1 · {plan === 'premium' ? `${effectiveSlug}-2 · ${effectiveSlug}-3` : ''}@inmoficina.es</span>
+                  Usuarios que se crearán: <span className="font-mono text-white/60">{effectiveSlug}-1 {plan === 'premium' ? `· ${effectiveSlug}-2 · ${effectiveSlug}-3` : ''}@inmoficina.es</span>
                 </p>
               )}
            </div>
 
-           {/* Sección: Ubicación */}
            <div className="pt-4 border-t border-white/5">
              <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
                   <label className="text-[11px] font-bold uppercase tracking-widest text-white/60">Ciudad</label>
-                  <input 
-                    className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 transition-all outline-none" 
-                    value={ciudad} 
-                    onChange={e => setCiudad(e.target.value)} 
-                  />
+                  <input className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 transition-all outline-none" value={ciudad} onChange={e => setCiudad(e.target.value)} />
                </div>
                <div className="space-y-2">
                   <label className="text-[11px] font-bold uppercase tracking-widest text-white/60">Plan Contratado</label>
-                  <select 
-                    className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 transition-all outline-none" 
-                    value={plan} 
-                    onChange={e => setPlan(e.target.value)}
-                  >
+                  <select className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 transition-all outline-none" value={plan} onChange={e => setPlan(e.target.value)}>
                     <option value="estandar">Estándar (29€)</option>
                     <option value="premium">Premium (49€)</option>
                   </select>
@@ -585,54 +563,30 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
              </div>
            </div>
 
-           {/* Sección: Contacto */}
            <div className="pt-4 border-t border-white/5">
              <h4 className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4">Persona de contacto (Opcional)</h4>
              <div className="space-y-4">
                <div className="space-y-2">
                   <label className="text-[11px] font-bold uppercase tracking-widest text-white/60">Responsable</label>
-                  <input 
-                    className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 transition-all outline-none" 
-                    placeholder="Nombre completo"
-                    value={cNombre} 
-                    onChange={e => setCNombre(e.target.value)} 
-                  />
+                  <input className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 transition-all outline-none" placeholder="Nombre completo" value={cNombre} onChange={e => setCNombre(e.target.value)} />
                </div>
                <div className="grid grid-cols-2 gap-4">
                  <div className="space-y-2">
                     <label className="text-[11px] font-bold uppercase tracking-widest text-white/60">Email de contacto</label>
-                    <input 
-                      type="email" 
-                      className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 transition-all outline-none" 
-                      placeholder="correo@agencia.com"
-                      value={cEmail} 
-                      onChange={e => setCEmail(e.target.value)} 
-                    />
+                    <input type="email" className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 transition-all outline-none" placeholder="correo@agencia.com" value={cEmail} onChange={e => setCEmail(e.target.value)} />
                  </div>
                  <div className="space-y-2">
                     <label className="text-[11px] font-bold uppercase tracking-widest text-white/60">Teléfono</label>
-                    <input 
-                      type="tel" 
-                      className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 transition-all outline-none" 
-                      placeholder="+34..."
-                      value={cTel} 
-                      onChange={e => setCTel(e.target.value)} 
-                    />
+                    <input type="tel" className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 transition-all outline-none" placeholder="+34..." value={cTel} onChange={e => setCTel(e.target.value)} />
                  </div>
                </div>
              </div>
            </div>
 
-           {/* Plan y Estado */}
            {isEdit && (
              <div className="pt-4 border-t border-white/5 flex flex-col justify-end">
                 <label className="flex items-center gap-3 cursor-pointer group p-4 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 transition-colors">
-                   <input 
-                     type="checkbox" 
-                     checked={bloqueada} 
-                     onChange={e => setBloqueada(e.target.checked)} 
-                     className="w-5 h-5 rounded border-white/20 bg-ink-950 text-red-500 focus:ring-red-500/50" 
-                   />
+                   <input type="checkbox" checked={bloqueada} onChange={e => setBloqueada(e.target.checked)} className="w-5 h-5 rounded border-white/20 bg-ink-950 text-red-500 focus:ring-red-500/50" />
                    <div>
                      <span className="text-sm font-bold text-red-400 group-hover:text-red-300 transition-colors block">Suspender acceso de esta agencia</span>
                      <span className="text-[10px] text-white/50 block">Si activas esto, sus usuarios no podrán entrar al CRM.</span>
@@ -643,7 +597,6 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
 
         </form>
 
-        {/* FOOTER DEL MODAL */}
         <div className="px-6 py-4 border-t border-white/5 bg-ink-950 flex items-center justify-between shrink-0">
            {isEdit ? (
              <button type="button" onClick={handleDelete} disabled={submitting} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-red-400/80 hover:bg-red-500/10 hover:text-red-400 transition-all text-xs font-bold uppercase tracking-widest">
