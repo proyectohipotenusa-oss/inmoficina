@@ -97,7 +97,11 @@ export function Layout({ children, title }: LayoutProps) {
           
           <div className="flex flex-col flex-1 gap-0.5">
             {isAdmin ? (
-              <NavItem href="/admin" icon={LayoutDashboard} label="Panel Admin" />
+              <>
+                <NavItem href="/admin" icon={LayoutDashboard} label="Panel Admin" />
+                {/* ENLACE DIRECTO AL FORMULARIO DE SOPORTE PARA TI */}
+                <NavItem href="/soporte" icon={LifeBuoy} label="Ir a Formulario Soporte" />
+              </>
             ) : (
               <>
                 <NavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" />
@@ -115,13 +119,15 @@ export function Layout({ children, title }: LayoutProps) {
             
             <div className="mt-auto pt-4 border-t border-white/5 mt-4 space-y-0.5">
               <NavItem href="/perfil" icon={UserCircle} label="Perfil" />
-              {/* ENLACE DE SOPORTE INYECTADO AQUÍ */}
-              <Link href={isAdmin ? "/admin" : "/soporte"}>
-                <a className="group relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-white/50 hover:bg-white/5 hover:text-white">
-                  <LifeBuoy size={16} className="text-white/40 group-hover:text-white" />
-                  <span className="font-medium text-[13px]">{isAdmin ? 'Soporte Técnico' : 'Soporte Técnico'}</span>
-                </a>
-              </Link>
+              {/* ENLACE AL FORMULARIO DE SOPORTE PARA AGENTES */}
+              {!isAdmin && (
+                <Link href="/soporte">
+                  <a className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-white/50 hover:bg-white/5 hover:text-white">
+                    <LifeBuoy size={16} className="text-white/40" />
+                    <span className="font-medium text-[13px]">Soporte Técnico</span>
+                  </a>
+                </Link>
+              )}
             </div>
           </div>
         </div>

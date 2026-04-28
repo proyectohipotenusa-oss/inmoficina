@@ -21,8 +21,8 @@ import AdminPanel from './pages/AdminPanel';
 import PublicProfile from './pages/PublicProfile';
 import FichaPropiedad from './pages/FichaPropiedad';
 import CatalogoPublico from './pages/CatalogoPublico';
-import Tutorial from './pages/Tutorial';
-import Soporte from './pages/Soporte'; // <-- RUTA IMPORTADA
+import Tutorial from './pages/Tutorial'; 
+import Soporte from './pages/Soporte'; // <-- AQUÍ ESTÁ IMPORTADO CORRECTAMENTE
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 function PlanGuard({ children, premium = false }: { children: React.ReactNode, premium?: boolean }) {
@@ -74,14 +74,18 @@ function PlanGuard({ children, premium = false }: { children: React.ReactNode, p
 export default function App() {
   return (
     <Switch>
+      {/* RUTAS PÚBLICAS */}
       <Route path="/" component={Landing} />
       <Route path="/login" component={Login} />
       <Route path="/u/:slug" component={PublicProfile} />
       <Route path="/p/:id" component={FichaPropiedad} /> 
       <Route path="/a/:agencia_id" component={CatalogoPublico} />
       <Route path="/tutorial" component={Tutorial} /> 
-      <Route path="/soporte" component={Soporte} /> {/* <-- RUTA AÑADIDA */}
       
+      {/* ¡ESTA ES LA RUTA QUE FALTABA! AHORA wouter LA RECONOCERÁ */}
+      <Route path="/soporte" component={Soporte} /> 
+      
+      {/* RUTAS PROTEGIDAS */}
       <Route path="/admin"><ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute></Route>
       
       <Route path="/dashboard"><ProtectedRoute><PlanGuard><Dashboard /></PlanGuard></ProtectedRoute></Route>
@@ -97,9 +101,9 @@ export default function App() {
       <Route path="/agenda"><ProtectedRoute><PlanGuard><Agenda /></PlanGuard></ProtectedRoute></Route>
       <Route path="/historico"><ProtectedRoute><PlanGuard><Historico /></PlanGuard></ProtectedRoute></Route>
       
-      {/* ELIMINAMOS PLANGUARD EN EL PERFIL PARA QUE EL ADMIN PUEDA ENTRAR */}
       <Route path="/perfil"><ProtectedRoute><Perfil /></ProtectedRoute></Route>
       
+      {/* CATCH ALL */}
       <Route><ProtectedRoute><PlanGuard><Dashboard /></PlanGuard></ProtectedRoute></Route>
     </Switch>
   );
