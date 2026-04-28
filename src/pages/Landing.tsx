@@ -5,7 +5,7 @@ import {
   Globe, BarChart3, Sparkles, Smartphone, Rss,
   ArrowRight, CheckCircle2, Star, X, Loader2,
   Trophy, Landmark, LayoutDashboard, Send, 
-  MousePointerClick, Mail, Phone, MapPin, Zap, Building2, ChevronDown, Users, QrCode, FileText, UserCircle
+  MousePointerClick, Mail, Phone, MapPin, Zap, Building2, ChevronDown, Users, QrCode, FileText, UserCircle, TrendingUp
 } from 'lucide-react';
 
 const LOGO_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png";
