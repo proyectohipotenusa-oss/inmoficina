@@ -474,7 +474,7 @@ export default function Landing() {
       </section>
 
       {/* FOOTER */}
-      <footer id="footer" className="py-10 px-4 border-t border-white/5 bg-ink-950 w-full text-center sm:text-left">
+      <footer id="footer" className="py-10 px-4 border-t border-white/5 bg-ink-950 w-full text-center sm:text-left mt-auto">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-white/5 pb-10">
           <div className="md:col-span-2">
             <img src={LOGO_URL} className="w-[48px] h-[48px] mb-4 opacity-80 mx-auto sm:mx-0" alt="Logo Footer" />
@@ -484,12 +484,12 @@ export default function Landing() {
           </div>
           <div>
             <h4 className="text-[9px] font-semibold uppercase text-white/60 mb-4">Menú</h4>
-            <div className="flex flex-col gap-2.5 text-white/40 text-xs uppercase tracking-widest">
-              <a href="#servicios" className="hover:text-white transition-colors">Funcionalidades</a>
-              <a href="#por-que-nosotros" className="hover:text-white transition-colors">La Diferencia</a>
-              <a href="#precios" className="hover:text-white transition-colors">Inversión</a>
-              <a href="#faq" className="hover:text-white transition-colors">Q&A</a>
-              <a href="#contacto" className="hover:text-white transition-colors">Contacto</a>
+            <div className="flex flex-col gap-2.5 text-white/40 text-xs">
+              <a href="/#servicios" className="hover:text-white transition-colors">Funcionalidades</a>
+              <a href="/#por-que-nosotros" className="hover:text-white transition-colors">La Diferencia</a>
+              <a href="/#precios" className="hover:text-white transition-colors">Inversión</a>
+              <a href="/#faq" className="hover:text-white transition-colors">Q&A</a>
+              <a href="/#contacto" className="hover:text-white transition-colors">Contacto</a>
               <Link href="/tutorial"><a className="hover:text-white transition-colors">Tutorial</a></Link>
               <Link href="/soporte"><a className="hover:text-white transition-colors">Soporte</a></Link>
             </div>
