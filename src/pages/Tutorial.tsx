@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
+import { supabase } from '../lib/supabase';
 import { 
   Users, LayoutDashboard, Building2, Rss, Calendar, 
   LineChart, FileText, TrendingUp, Sparkles, UserCircle,
@@ -8,17 +9,31 @@ import {
 } from 'lucide-react';
 
 const LOGO_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png";
-const HERO_IMG_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/1777235529301-019dcb7d-a185-7894-8e9f-05d821ff0562.png";
 const TEMPORARY_LEGAL_URL = "https://www.ejemplo.com";
 
 export default function Tutorial() {
   const [scrolled, setScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
+  const [isModalOpen, setIsModalOpen] = useState(false); // Necesario para el menú de prueba
+  
+  // 1. Efecto para el color del header al hacer scroll
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 2. NUEVO EFECTO: Scroll automático a la sección si venimos de otra página con #
+  useEffect(() => {
+    if (window.location.hash) {
+      const id = window.location.hash.substring(1);
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
   }, []);
 
   const tutorialSections = [
@@ -124,29 +139,29 @@ export default function Tutorial() {
       <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-brand-500/10 blur-[120px] pointer-events-none" />
       <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/5 blur-[120px] pointer-events-none" />
 
-      {/* NAVBAR IDÉNTICA A LANDING */}
+      {/* HEADER EXACTO DE LA LANDING (Adaptado) */}
       <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 w-full ${scrolled ? 'bg-ink-950/90 backdrop-blur-xl border-b border-white/5 py-1' : 'bg-transparent py-3'}`}>
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
-          <Link href="/"><a className="flex items-center gap-3 group cursor-pointer">
+          <a href="/#hero" className="flex items-center gap-3 group cursor-pointer">
             <img src={LOGO_URL} alt="Logo" className="w-[42px] h-[42px] rounded-lg opacity-90 group-hover:opacity-100 transition-opacity" />
             <span className="text-xs font-semibold tracking-widest uppercase text-white/90 hidden sm:block">INMOFICINA</span>
-          </a></Link>
+          </a>
           <div className="hidden lg:flex items-center gap-8 text-[11px] uppercase tracking-[0.15em] font-medium text-white/50">
-            <Link href="/#servicios"><a className="hover:text-white transition-colors">Funcionalidades</a></Link>
-            <Link href="/#por-que-nosotros"><a className="hover:text-white transition-colors">La Diferencia</a></Link>
-            <Link href="/#precios"><a className="hover:text-white transition-colors">Inversión</a></Link>
-            <Link href="/#faq"><a className="hover:text-white transition-colors">Q&A</a></Link>
-            <Link href="/#contacto"><a className="hover:text-white transition-colors">Contacto</a></Link>
-            <Link href="/tutorial"><a className="text-brand-400 border-b-2 border-brand-500 pb-1 font-black cursor-default">Tutorial</a></Link>
+            <a href="/#servicios" className="hover:text-white transition-colors">Funcionalidades</a>
+            <a href="/#por-que-nosotros" className="hover:text-white transition-colors">La Diferencia</a>
+            <a href="/#precios" className="hover:text-white transition-colors">Inversión</a>
+            <a href="/#faq" className="hover:text-white transition-colors">Q&A</a>
+            <a href="/#contacto" className="hover:text-white transition-colors">Contacto</a>
+            <Link href="/tutorial"><a className="hover:text-white transition-colors text-brand-400">Tutorial</a></Link>
             <Link href="/soporte"><a className="hover:text-white transition-colors">Soporte</a></Link>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/login"><a className="hidden sm:block text-[11px] font-medium uppercase tracking-widest hover:text-brand-400 text-white/70 transition-colors">Acceso</a></Link>
-            <Link href="/"><a className="hidden sm:block px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-white hover:text-ink-950 transition-all">
+            <Link href="/login" className="text-[11px] font-medium uppercase tracking-widest hover:text-brand-400 text-white/70 transition-colors hidden sm:block">Acceso</Link>
+            <Link href="/" className="hidden sm:block px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-white hover:text-ink-950 transition-all">
               Probar Gratis
-            </a></Link>
-            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 text-brand-400">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            </Link>
+            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-brand-400">
                 <rect y="4" width="24" height="2.5" rx="1.25" fill="currentColor"/>
                 <rect y="10.75" width="24" height="2.5" rx="1.25" fill="currentColor"/>
                 <rect y="17.5" width="24" height="2.5" rx="1.25" fill="currentColor"/>
@@ -156,7 +171,7 @@ export default function Tutorial() {
         </div>
       </nav>
 
-      {/* MOBILE MENU IDÉNTICO A LANDING (FUERA DEL HEADER) */}
+      {/* MOBILE MENU EXACTO DE LA LANDING (FUERA DEL HEADER) */}
       {isMobileMenuOpen && (
         <div id="mobile-menu" className="fixed inset-0 z-[100] flex justify-end bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
           <div className="w-64 bg-ink-950 h-full border-l border-white/10 p-6 flex flex-col gap-6 shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
@@ -167,25 +182,25 @@ export default function Tutorial() {
               </button>
             </div>
             <div className="flex flex-col gap-5 text-xs uppercase tracking-widest font-medium text-white/70">
-              <Link href="/#servicios"><a onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Funcionalidades</a></Link>
-              <Link href="/#por-que-nosotros"><a onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">La Diferencia</a></Link>
-              <Link href="/#precios"><a onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Inversión</a></Link>
-              <Link href="/#faq"><a onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Q&A</a></Link>
-              <Link href="/#contacto"><a onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Contacto</a></Link>
-              <Link href="/tutorial"><a onClick={() => setIsMobileMenuOpen(false)} className="text-brand-400 font-black">Tutorial</a></Link>
-              <Link href="/soporte"><a onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Soporte</a></Link>
+              <a href="/#servicios" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Funcionalidades</a>
+              <a href="/#por-que-nosotros" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">La Diferencia</a>
+              <a href="/#precios" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Inversión</a>
+              <a href="/#faq" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Q&A</a>
+              <a href="/#contacto" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Contacto</a>
+              <Link href="/tutorial" onClick={() => setIsMobileMenuOpen(false)}><a className="hover:text-brand-400 transition-colors">Tutorial</a></Link>
+              <Link href="/soporte" onClick={() => setIsMobileMenuOpen(false)}><a className="hover:text-brand-400 transition-colors">Soporte</a></Link>
               <div className="pt-4 border-t border-white/10 flex flex-col gap-4 mt-2">
-                <Link href="/"><a onClick={() => setIsMobileMenuOpen(false)} className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-white hover:text-ink-950 transition-all text-center">
+                <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-white hover:text-ink-950 transition-all text-center">
                   Probar Gratis
-                </a></Link>
-                <Link href="/login"><a onClick={() => setIsMobileMenuOpen(false)} className="text-brand-400 hover:text-white transition-colors">Acceso</a></Link>
+                </Link>
+                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}><a className="text-brand-400 hover:text-white transition-colors">Acceso</a></Link>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* HERO TUTORIAL (TU CONTENIDO ORIGINAL) */}
+      {/* HERO TUTORIAL */}
       <section className="relative pt-48 pb-24 text-center w-full flex flex-col justify-center items-center px-4">
         <div className="max-w-3xl mx-auto z-10">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/[0.02] text-white/60 text-[9px] font-bold uppercase tracking-[0.2em] mb-8 backdrop-blur-md">
@@ -204,7 +219,7 @@ export default function Tutorial() {
         </div>
       </section>
 
-      {/* CONTENIDO DEL TUTORIAL (TU CONTENIDO ORIGINAL) */}
+      {/* CONTENIDO DEL TUTORIAL */}
       <section className="py-20 relative z-10">
         <div className="max-w-5xl mx-auto px-4 space-y-32">
           {tutorialSections.map((section, index) => (
@@ -239,7 +254,7 @@ export default function Tutorial() {
         </div>
       </section>
 
-      {/* CTA FINAL (TU CONTENIDO ORIGINAL) */}
+      {/* CTA FINAL */}
       <section className="py-32 px-4 text-center border-t border-white/5 bg-white/[0.01]">
         <div className="max-w-2xl mx-auto">
           <Zap size={40} className="text-brand-400 mx-auto mb-8 animate-pulse" />
@@ -251,7 +266,7 @@ export default function Tutorial() {
         </div>
       </section>
 
-      {/* FOOTER */}
+      {/* FOOTER EXACTO DE LA LANDING (con mayúsculas corregidas) */}
       <footer id="footer" className="py-10 px-4 border-t border-white/5 bg-ink-950 w-full text-center sm:text-left">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-white/5 pb-10">
           <div className="md:col-span-2">
@@ -263,12 +278,12 @@ export default function Tutorial() {
           <div>
             <h4 className="text-[9px] font-semibold uppercase text-white/60 mb-4">Menú</h4>
             <div className="flex flex-col gap-2.5 text-white/40 text-xs">
-              <a href="#servicios" className="hover:text-white transition-colors">Funcionalidades</a>
-              <a href="#por-que-nosotros" className="hover:text-white transition-colors">La Diferencia</a>
-              <a href="#precios" className="hover:text-white transition-colors">Inversión</a>
-              <a href="#faq" className="hover:text-white transition-colors">Q&A</a>
-              <a href="#contacto" className="hover:text-white transition-colors">Contacto</a>
-              <Link href="/tutorial"><a className="hover:text-white transition-colors">Tutorial</a></Link>
+              <a href="/#servicios" className="hover:text-white transition-colors">Funcionalidades</a>
+              <a href="/#por-que-nosotros" className="hover:text-white transition-colors">La Diferencia</a>
+              <a href="/#precios" className="hover:text-white transition-colors">Inversión</a>
+              <a href="/#faq" className="hover:text-white transition-colors">Q&A</a>
+              <a href="/#contacto" className="hover:text-white transition-colors">Contacto</a>
+              <Link href="/tutorial"><a className="text-brand-400 font-bold hover:text-white transition-colors">Tutorial</a></Link>
               <Link href="/soporte"><a className="hover:text-white transition-colors">Soporte</a></Link>
             </div>
           </div>
