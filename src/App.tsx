@@ -21,8 +21,8 @@ import AdminPanel from './pages/AdminPanel';
 import PublicProfile from './pages/PublicProfile';
 import FichaPropiedad from './pages/FichaPropiedad';
 import CatalogoPublico from './pages/CatalogoPublico';
-import Tutorial from './pages/Tutorial'; 
-import Soporte from './pages/Soporte'; // NUEVA RUTA: SOPORTE
+import Tutorial from './pages/Tutorial';
+import Soporte from './pages/Soporte'; // <-- RUTA IMPORTADA
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 function PlanGuard({ children, premium = false }: { children: React.ReactNode, premium?: boolean }) {
@@ -80,7 +80,7 @@ export default function App() {
       <Route path="/p/:id" component={FichaPropiedad} /> 
       <Route path="/a/:agencia_id" component={CatalogoPublico} />
       <Route path="/tutorial" component={Tutorial} /> 
-      <Route path="/soporte" component={Soporte} /> {/* AQUÍ SE REGISTRA LA RUTA PÚBLICA */}
+      <Route path="/soporte" component={Soporte} /> {/* <-- RUTA REGISTRADA */}
       
       <Route path="/admin"><ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute></Route>
       
@@ -97,7 +97,6 @@ export default function App() {
       <Route path="/agenda"><ProtectedRoute><PlanGuard><Agenda /></PlanGuard></ProtectedRoute></Route>
       <Route path="/historico"><ProtectedRoute><PlanGuard><Historico /></PlanGuard></ProtectedRoute></Route>
       
-      {/* ELIMINAMOS PLANGUARD EN EL PERFIL PARA QUE EL ADMIN PUEDA ENTRAR */}
       <Route path="/perfil"><ProtectedRoute><Perfil /></ProtectedRoute></Route>
       
       <Route><ProtectedRoute><PlanGuard><Dashboard /></PlanGuard></ProtectedRoute></Route>

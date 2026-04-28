@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { useLocation } from 'wouter';
 import {
   Shield, Plus, Building2, Loader2, Copy, Check, X, Users, Sparkles, ChevronRight, MapPin, Trash2,
-  TrendingUp, CheckCircle, Phone, CalendarDays, MessageSquare, LogOut, UserCircle, LifeBuoy
+  TrendingUp, CheckCircle, Phone, CalendarDays, MessageSquare, LogOut, LifeBuoy
 } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageHeader } from '../components/PageHeader';
@@ -63,12 +63,6 @@ interface TicketSoporte {
   created_at: string;
 }
 
-interface Agente {
-  id: string;
-  email: string;
-  nombre: string;
-}
-
 interface CreatedUser {
   email: string;
   password: string;
@@ -96,7 +90,7 @@ export default function AdminPanel() {
   const [selectedAgencia, setSelectedAgencia] = useState<Agencia | 'new' | null>(null);
   const [selectedSolicitud, setSelectedSolicitud] = useState<Solicitud | null>(null);
   const [selectedMensaje, setSelectedMensaje] = useState<MensajeContacto | null>(null);
-  const [selectedTicket, setSelectedTicket] = useState<TicketSoporte | null>(null); // MODAL TICKET
+  const [selectedTicket, setSelectedTicket] = useState<TicketSoporte | null>(null); // ESTADO DEL MODAL TICKET
   const [result, setResult] = useState<CreatedResult | null>(null);
 
   const loadData = async () => {
@@ -111,7 +105,7 @@ export default function AdminPanel() {
     const { data: msgs } = await supabase.from('mensajes_contacto').select('*').order('created_at', { ascending: false });
     setMensajes((msgs as MensajeContacto[]) || []);
 
-    // CARGAMOS LOS TICKETS DE SOPORTE
+    // CARGAMOS TICKETS
     const { data: tcks } = await supabase.from('tickets_soporte').select('*').order('created_at', { ascending: false });
     setTickets((tcks as TicketSoporte[]) || []);
 
@@ -161,10 +155,10 @@ export default function AdminPanel() {
     loadData();
   };
 
+  // BANDEJA DE ENTRADA UNIFICADA (TICKETS PRIMERO)
   const pendingTrials = solicitudes.filter(s => s.estado === 'pendiente' || s.estado === 'rechazado').map(s => ({ ...s, tipoEntrada: 'trial', sortDate: new Date(s.created_at).getTime() }));
   const pendingMessages = mensajes.filter(m => !m.leido).map(m => ({ ...m, tipoEntrada: 'mensaje', sortDate: new Date(m.created_at).getTime() }));
-  // AÑADIMOS LOS TICKETS PENDIENTES A LA BANDEJA PRINCIPAL (CON PRIORIDAD)
-  const pendingTickets = tickets.filter(t => t.estado === 'pendiente').map(t => ({ ...t, tipoEntrada: 'ticket', sortDate: new Date(t.created_at).getTime() + 9999999999 })); // Prioridad máxima en el sort
+  const pendingTickets = tickets.filter(t => t.estado === 'pendiente').map(t => ({ ...t, tipoEntrada: 'ticket', sortDate: new Date(t.created_at).getTime() + 9999999999 })); // Prioridad Absoluta
   
   const bandejaEntrada = [...pendingTickets, ...pendingTrials, ...pendingMessages].sort((a, b) => b.sortDate - a.sortDate);
 
@@ -207,7 +201,6 @@ export default function AdminPanel() {
         }
       />
 
-      {/* MÉTRICAS (Mantenidas) */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="card p-4 bg-ink-900 border-white/5 flex items-center gap-4">
            <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center shrink-0 border border-brand-500/20">
@@ -240,7 +233,7 @@ export default function AdminPanel() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
         
-        {/* BANDEJA DE ENTRADA PRINCIPAL */}
+        {/* BANDEJA PRINCIPAL (INCLUYE TICKETS) */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 flex items-center gap-1.5">
@@ -273,7 +266,7 @@ export default function AdminPanel() {
                           {isTrial ? item.nombre_agencia : isTicket ? item.nombre_agencia : item.nombre}
                         </div>
                         <div className={`text-[8px] font-black px-2 py-0.5 rounded w-fit uppercase tracking-widest ${isTrial ? 'bg-brand-500/20 text-brand-400' : isTicket ? 'bg-orange-500/20 text-orange-400' : 'bg-purple-500/20 text-purple-400'}`}>
-                          {isTrial ? `Trial: ${item.estado}` : isTicket ? 'Soporte Técnico' : 'Mensaje Web'}
+                          {isTrial ? `Trial: ${item.estado}` : isTicket ? 'Ticket Soporte' : 'Mensaje Web'}
                         </div>
                       </div>
                       <div className="text-[9px] font-medium text-white/40 shrink-0">
@@ -286,7 +279,7 @@ export default function AdminPanel() {
                         <MapPin size={10} className="text-white/30 shrink-0" /> {item.ciudad}
                       </div>
                     ) : isTicket ? (
-                       <div className="text-[10px] text-white/60 italic truncate leading-relaxed">
+                      <div className="text-[10px] text-white/60 italic truncate leading-relaxed">
                         "{item.motivo}"
                       </div>
                     ) : (
@@ -312,7 +305,7 @@ export default function AdminPanel() {
                           </button>
                         )
                       ) : isTicket ? (
-                         <button onClick={(e) => { e.stopPropagation(); setSelectedTicket(item); }} className="w-full py-1.5 rounded-lg bg-orange-500/20 text-orange-400 text-[9px] font-bold hover:bg-orange-500 hover:text-white transition uppercase tracking-widest flex items-center justify-center gap-1">
+                        <button onClick={(e) => { e.stopPropagation(); setSelectedTicket(item); }} className="w-full py-1.5 rounded-lg bg-orange-500/20 text-orange-400 text-[9px] font-bold hover:bg-orange-500 hover:text-white transition uppercase tracking-widest flex items-center justify-center gap-1">
                           <LifeBuoy size={12}/> Ver Ticket
                         </button>
                       ) : (
@@ -328,9 +321,8 @@ export default function AdminPanel() {
           )}
         </div>
 
-        {/* COLUMNA CENTRAL (Trials activos y Tickets resueltos) */}
+        {/* COLUMNA CENTRAL: TRIALS Y TICKETS RESUELTOS */}
         <div className="space-y-6">
-          {/* TRIALS ACTIVOS */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-1.5">
@@ -376,7 +368,6 @@ export default function AdminPanel() {
             )}
           </div>
 
-          {/* HISTORIAL TICKETS (NUEVO) */}
           <div className="space-y-3">
             <div className="flex items-center justify-between pt-4 border-t border-white/5">
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 flex items-center gap-1.5">
@@ -411,10 +402,9 @@ export default function AdminPanel() {
               </div>
             )}
           </div>
-
         </div>
 
-        {/* COLUMNA DERECHA (Historial Mensajes Web) */}
+        {/* COLUMNA DERECHA (Mensajes) */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-400 flex items-center gap-1.5">
@@ -520,7 +510,7 @@ export default function AdminPanel() {
   );
 }
 
-// ... EL RESTO DE TUS COMPONENTES (AgencyDialog, SolicitudDialog, MensajeDialog, CredentialsDialog) SIGUEN EXACTAMENTE IGUAL AQUÍ ...
+// ... EL RESTO DE TUS DIALOGOS SE MANTIENEN INTACTOS (AgencyDialog, SolicitudDialog, MensajeDialog, CredentialsDialog) ...
 
 function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
   const isEdit = agencia !== 'new';
@@ -864,7 +854,39 @@ function MensajeDialog({ mensaje, onClose, onSave, onDelete }: any) {
   );
 }
 
-// NUEVO DIALOG PARA LOS TICKETS DE SOPORTE
+function CredentialsDialog({ result, onClose }: any) {
+  const [copied, setCopied] = useState<any>(null);
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-ink-950/90 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-sm bg-ink-900 border border-white/10 rounded-2xl p-8 shadow-2xl animate-slide-up text-center">
+        <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
+          <Check size={32} className="text-emerald-400" />
+        </div>
+        <h3 className="text-xl font-bold text-white mb-2">Agencia Creada</h3>
+        <p className="text-white/50 text-xs mb-8">Copia las credenciales a continuación y envíaselas al responsable de la agencia.</p>
+        
+        <div className="space-y-3 text-left mb-8">
+          {result.usuarios.map((u: any, i: number) => (
+            <div key={i} className="p-4 bg-ink-950 border border-white/10 rounded-xl flex justify-between items-center group">
+              <div className="min-w-0 pr-4">
+                <div className="text-[11px] font-bold text-white truncate mb-0.5">{u.email}</div>
+                <div className="text-[10px] text-white/40 font-mono tracking-widest">{u.password}</div>
+              </div>
+              <button onClick={() => { navigator.clipboard.writeText(`${u.email} / ${u.password}`); setCopied(i); setTimeout(() => setCopied(null), 1500); }} className="p-2 rounded-lg bg-white/5 text-white/40 hover:text-white hover:bg-brand-500 transition-all shrink-0">
+                {copied === i ? <Check size={16} className="text-emerald-400"/> : <Copy size={16}/>}
+              </button>
+            </div>
+          ))}
+        </div>
+        <button onClick={onClose} className="w-full py-3.5 rounded-xl bg-brand-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-brand-500 transition-all shadow-lg shadow-brand-500/20">
+          Entendido, cerrar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// NUEVO MODAL PARA LOS TICKETS DE SOPORTE
 function TicketDialog({ ticket, onClose, onSave, onDelete }: any) {
   const [formData, setFormData] = useState({ ...ticket });
   const [submitting, setSubmitting] = useState(false);
@@ -924,7 +946,7 @@ function TicketDialog({ ticket, onClose, onSave, onDelete }: any) {
 
           <div>
             <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5 block">Mensaje / Detalle del error</label>
-            <div className="text-sm text-white/80 bg-ink-950 border border-white/5 px-4 py-3 rounded-lg leading-relaxed">{ticket.mensaje}</div>
+            <div className="text-sm text-white/80 bg-ink-950 border border-white/5 px-4 py-3 rounded-lg leading-relaxed whitespace-pre-wrap">{ticket.mensaje}</div>
           </div>
           
           <form onSubmit={onSubmit} className="pt-4">
@@ -951,38 +973,6 @@ function TicketDialog({ ticket, onClose, onSave, onDelete }: any) {
             </div>
           </form>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function CredentialsDialog({ result, onClose }: any) {
-  const [copied, setCopied] = useState<any>(null);
-  return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-ink-950/90 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-sm bg-ink-900 border border-white/10 rounded-2xl p-8 shadow-2xl animate-slide-up text-center">
-        <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
-          <Check size={32} className="text-emerald-400" />
-        </div>
-        <h3 className="text-xl font-bold text-white mb-2">Agencia Creada</h3>
-        <p className="text-white/50 text-xs mb-8">Copia las credenciales a continuación y envíaselas al responsable de la agencia.</p>
-        
-        <div className="space-y-3 text-left mb-8">
-          {result.usuarios.map((u: any, i: number) => (
-            <div key={i} className="p-4 bg-ink-950 border border-white/10 rounded-xl flex justify-between items-center group">
-              <div className="min-w-0 pr-4">
-                <div className="text-[11px] font-bold text-white truncate mb-0.5">{u.email}</div>
-                <div className="text-[10px] text-white/40 font-mono tracking-widest">{u.password}</div>
-              </div>
-              <button onClick={() => { navigator.clipboard.writeText(`${u.email} / ${u.password}`); setCopied(i); setTimeout(() => setCopied(null), 1500); }} className="p-2 rounded-lg bg-white/5 text-white/40 hover:text-white hover:bg-brand-500 transition-all shrink-0">
-                {copied === i ? <Check size={16} className="text-emerald-400"/> : <Copy size={16}/>}
-              </button>
-            </div>
-          ))}
-        </div>
-        <button onClick={onClose} className="w-full py-3.5 rounded-xl bg-brand-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-brand-500 transition-all shadow-lg shadow-brand-500/20">
-          Entendido, cerrar
-        </button>
       </div>
     </div>
   );
