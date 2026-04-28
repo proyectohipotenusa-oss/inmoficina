@@ -37,6 +37,7 @@ export function Layout({ children, title }: LayoutProps) {
     }
   }, [perfil?.agencia_id]);
 
+  // CIERRE DE SESIÓN SUAVE
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -47,7 +48,7 @@ export function Layout({ children, title }: LayoutProps) {
     }
   };
 
-  // ENVÍO DEL TICKET DE SOPORTE DESDE EL POP-UP
+  // ENVÍO DEL TICKET AL MODAL
   const handleSupportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSupportError('');
@@ -55,7 +56,7 @@ export function Layout({ children, title }: LayoutProps) {
 
     const ticketPayload = {
       nombre_agencia: perfil?.agencia_id || 'Desconocida',
-      licencia: 'N/A', // O puedes omitirlo
+      licencia: 'N/A',
       nombre_usuario: perfil?.nombre || 'Agente',
       email_plataforma: perfil?.email || '',
       email_personal: perfil?.email || '',
@@ -73,7 +74,6 @@ export function Layout({ children, title }: LayoutProps) {
     } else {
       setSupportSuccess(true);
       setSupportLoading(false);
-      // Limpiar formulario tras 3 segundos y cerrar modal
       setTimeout(() => {
         setSupportSuccess(false);
         setShowSupportModal(false);
@@ -152,6 +152,7 @@ export function Layout({ children, title }: LayoutProps) {
             {isAdmin ? (
               <>
                 <NavItem href="/admin" icon={LayoutDashboard} label="Panel Admin" />
+                {/* BOTÓN PARA ADMINS: IR A VER LOS TICKETS */}
                 <NavItem href="/admin" icon={LifeBuoy} label="Tickets Soporte" />
               </>
             ) : (
@@ -172,7 +173,7 @@ export function Layout({ children, title }: LayoutProps) {
             <div className="mt-auto pt-4 border-t border-white/5 mt-4 space-y-0.5">
               <NavItem href="/perfil" icon={UserCircle} label="Perfil" />
               
-              {/* BOTÓN QUE ABRE EL POP-UP DE SOPORTE (SOLO PARA AGENTES) */}
+              {/* BOTÓN PARA AGENTES: ABRE POP UP MODAL */}
               {!isAdmin && (
                 <button 
                   onClick={() => { setShowSupportModal(true); setIsMobileMenuOpen(false); }}
@@ -219,7 +220,7 @@ export function Layout({ children, title }: LayoutProps) {
 
       {isMobileMenuOpen && <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />}
 
-      {/* POP-UP DE UPGRADE PREMIUM */}
+      {/* POP-UP DE MEJORA DE PLAN */}
       {showUpgradeModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="relative w-full max-w-sm bg-ink-900 border border-white/10 rounded-[2rem] p-8 text-center shadow-2xl animate-slide-up">
@@ -248,7 +249,7 @@ export function Layout({ children, title }: LayoutProps) {
         </div>
       )}
 
-      {/* NUEVO: POP-UP DE SOPORTE TÉCNICO */}
+      {/* NUEVO POP UP: FORMULARIO SOPORTE */}
       {showSupportModal && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="relative w-full max-w-md bg-ink-900 border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-2xl animate-slide-up">

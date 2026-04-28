@@ -154,7 +154,7 @@ export default function AdminPanel() {
   };
 
   const borrarTicket = async (id: string) => {
-    if(!confirm('¿Borrar este ticket de soporte definitivamente?')) return;
+    if(!confirm('¿Borrar este ticket de soporte permanentemente?')) return;
     await supabase.from('tickets_soporte').delete().eq('id', id);
     loadData();
   };
@@ -174,10 +174,7 @@ export default function AdminPanel() {
     .sort((a, b) => a.daysLeft - b.daysLeft);
 
   const historialMensajes = mensajes.filter(m => m.leido);
-  
-  // Clasificar tickets
   const pendingTickets = tickets.filter(t => t.estado === 'pendiente');
-  const resolvedTickets = tickets.filter(t => t.estado === 'resuelto');
 
   return (
     <Layout title="Panel Admin">
@@ -235,8 +232,42 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+      {/* SECCIÓN TICKETS DE SOPORTE */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 flex items-center gap-1.5">
+            <LifeBuoy size={14}/> Tickets de Soporte Pendientes
+          </h3>
+          <span className="text-[9px] font-bold bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">
+            {pendingTickets.length} Nuevos
+          </span>
+        </div>
         
+        {loading ? (
+          <div className="py-8 flex justify-center">
+            <Loader2 className="animate-spin text-orange-400" size={20} />
+          </div>
+        ) : pendingTickets.length === 0 ? (
+          <div className="card p-6 text-center bg-white/[0.01] border-dashed border border-white/10 text-white/20 text-[10px] uppercase font-bold tracking-widest">
+            Sin tickets pendientes
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pendingTickets.map(t => (
+              <div key={t.id} onClick={() => setSelectedTicket(t)} className="card p-4 bg-ink-900 border-white/5 border-l-2 border-l-orange-500 hover:border-white/20 cursor-pointer transition-all shadow-lg shadow-orange-500/5">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-xs font-bold text-white uppercase truncate pr-2">{t.nombre_agencia}</div>
+                  <div className="text-[9px] text-white/30 whitespace-nowrap">{new Date(t.created_at).toLocaleDateString()}</div>
+                </div>
+                <div className="text-[10px] text-orange-400/80 font-medium mb-2 truncate">{t.motivo}</div>
+                <div className="text-[10px] text-white/50 line-clamp-2 italic">"{t.mensaje}"</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 flex items-center gap-1.5">
@@ -397,62 +428,6 @@ export default function AdminPanel() {
 
       </div>
 
-      {/* NUEVA SECCIÓN: TICKETS DE SOPORTE TÉCNICO */}
-      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-4 flex items-center gap-2 mt-12">
-        <LifeBuoy size={16} className="text-orange-400" /> Panel de Soporte Técnico
-      </h3>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-12">
-        {/* TICKETS PENDIENTES */}
-        <div className="card p-0 overflow-hidden shadow-xl border-white/5 bg-ink-900/50">
-          <div className="p-4 border-b border-white/5 flex items-center justify-between bg-orange-500/10">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400">Tickets Pendientes</span>
-            <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{pendingTickets.length}</span>
-          </div>
-          {loading ? (
-             <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-orange-400" size={20} /></div>
-          ) : pendingTickets.length === 0 ? (
-             <div className="p-6 text-center text-white/20 text-[10px] font-bold uppercase tracking-widest">Sin tickets pendientes</div>
-          ) : (
-            <div className="divide-y divide-white/5 max-h-[300px] overflow-y-auto">
-              {pendingTickets.map(t => (
-                <div key={t.id} onClick={() => setSelectedTicket(t)} className="p-4 hover:bg-white/[0.02] cursor-pointer transition-colors border-l-2 border-l-orange-500 group">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-xs font-bold text-white group-hover:text-orange-400 transition-colors uppercase">{t.nombre_agencia}</span>
-                    <span className="text-[9px] text-white/40">{new Date(t.created_at).toLocaleDateString()}</span>
-                  </div>
-                  <div className="text-[10px] text-white/60 truncate">{t.motivo}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* TICKETS RESUELTOS */}
-        <div className="card p-0 overflow-hidden shadow-xl border-white/5 bg-ink-900/50">
-          <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">Historial Resueltos</span>
-          </div>
-          {loading ? (
-             <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-white/40" size={20} /></div>
-          ) : historialTickets.length === 0 ? (
-             <div className="p-6 text-center text-white/20 text-[10px] font-bold uppercase tracking-widest">Historial vacío</div>
-          ) : (
-            <div className="divide-y divide-white/5 max-h-[300px] overflow-y-auto opacity-70">
-              {historialTickets.map(t => (
-                <div key={t.id} onClick={() => setSelectedTicket(t)} className="p-4 hover:bg-white/[0.02] cursor-pointer transition-colors group">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-xs font-bold text-white uppercase">{t.nombre_agencia}</span>
-                    <span className="text-[9px] text-white/40">{new Date(t.created_at).toLocaleDateString()}</span>
-                  </div>
-                  <div className="text-[10px] text-white/60 truncate">{t.motivo}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* BASE DE DATOS DE AGENCIAS (Tu tabla original) */}
       <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-4 flex items-center gap-2 mt-12">
         <Building2 size={16}/> Base de Datos de Agencias
       </h3>
@@ -515,7 +490,6 @@ export default function AdminPanel() {
       {selectedAgencia && <AgencyDialog agencia={selectedAgencia} onClose={() => setSelectedAgencia(null)} onSave={() => { setSelectedAgencia(null); loadData(); }} onCreated={(res: CreatedResult) => { setSelectedAgencia(null); setResult(res); loadData(); }} />}
       {selectedSolicitud && <SolicitudDialog solicitud={selectedSolicitud} onClose={() => setSelectedSolicitud(null)} onSave={() => { setSelectedSolicitud(null); loadData(); }} />}
       {selectedMensaje && <MensajeDialog mensaje={selectedMensaje} onClose={() => setSelectedMensaje(null)} onSave={() => { setSelectedMensaje(null); loadData(); }} onDelete={() => borrarMensaje(selectedMensaje.id)} />}
-      {/* NUEVO MODAL DE TICKET */}
       {selectedTicket && <TicketDialog ticket={selectedTicket} onClose={() => setSelectedTicket(null)} onSave={() => { setSelectedTicket(null); loadData(); }} onDelete={() => borrarTicket(selectedTicket.id)} />}
       {result && <CredentialsDialog result={result} onClose={() => setResult(null)} />}
     </Layout>
@@ -864,7 +838,6 @@ function MensajeDialog({ mensaje, onClose, onSave, onDelete }: any) {
   );
 }
 
-// EL NUEVO MODAL DE TICKET DE SOPORTE
 function TicketDialog({ ticket, onClose, onSave, onDelete }: any) {
   const [formData, setFormData] = useState({ ...ticket });
   const [submitting, setSubmitting] = useState(false);
