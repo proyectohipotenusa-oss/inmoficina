@@ -33,30 +33,47 @@ export default function Dashboard() {
   useEffect(() => {
     if (!perfil?.agencia_id) return;
     const load = async () => {
-      // Peticiones seguras para evitar errores de servidor (404, etc)
-      const { data: lData } = await supabase.from('leads').select('*').eq('agencia_id', perfil.agencia_id);
-      const { data: pData } = await supabase.from('propiedades').select('id, transaccion').eq('agencia_id', perfil.agencia_id);
-      const { data: tData } = await supabase.from('agenda').select('*').eq('agencia_id', perfil.agencia_id);
+      // Peticiones con manejo de error para evitar que el 404 de la tabla 'agenda' rompa la carga
+      try {
+        const [l, p, t] = await Promise.all([
+          supabase.from('leads').select('*').eq('agencia_id', perfil.agencia_id),
+          supabase.from('propiedades').select('id, transaccion').eq('agencia_id', perfil.agencia_id),
+          supabase.from('agenda').select('*').eq('agencia_id', perfil.agencia_id)
+        ]);
 
-      if (lData) setLeads(lData);
-      if (pData) setPropiedades(pData);
-      
-      if (tData) {
-        const hoyStr = new Date().toISOString().split('T')[0];
-        const ahoraDate = new Date();
+        if (l.data) setLeads(l.data);
+        if (p.data) setPropiedades(p.data);
         
-        // Tareas para hoy
-        setTareasHoy(tData
-          .filter(x => x.fecha === hoyStr && !x.completada)
-          .sort((a, b) => (a.hora || '').localeCompare(b.hora || '')));
+        if (t.data) {
+          const hoyStr = new Date().toISOString().split('T')[0];
+          const ahoraDate = new Date();
+          
+          // Tareas para hoy (solo las que no han vencido y no están completadas)
+          setTareasHoy(t.data
+            .filter(x => x.fecha === hoyStr && !x.completada)
+            .sort((a, b) => (a.hora || '').localeCompare(b.hora || '')));
 
-        // Tareas atrasadas (lógica inyectada)
-        const atrasadas = tData.filter(x => {
-          if (x.completada) return false;
-          const tareaDate = new Date(`${x.fecha}T${x.hora || '23:59'}:00`);
-          return tareaDate < ahoraDate;
-        });
-        setTareasAtrasadas(atrasadas.sort((a, b) => new Date(`${a.fecha}T${a.hora}`).getTime() - new Date(`${b.fecha}T${b.hora}`).getTime()));
+          // Tareas atrasadas: Fecha anterior a hoy O (Fecha hoy Y hora anterior a la actual)
+          const atrasadas = t.data.filter(x => {
+            if (x.completada) return false;
+            
+            // Normalizamos la hora para evitar errores de formato (HH:mm)
+            const horaLimpia = x.hora ? x.hora.substring(0, 5) : '23:59';
+            const tareaDate = new Date(`${x.fecha}T${horaLimpia}:00`);
+            
+            // Si la conversión de fecha falla, no la mostramos como urgente por error
+            if (isNaN(tareaDate.getTime())) return false;
+            
+            return tareaDate < ahoraDate;
+          });
+
+          setTareasAtrasadas(atrasadas.sort((a, b) => 
+            new Date(`${a.fecha}T${a.hora || '00:00'}`).getTime() - 
+            new Date(`${b.fecha}T${b.hora || '00:00'}`).getTime()
+          ));
+        }
+      } catch (err) {
+        console.error("Error cargando datos del dashboard", err);
       }
 
       const notaKey = `notas_${perfil.agencia_id}_${perfil.id}`;
@@ -91,7 +108,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* TOP STATS (Tu diseño original) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[ 
             { title: "Pipeline", val: pipelineActivo, icon: KanbanSquare, color: "text-blue-400" },
@@ -107,10 +123,8 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* TRES COLUMNAS PRINCIPALES (Tu diseño original restaurado) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[450px]">
           
-          {/* 1. ATENCIÓN URGENTE */}
           <div className="card p-0 bg-ink-900 border-white/5 flex flex-col h-full overflow-hidden relative">
             <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/10 rounded-bl-full blur-2xl" />
             <div className="p-5 border-b border-white/5 shrink-0 flex justify-between items-center z-10">
@@ -130,9 +144,9 @@ export default function Dashboard() {
                </div>
             ) : (
               <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2 relative z-10">
-                {/* Tareas Atrasadas (Bloque nuevo en tu diseño) */}
+                {/* BLOQUE TAREAS ATRASADAS */}
                 {tareasAtrasadas.map(t => (
-                  <div key={`tarea-${t.id}`} onClick={() => setLocation('/agenda')} className="flex items-center justify-between p-3.5 rounded-xl bg-red-500/5 border border-red-500/10 hover:border-red-500/30 cursor-pointer transition-colors group">
+                  <div key={`tarea-${t.id}`} onClick={() => setLocation('/agenda')} className="flex items-center justify-between p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 cursor-pointer transition-colors group">
                     <div className="min-w-0 pr-2">
                       <div className="text-[12px] font-bold text-white truncate flex items-center gap-1.5">
                         <AlertCircle size={12} className="text-red-400 shrink-0" /> {t.titulo}
@@ -141,19 +155,19 @@ export default function Dashboard() {
                     </div>
                     <div className="text-[9px] font-bold text-red-400 flex flex-col items-end gap-0.5 bg-red-500/10 px-2 py-1 rounded-md shrink-0">
                       <span>{new Date(t.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit'})}</span>
-                      <span>{t.hora}</span>
+                      <span>{t.hora ? t.hora.substring(0,5) : ''}</span>
                     </div>
                   </div>
                 ))}
 
-                {/* Leads Dormidos */}
+                {/* BLOQUE LEADS DORMIDOS */}
                 {leadsCongelados.map(l => (
                   <div key={`lead-${l.id}`} onClick={() => setLocation('/pipeline')} className="flex items-center justify-between p-3.5 rounded-xl bg-ink-950/50 border border-white/5 hover:border-white/10 cursor-pointer transition-colors group">
                     <div className="min-w-0 pr-2">
                       <div className="text-[13px] font-bold text-white truncate">{l.nombre}</div>
                       <div className="text-[10px] text-white/40 capitalize mt-0.5">{l.estado}</div>
                     </div>
-                    <div className="text-[10px] font-bold text-red-400 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded-md shrink-0">
+                    <div className="text-[10px] font-bold text-amber-400 flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-md shrink-0">
                       <Flame size={12}/> +3 días
                     </div>
                   </div>
@@ -162,7 +176,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* 2. BLOC DE NOTAS */}
           <div className="card p-0 bg-amber-500/5 border border-amber-500/20 flex flex-col h-full overflow-hidden relative group">
             <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-bl from-amber-500/20 to-transparent rounded-bl-xl opacity-50" />
             <div className="flex items-center gap-2 p-5 shrink-0">
@@ -177,7 +190,6 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* 3. AGENDA HOY */}
           <div className="card p-0 bg-ink-900 border-white/5 flex flex-col h-full overflow-hidden">
             <div className="p-5 border-b border-white/5 flex justify-between items-center shrink-0">
                <div className="flex items-center gap-2.5">
@@ -202,7 +214,9 @@ export default function Dashboard() {
                         <p className="text-[13px] font-bold text-white truncate">{t.titulo}</p>
                         <p className="text-[10px] text-white/40 uppercase tracking-wider mt-0.5">{t.tipo}</p>
                       </div>
-                      <div className="text-[11px] font-mono font-bold text-brand-400 bg-brand-500/10 px-2.5 py-1 rounded shrink-0">{t.hora}</div>
+                      <div className="text-[11px] font-mono font-bold text-brand-400 bg-brand-500/10 px-2.5 py-1 rounded shrink-0">
+                        {t.hora ? t.hora.substring(0,5) : ''}
+                      </div>
                     </div>
                   )
                 })}

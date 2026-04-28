@@ -14,6 +14,7 @@ const TEMPORARY_LEGAL_URL = "https://www.ejemplo.com";
 
 export default function Landing() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const [formStatus, setFormStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [formData, setFormData] = useState({
     nombre_agencia: '', direccion: '', ciudad: '', codigo_postal: '', contacto_nombre: '', telefono: '', email: ''
@@ -185,7 +186,7 @@ export default function Landing() {
               { icon: Sparkles, title: "Copywriter IA", desc: "Redacción persuasiva basada en la ubicación del inmueble." },
               { icon: LayoutDashboard, title: "Pipeline Kanban", desc: "Control visual de leads y detección de clientes fríos." }
             ].map((s, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-ink-900/40 border border-white/5 hover:border-brand-500/20 transition-all">
+              <div key={i} className="p-6 rounded-2xl bg-ink-900/40 border border-white/5 border border-white/5 hover:border-brand-500/20 transition-all">
                 <s.icon className="text-brand-500 mb-5" size={20} />
                 <h3 className="text-base font-medium mb-2 text-white/90">{s.title}</h3>
                 <p className="text-white/40 text-xs font-light leading-relaxed">{s.desc}</p>
@@ -233,7 +234,28 @@ export default function Landing() {
       <section id="precios" className="py-24 bg-gradient-to-b from-brand-900/10 via-ink-900/40 to-ink-950 border-t border-white/5">
         <div className="max-w-4xl mx-auto text-center mb-16 px-4">
           <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4 text-brand-500">Inversión Inteligente</h2>
-          <p className="text-white/50 text-sm font-light">Escala las herramientas de tu agencia a medida que creces. Sin permanencia.</p>
+          <p className="text-white/50 text-sm font-light mb-8">Escala las herramientas de tu agencia a medida que creces. Sin permanencia.</p>
+          
+          {/* Billing Toggle Premium */}
+          <div className="inline-flex items-center p-1 bg-ink-900/60 rounded-xl border border-white/10 mb-4">
+            <button 
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${billingCycle === 'monthly' ? 'bg-white/10 text-white shadow-lg' : 'text-white/40 hover:text-white'}`}
+            >
+              Mensual
+            </button>
+            <button 
+              onClick={() => setBillingCycle('annual')}
+              className={`px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 ${billingCycle === 'annual' ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'text-white/40 hover:text-white'}`}
+            >
+              Anual <span className="bg-white/20 px-1.5 py-0.5 rounded text-[8px]">-15%</span>
+            </button>
+          </div>
+          {billingCycle === 'annual' && (
+            <p className="text-brand-400 text-[10px] font-bold uppercase tracking-widest animate-fade-in">
+              <Sparkles className="inline-block mr-1 mb-0.5" size={10} /> Pago único anual con bonificación exclusiva
+            </p>
+          )}
         </div>
         
         <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
@@ -244,9 +266,12 @@ export default function Landing() {
                 <h3 className="text-lg font-medium text-white/80 mb-2">Plan Estándar</h3>
                 <div className="flex items-start justify-center gap-1">
                   <span className="text-xl font-medium text-white/40 mt-1">€</span>
-                  <span className="text-5xl font-semibold text-white/90">29</span>
+                  <span className="text-5xl font-semibold text-white/90">
+                    {billingCycle === 'monthly' ? '29' : Math.floor(29 * 0.85)}
+                  </span>
                   <span className="text-sm text-white/40 self-end mb-1.5">/mes</span>
                 </div>
+                {billingCycle === 'annual' && <p className="text-[10px] text-white/30 font-medium mt-2 uppercase tracking-widest">{formatEUR(Math.floor(29 * 0.85) * 12)} facturado anualmente</p>}
               </div>
               <div className="space-y-4 text-left mb-8">
                 {PREMIUM_FEATURES.map((item, i) => (
@@ -271,9 +296,12 @@ export default function Landing() {
               <div className="mt-8 mb-8">
                 <div className="flex items-start justify-center gap-1 mb-2">
                   <span className="text-xl font-medium text-brand-400/50 mt-1">€</span>
-                  <span className="text-5xl font-semibold text-white/90">49</span>
+                  <span className="text-5xl font-semibold text-white/90">
+                    {billingCycle === 'monthly' ? '49' : Math.floor(49 * 0.85)}
+                  </span>
                   <span className="text-sm text-brand-400/50 self-end mb-1.5">/mes</span>
                 </div>
+                {billingCycle === 'annual' && <p className="text-[10px] text-brand-400/40 font-medium mt-2 uppercase tracking-widest">{formatEUR(Math.floor(49 * 0.85) * 12)} facturado anualmente</p>}
               </div>
               <div className="space-y-4 text-left mb-8">
                 {PREMIUM_FEATURES.map((item, i) => (
