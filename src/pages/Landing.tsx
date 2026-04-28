@@ -16,6 +16,7 @@ const TEMPORARY_LEGAL_URL = "https://www.ejemplo.com";
 
 export default function Landing() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   // ESTADO PARA EL DESCUENTO
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const [formStatus, setFormStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -81,7 +82,7 @@ export default function Landing() {
       a: "Nuestras fichas VIP y dossiers retienen al cliente un 300% más de tiempo que un PDF estático, aumentando drásticamente la conversión." 
     },
     { 
-      q: "¿Qué es exactamente el Dossier de Inversionista?", 
+      q: "¿Qué es exactamente el Dossier de Inversión?", 
       a: "Es un reporte automático que calcula el ROI, Cash Flow y Yield Neto para inversores. Les habla en su idioma (números puros) en lugar de darles descripciones genéricas." 
     },
     { 
@@ -138,20 +139,55 @@ export default function Landing() {
             <a href="#servicios" className="hover:text-white transition-colors">Funcionalidades</a>
             <a href="#por-que-nosotros" className="hover:text-white transition-colors">La Diferencia</a>
             <a href="#precios" className="hover:text-white transition-colors">Inversión</a>
-            {/* NUEVOS ITEMS */}
-            <Link href="/tutorial"><a className="hover:text-white transition-colors">Tutorial</a></Link>
-            <Link href="/soporte"><a className="hover:text-white transition-colors">Soporte</a></Link>
             <a href="#faq" className="hover:text-white transition-colors">Q&A</a>
             <a href="#contacto" className="hover:text-white transition-colors">Contacto</a>
+            <Link href="/tutorial"><a className="hover:text-white transition-colors">Tutorial</a></Link>
+            <Link href="/soporte"><a className="hover:text-white transition-colors">Soporte</a></Link>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/login" className="text-[11px] font-medium uppercase tracking-widest hover:text-brand-400 text-white/70 transition-colors">Acceso</Link>
-            <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-white hover:text-ink-950 transition-all">
+            <Link href="/login" className="text-[11px] font-medium uppercase tracking-widest hover:text-brand-400 text-white/70 transition-colors hidden sm:block">Acceso</Link>
+            <button onClick={() => setIsModalOpen(true)} className="hidden sm:block px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-white hover:text-ink-950 transition-all">
               Probar Gratis
+            </button>
+            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-brand-400">
+                <rect y="4" width="24" height="2.5" rx="1.25" fill="currentColor"/>
+                <rect y="10.75" width="24" height="2.5" rx="1.25" fill="currentColor"/>
+                <rect y="17.5" width="24" height="2.5" rx="1.25" fill="currentColor"/>
+              </svg>
             </button>
           </div>
         </div>
       </nav>
+
+      {/* MOBILE MENU */}
+      {isMobileMenuOpen && (
+        <div id="mobile-menu" className="fixed inset-0 z-[100] flex justify-end bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
+          <div className="w-64 bg-ink-950 h-full border-l border-white/10 p-6 flex flex-col gap-6 shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center border-b border-white/10 pb-4">
+              <span className="text-xs font-semibold tracking-widest uppercase text-white/90">Menú</span>
+              <button onClick={() => setIsMobileMenuOpen(false)} className="text-white/50 hover:text-white">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="flex flex-col gap-5 text-xs uppercase tracking-widest font-medium text-white/70">
+              <a href="#servicios" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Funcionalidades</a>
+              <a href="#por-que-nosotros" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">La Diferencia</a>
+              <a href="#precios" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Inversión</a>
+              <a href="#faq" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Q&A</a>
+              <a href="#contacto" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Contacto</a>
+              <Link href="/tutorial" onClick={() => setIsMobileMenuOpen(false)}><a className="hover:text-brand-400 transition-colors">Tutorial</a></Link>
+              <Link href="/soporte" onClick={() => setIsMobileMenuOpen(false)}><a className="hover:text-brand-400 transition-colors">Soporte</a></Link>
+              <div className="pt-4 border-t border-white/10 flex flex-col gap-4 mt-2">
+                <button onClick={() => { setIsMobileMenuOpen(false); setIsModalOpen(true); }} className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-white hover:text-ink-950 transition-all">
+                  Probar Gratis
+                </button>
+                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}><a className="text-brand-400 hover:text-white transition-colors">Acceso</a></Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* HERO */}
       <section id="hero" className="relative pt-32 pb-16 text-center w-full min-h-[85vh] flex flex-col justify-center items-center">
@@ -236,13 +272,12 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* PRECIOS A DOS COLUMNAS CON SELECTOR DE DESCUENTO ANUAL */}
+      {/* PRECIOS */}
       <section id="precios" className="py-24 bg-gradient-to-b from-brand-900/10 via-ink-900/40 to-ink-950 border-t border-white/5">
         <div className="max-w-4xl mx-auto text-center mb-16 px-4">
           <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4 text-brand-500">Inversión Inteligente</h2>
           <p className="text-white/50 text-sm font-light mb-8">Escala las herramientas de tu agencia a medida que creces. Sin permanencia.</p>
           
-          {/* Billing Switcher */}
           <div className="inline-flex items-center p-1 bg-ink-900/60 rounded-xl border border-white/10 mb-4">
             <button 
               onClick={() => setBillingCycle('monthly')}
@@ -265,7 +300,6 @@ export default function Landing() {
         </div>
         
         <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          {/* PLAN ESTÁNDAR */}
           <div className="bg-ink-900/40 border border-white/10 p-8 rounded-[2rem] relative shadow-lg h-full flex flex-col justify-between">
             <div>
               <div className="text-center mb-8">
@@ -293,7 +327,6 @@ export default function Landing() {
             </button>
           </div>
 
-          {/* PLAN PREMIUM */}
           <div className="bg-ink-950 border border-brand-500/30 p-8 rounded-[2rem] text-center relative shadow-[0_0_40px_rgba(99,102,241,0.15)] md:scale-105 z-10 h-[105%] flex flex-col justify-between">
             <div className="absolute top-0 left-0 right-0 py-1.5 bg-brand-600 border-b border-brand-500 text-[9px] font-semibold text-white uppercase tracking-[0.2em] rounded-t-[2rem]">
               Pack Agencia Premium
@@ -391,6 +424,11 @@ export default function Landing() {
               </div>
             ) : (
               <form onSubmit={handleContactSubmit} className="space-y-4">
+                {contactStatus === 'error' && (
+                  <div className="p-3 text-[10px] bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-center">
+                    Error de conexión. Inténtalo de nuevo.
+                  </div>
+                )}
                 <div>
                   <label className="block text-[8px] uppercase tracking-[0.15em] font-medium text-white/50 mb-1.5 ml-1">Nombre *</label>
                   <input required className="input bg-ink-950 border-white/5 text-xs px-3 py-2 w-full rounded-lg outline-none focus:border-brand-500 transition-colors" value={contactData.nombre} onChange={e => setContactData({...contactData, nombre: e.target.value})} />
@@ -429,13 +467,14 @@ export default function Landing() {
           </div>
           <div>
             <h4 className="text-[9px] font-semibold uppercase text-white/60 mb-4">Menú</h4>
-            <div className="flex flex-col gap-2.5 text-white/40 text-xs uppercase tracking-widest">
+            <div className="flex flex-col gap-2.5 text-white/40 text-xs">
               <a href="#servicios" className="hover:text-white transition-colors">Funcionalidades</a>
-              <Link href="/tutorial"><a className="hover:text-white transition-colors">Tutorial de Uso</a></Link>
-              <Link href="/soporte"><a className="hover:text-white transition-colors">Soporte Técnico</a></Link>
+              <a href="#por-que-nosotros" className="hover:text-white transition-colors">La Diferencia</a>
               <a href="#precios" className="hover:text-white transition-colors">Inversión</a>
               <a href="#faq" className="hover:text-white transition-colors">Q&A</a>
               <a href="#contacto" className="hover:text-white transition-colors">Contacto</a>
+              <Link href="/tutorial"><a className="hover:text-white transition-colors">Tutorial</a></Link>
+              <Link href="/soporte"><a className="hover:text-white transition-colors">Soporte</a></Link>
             </div>
           </div>
           <div>
@@ -444,6 +483,8 @@ export default function Landing() {
               <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Política de Cookies</a>
               <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Privacidad</a>
               <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Aviso Legal</a>
+              <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Condiciones de Uso</a>
+              <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Contratación</a>
             </div>
           </div>
         </div>
@@ -459,11 +500,17 @@ export default function Landing() {
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
           <div className="relative w-full max-w-sm bg-ink-950 border border-white/10 rounded-2xl p-6 shadow-2xl animate-slide-up">
             <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-white/30 hover:text-white transition-colors"><X size={18} /></button>
+            
             {formStatus === 'success' ? (
               <div className="text-center py-4">
                 <CheckCircle2 className="text-emerald-400 mx-auto mb-4" size={32} />
                 <h3 className="text-lg font-medium text-white">Solicitud Enviada</h3>
-                <button onClick={() => setIsModalOpen(false)} className="mt-6 w-full py-2.5 bg-brand-600 hover:bg-brand-500 rounded-lg text-xs font-bold text-white uppercase tracking-widest transition-colors">Finalizar</button>
+                <p className="text-white/40 text-xs mt-3 leading-relaxed">
+                  Revisaremos tu agencia y crearemos tus credenciales VIP. Te avisaremos por email a la brevedad.
+                </p>
+                <button onClick={() => setIsModalOpen(false)} className="mt-6 w-full py-2.5 bg-brand-600 hover:bg-brand-500 rounded-lg text-xs font-bold text-white uppercase tracking-widest transition-colors">
+                  Finalizar
+                </button>
               </div>
             ) : (
               <>
@@ -472,15 +519,44 @@ export default function Landing() {
                   <p className="text-[9px] text-white/50 uppercase tracking-widest font-medium mt-1">14 Días Gratis • Pack Premium</p>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-3">
-                  <input required placeholder="Inmobiliaria *" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.nombre_agencia} onChange={e => setFormData({...formData, nombre_agencia: e.target.value})} />
-                  <input required placeholder="Persona de Contacto *" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.contacto_nombre} onChange={e => setFormData({...formData, contacto_nombre: e.target.value})} />
-                  <div className="grid grid-cols-2 gap-3">
-                    <input required placeholder="Teléfono *" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.telefono} onChange={e => setFormData({...formData, telefono: e.target.value})} />
-                    <input required type="email" placeholder="Email *" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                  <div>
+                    <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Inmobiliaria *</label>
+                    <input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.nombre_agencia} onChange={e => setFormData({...formData, nombre_agencia: e.target.value})} />
                   </div>
-                  <button type="submit" disabled={formStatus === 'loading'} className="w-full py-3 mt-4 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
+                  <div>
+                    <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Dirección *</label>
+                    <input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.direccion} onChange={e => setFormData({...formData, direccion: e.target.value})} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Ciudad *</label>
+                      <input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.ciudad} onChange={e => setFormData({...formData, ciudad: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">C.P. *</label>
+                      <input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.codigo_postal} onChange={e => setFormData({...formData, codigo_postal: e.target.value})} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Responsable *</label>
+                    <input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.contacto_nombre} onChange={e => setFormData({...formData, contacto_nombre: e.target.value})} />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Teléfono *</label>
+                      <input required type="tel" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.telefono} onChange={e => setFormData({...formData, telefono: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Email *</label>
+                      <input required type="email" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white text-white focus:border-brand-500 transition-colors outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                    </div>
+                  </div>
+                  <button type="submit" disabled={formStatus === 'loading'} className="w-full py-3 mt-4 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20">
                     {formStatus === 'loading' ? <Loader2 className="animate-spin" size={14} /> : 'Solicitar Acceso VIP'}
                   </button>
+                  <p className="text-[9px] text-white/30 text-center uppercase tracking-widest flex items-center justify-center gap-1 mt-3">
+                    <CheckCircle2 size={10} className="text-emerald-400"/> Sin tarjeta de crédito
+                  </p>
                 </form>
               </>
             )}
