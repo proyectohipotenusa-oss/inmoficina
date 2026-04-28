@@ -33,30 +33,31 @@ export default function Dashboard() {
   useEffect(() => {
     if (!perfil?.agencia_id) return;
     const load = async () => {
+      // Usamos .catch para evitar que una tabla faltante rompa el Promise.all
       const [l, p, t] = await Promise.all([
-        supabase.from('leads').select('*').eq('agencia_id', perfil.agencia_id),
-        supabase.from('propiedades').select('id, transaccion').eq('agencia_id', perfil.agencia_id),
-        supabase.from('agenda').select('*').eq('agencia_id', perfil.agencia_id)
+        supabase.from('leads').select('*').eq('agencia_id', perfil.agencia_id).catch(() => ({ data: [] })),
+        supabase.from('propiedades').select('id, transaccion').eq('agencia_id', perfil.agencia_id).catch(() => ({ data: [] })),
+        supabase.from('agenda').select('*').eq('agencia_id', perfil.agencia_id).catch(() => ({ data: [] }))
       ]);
-      if (l.data) setLeads(l.data);
-      if (p.data) setPropiedades(p.data);
       
-      if (t.data) {
+      if (l && l.data) setLeads(l.data as LeadDash[]);
+      if (p && p.data) setPropiedades(p.data as PropDash[]);
+      
+      if (t && t.data && Array.isArray(t.data)) {
         const hoyStr = new Date().toISOString().split('T')[0];
         const ahoraDate = new Date();
         
         setTareasHoy(t.data
           .filter(x => x.fecha === hoyStr && !x.completada)
-          .sort((a, b) => a.hora.localeCompare(b.hora)));
+          .sort((a, b) => (a.hora || '').localeCompare(b.hora || '')));
 
         const atrasadas = t.data.filter(x => {
           if (x.completada) return false;
-          // Si no tiene hora definida, asumimos 23:59 para no marcarla atrasada prematuramente hoy
           const tareaDate = new Date(`${x.fecha}T${x.hora || '23:59'}:00`);
           return tareaDate < ahoraDate;
         });
         
-        setTareasAtrasadas(atrasadas.sort((a, b) => new Date(`${a.fecha}T${a.hora}`).getTime() - new Date(`${b.fecha}T${b.hora}`).getTime()));
+        setTareasAtrasadas(atrasadas.sort((a, b) => new Date(`${a.fecha}T${a.hora || '00:00'}`).getTime() - new Date(`${b.fecha}T${b.hora || '00:00'}`).getTime()));
       }
 
       const notaKey = `notas_${perfil.agencia_id}_${perfil.id}`;
@@ -102,7 +103,6 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[400px]">
-        {/* ATENCIÓN URGENTE (TAREAS ATRASADAS + LEADS DORMIDOS) */}
         <div className="card p-0 bg-ink-900 border-white/5 flex flex-col h-full overflow-hidden relative">
           <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-bl-full blur-xl" />
           <div className="p-4 pb-2 border-b border-white/5 shrink-0 flex justify-between items-center z-10">
@@ -120,8 +120,6 @@ export default function Dashboard() {
              </div>
           ) : (
             <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2 relative z-10">
-              
-              {/* BLOQUE DE TAREAS ATRASADAS */}
               {tareasAtrasadas.map(t => (
                 <div key={`tarea-${t.id}`} onClick={() => setLocation('/agenda')} className="flex items-center justify-between p-3 rounded-xl bg-red-500/5 border border-red-500/10 hover:border-red-500/30 cursor-pointer transition-colors group">
                   <div className="min-w-0 pr-2">
@@ -138,7 +136,6 @@ export default function Dashboard() {
                 </div>
               ))}
 
-              {/* BLOQUE DE LEADS DORMIDOS */}
               {leadsCongelados.map(l => (
                 <div key={`lead-${l.id}`} onClick={() => setLocation('/pipeline')} className="flex items-center justify-between p-3 rounded-xl bg-ink-950/50 border border-white/5 hover:border-white/10 cursor-pointer transition-colors group">
                   <div className="min-w-0 pr-2">
