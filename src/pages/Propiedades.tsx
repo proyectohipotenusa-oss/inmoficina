@@ -125,7 +125,7 @@ export default function Propiedades() {
               </thead>
               <tbody>
                 {sortedProps.map(p => (
-                  <tr key={p.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition cursor-pointer group" onClick={() => { setEditingProp(p); setIsDialogOpen(true); }}>
+                  <tr key={p.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition cursor-pointer" onClick={() => { setEditingProp(p); setIsDialogOpen(true); }}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-lg bg-ink-950 overflow-hidden border border-white/10 shrink-0">
@@ -148,8 +148,9 @@ export default function Propiedades() {
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2.5">
                         <div className="font-bold text-[13px] text-white mr-1 whitespace-nowrap">{formatEUR(p.precio)}</div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {/* BOTONES EDITADOS: Calculadora (Ficha Interna), Globo (Ficha Pública), Trending (Dossier) */}
+                        
+                        {/* CORRECCIÓN 1: Quitada la clase opacity-0 group-hover:opacity-100 para que se vea siempre en móviles */}
+                        <div className="flex items-center gap-1 transition-opacity">
                           <button onClick={(e) => { e.stopPropagation(); setViewingProp(p); }} className="p-1.5 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="Ficha Interna y Calculadora Financiera"><Calculator size={12}/></button>
                           <button onClick={(e) => abrirFichaPublica(p, e)} className={`p-1.5 rounded-md transition ${planAgencia === 'estandar' ? 'bg-white/5 text-white/20' : 'bg-brand-500/10 text-brand-400 hover:bg-brand-500 hover:text-white'}`} title="Ficha Técnica VIP (Pública)"><Globe size={12}/></button>
                           <button onClick={(e) => { e.stopPropagation(); if (planAgencia === 'premium') window.location.href = '/inversion'; else alert("Función Premium: Actualiza tu plan para crear Dossiers de Inversión."); }} className={`p-1.5 rounded-md transition ${planAgencia === 'estandar' ? 'bg-white/5 text-white/20' : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500 hover:text-white'}`} title="Dossier de Inversión"><TrendingUp size={12}/></button>
@@ -321,22 +322,55 @@ function PropertyDialog({ propiedad, agenciaFija, onClose, onSaved }: { propieda
     e.target.value = '';
   };
 
+  // CORRECCIÓN 2: LÓGICA DE PRECIOS PARA LA INTELIGENCIA ARTIFICIAL
   const generarDescripcion = () => {
-    if (!tipo || (!ciudad && !codigoPostal) || !m2) { alert("Rellena el tipo, ciudad o código postal, y m² para que la IA haga su magia."); return; }
+    if (!tipo || (!ciudad && !codigoPostal) || !m2 || !precio) { 
+      alert("Rellena el tipo, ciudad/C.P., metros cuadrados y PRECIO para que la IA pueda redactar un buen texto."); 
+      return; 
+    }
+    
     setIsGeneratingIA(true); 
-    const pre = formatEUR(Number(precio || 0));
+    
+    const preNum = Number(precio);
+    const m2Num = Number(m2);
+    const pre = formatEUR(preNum);
+    const precioM2 = preNum / m2Num;
+    
     const hab = habitaciones || 'varias';
     const ban = banos || 'varios';
     const esCasa = tipo.toLowerCase() === 'casa' || tipo.toLowerCase() === 'chalet';
     const pronombre = esCasa ? 'a' : 'o';
     const ubicacion = ciudad ? `${ciudad} ${codigoPostal ? `(CP: ${codigoPostal})` : ''}` : `el código postal ${codigoPostal}`;
 
-    const plantillas = [
-      `Ubicad${pronombre} en una de las zonas más atractivas de ${ubicacion}, est${pronombre === 'a' ? 'a' : 'e'} exclusiv${pronombre} ${tipo.toLowerCase()} ofrece un equilibrio perfecto entre elegancia y funcionalidad.\n\nCon una superficie de ${m2}m², su distribución aprovecha al máximo la luz natural. Dispone de ${hab} dormitorios y ${ban} baños completos con excelentes acabados.\n\nEstado actual: ${estadoFisico}. Una oportunidad única en el mercado por ${pre}. Contáctanos para organizar una visita sin compromiso.`,
-      `Excepcional ${tipo.toLowerCase()} de ${m2}m² en ${ubicacion}. Un inmueble pensado para satisfacer los estándares más exigentes, destacando por su amplitud y confort.\n\nLa propiedad consta de ${hab} habitaciones bien iluminadas y ${ban} baños. Su estado de conservación es: ${estadoFisico}, ideal para adaptarse a tu estilo de vida.\n\nPrecio de comercialización: ${pre}. Recomendamos agendar una visita en persona para apreciar todo su potencial y dimensiones.`,
-      `¡Descubre tu próximo hogar en ${ubicacion}! Presentamos est${pronombre === 'a' ? 'a' : 'e'} magnífic${pronombre} ${tipo.toLowerCase()}, un espacio donde cada detalle ha sido cuidado.\n\nSus ${m2}m² se distribuyen de forma inmejorable en ${hab} cálidos dormitorios y ${ban} baños muy funcionales. Se encuentra en condición: ${estadoFisico}.\n\nInversión inteligente por ${pre}. No dejes pasar esta oportunidad, la exclusividad que buscas te está esperando.`,
-      `En ${ubicacion}, te espera est${pronombre === 'a' ? 'a' : 'e'} fantástic${pronombre} ${tipo.toLowerCase()} de ${m2}m². Ideal tanto para vivienda habitual como para una sólida inversión.\n\nOfrece ${hab} habitaciones, ${ban} baños y una distribución impecable. Estado de la propiedad: ${estadoFisico}.\n\nDisponible por ${pre}. Llámanos y ven a conocerlo en persona, te aseguramos que cumplirá con tus expectativas.`
-    ];
+    // Lógica para determinar el tono de la venta (Basado en el Precio por metro cuadrado y total)
+    let tono = 'neutro';
+    if (precioM2 < 1500) tono = 'ganga_inversor';
+    else if (precioM2 > 4500 || preNum > 700000) tono = 'lujo_exclusivo';
+    else if (estadoFisico.includes('reformar')) tono = 'proyecto_reforma';
+    else tono = 'estandar_emocional';
+
+    let plantillas: string[] = [];
+
+    if (tono === 'ganga_inversor') {
+      plantillas = [
+        `Oportunidad de mercado en ${ubicacion}. Est${pronombre === 'a' ? 'a' : 'e'} ${tipo.toLowerCase()} de ${m2Num}m² sale a la venta por tan solo ${pre}, ofreciendo una rentabilidad potencial excelente.\\n\\nCon ${hab} habitaciones y ${ban} baños, es una opción ideal tanto para inversores como para primera vivienda a un coste inmejorable. Estado actual: ${estadoFisico}.\\n\\nInmuebles en esta franja de precio no suelen durar en cartera. Contáctanos antes de que se reserve.`,
+        `Excelente relación calidad-precio en ${ubicacion}. Adquiere est${pronombre === 'a' ? 'a' : 'e'} ${tipo.toLowerCase()} de ${m2Num}m² por ${pre} y asegura tu inversión.\\n\\nCuenta con ${hab} dormitorios y ${ban} baños. Su estado es ${estadoFisico}. Ideal para quienes buscan maximizar su capital sin renunciar a una buena zona.\\n\\nLlámanos para agendar una visita y analizar las posibilidades de este activo.`
+      ];
+    } else if (tono === 'lujo_exclusivo') {
+      plantillas = [
+        `Exclusividad y prestigio en el corazón de ${ubicacion}. Presentamos est${pronombre === 'a' ? 'a' : 'e'} imponente ${tipo.toLowerCase()} de ${m2Num}m², una propiedad reservada para los gustos más exigentes.\\n\\nCada uno de sus ${hab} dormitorios y ${ban} baños ha sido diseñado buscando la máxima amplitud y sofisticación. Estado de conservación: ${estadoFisico}.\\n\\nValorada en ${pre}, representa un estatus de vida único. Agende una visita privada con nuestros asesores para experimentar este inmueble.`,
+        `Una auténtica joya inmobiliaria en ${ubicacion}. Est${pronombre === 'a' ? 'a' : 'e'} ${tipo.toLowerCase()} premium de ${m2Num}m² redefine el concepto de elegancia.\\n\\nDisfrute de ${hab} estancias de lujo y ${ban} baños con calidades excepcionales. Se entrega en condición: ${estadoFisico}.\\n\\nPor ${pre}, usted no solo adquiere una propiedad, sino un estilo de vida superior. Contacte con nuestra división de lujo para más detalles.`
+      ];
+    } else if (tono === 'proyecto_reforma') {
+      plantillas = [
+        `Lienzo en blanco en ${ubicacion}. Est${pronombre === 'a' ? 'a' : 'e'} ${tipo.toLowerCase()} de ${m2Num}m² es el proyecto perfecto para diseñar la casa de tus sueños a medida.\\n\\nLa propiedad, actualmente con ${hab} habitaciones y ${ban} baños, tiene una condición de ${estadoFisico}, ofreciendo infinitas posibilidades de redistribución.\\n\\nPor ${pre}, adquieres un espacio con un potencial de revalorización brutal. Ven a visitarlo con tu arquitecto y visualiza el resultado.`
+      ];
+    } else {
+      plantillas = [
+        `Descubre tu próximo hogar en ${ubicacion}. Est${pronombre === 'a' ? 'a' : 'e'} cálid${pronombre} ${tipo.toLowerCase()} de ${m2Num}m² ofrece un equilibrio perfecto entre confort y ubicación.\\n\\nSus espacios están distribuidos en ${hab} dormitorios acogedores y ${ban} baños muy funcionales. Estado de la propiedad: ${estadoFisico}.\\n\\nDisponible por ${pre}, es la opción ideal para familias que buscan establecerse en un entorno agradable. Te invitamos a conocerlo hoy mismo.`,
+        `En la atractiva zona de ${ubicacion}, te espera est${pronombre === 'a' ? 'a' : 'e'} fantástic${pronombre} ${tipo.toLowerCase()}. Con ${m2Num}m², está diseñado para aprovechar al máximo la luz natural.\\n\\nCuenta con ${hab} habitaciones espaciosas y ${ban} baños, presentándose en un estado ${estadoFisico}.\\n\\nComercializado por ${pre}, creemos que es un inmueble que cumplirá todas tus expectativas de vida. Llámanos sin compromiso.`
+      ];
+    }
 
     setTimeout(() => {
       setDescripcion(plantillas[Math.floor(Math.random() * plantillas.length)]);

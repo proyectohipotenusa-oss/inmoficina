@@ -1,10 +1,9 @@
-import { Switch, Route, Redirect } from 'wouter';
+import { Switch, Route } from 'wouter';
 import { useEffect, useState } from 'react';
 import { useAuth } from './context/AuthContext';
 import { supabase } from './lib/supabase';
 import { Lock, Loader2, Sparkles } from 'lucide-react';
 
-// Importaciones de páginas... (igual que antes)
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -45,9 +44,15 @@ function PlanGuard({ children, premium = false }: { children: React.ReactNode, p
   if (authLoading || checking) return <div className="min-h-screen bg-ink-950 flex items-center justify-center"><Loader2 className="animate-spin text-brand-400" /></div>;
 
   if (perfil?.rol === 'admin') return <>{children}</>;
-  if (status?.blocked) return <div className="min-h-screen bg-ink-950 flex flex-col items-center justify-center p-6 text-center"><Lock size={48} className="text-red-500 mb-4"/><h1 className="text-2xl font-bold">Acceso Suspendido</h1><p className="text-white/50 mt-2">Contacta con administración.</p></div>;
+  
+  if (status?.blocked) return (
+    <div className="min-h-screen bg-ink-950 flex flex-col items-center justify-center p-6 text-center">
+      <Lock size={48} className="text-red-500 mb-4"/>
+      <h1 className="text-2xl font-bold text-white">Acceso Suspendido</h1>
+      <p className="text-white/50 mt-2">Contacta con administración para reactivar tu cuenta.</p>
+    </div>
+  );
 
-  // Si la ruta es premium y el plan es estandar, mostramos bloqueo
   if (premium && status?.plan === 'estandar') {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center bg-ink-950">
@@ -56,7 +61,7 @@ function PlanGuard({ children, premium = false }: { children: React.ReactNode, p
         </div>
         <h1 className="text-3xl font-bold text-white mb-3">Zona Premium</h1>
         <p className="text-white/50 max-w-sm mb-8">Esta herramienta es exclusiva para usuarios con el Plan Premium de Inmoficina.</p>
-        <button onClick={() => window.location.href = '/dashboard'} className="btn-primary px-8">Volver al inicio</button>
+        <button onClick={() => window.location.href = '/dashboard'} className="btn-primary px-8 py-2.5 text-xs">Volver al inicio</button>
       </div>
     );
   }
@@ -80,7 +85,6 @@ export default function App() {
       <Route path="/pipeline"><ProtectedRoute><PlanGuard><Pipeline /></PlanGuard></ProtectedRoute></Route>
       <Route path="/propiedades"><ProtectedRoute><PlanGuard><Propiedades /></PlanGuard></ProtectedRoute></Route>
       
-      {/* RUTAS PREMIUM BLOQUEADAS POR PLANGUARD */}
       <Route path="/portales"><ProtectedRoute><PlanGuard><Portales /></PlanGuard></ProtectedRoute></Route>
       <Route path="/informes"><ProtectedRoute><PlanGuard premium><Informes /></PlanGuard></ProtectedRoute></Route>
       <Route path="/inversion"><ProtectedRoute><PlanGuard premium><Inversion /></PlanGuard></ProtectedRoute></Route>
@@ -88,9 +92,11 @@ export default function App() {
 
       <Route path="/agenda"><ProtectedRoute><PlanGuard><Agenda /></PlanGuard></ProtectedRoute></Route>
       <Route path="/historico"><ProtectedRoute><PlanGuard><Historico /></PlanGuard></ProtectedRoute></Route>
-      <Route path="/perfil"><ProtectedRoute><PlanGuard><Perfil /></PlanGuard></ProtectedRoute></Route>
       
-      <Route><ProtectedRoute><Dashboard /></ProtectedRoute></Route>
+      {/* ELIMINAMOS PLANGUARD EN EL PERFIL PARA QUE EL ADMIN PUEDA ENTRAR */}
+      <Route path="/perfil"><ProtectedRoute><Perfil /></ProtectedRoute></Route>
+      
+      <Route><ProtectedRoute><PlanGuard><Dashboard /></PlanGuard></ProtectedRoute></Route>
     </Switch>
   );
 }

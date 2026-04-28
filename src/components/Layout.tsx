@@ -30,7 +30,6 @@ export function Layout({ children, title }: LayoutProps) {
     }
   }, [perfil?.agencia_id]);
 
-  // CIERRE DE SESIÓN SUAVE
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -67,10 +66,7 @@ export function Layout({ children, title }: LayoutProps) {
           
           {isLocked && (
             <div className="ml-auto relative flex items-center">
-              <Lock size={12} className="text-amber-500/50 group-hover:text-amber-500 transition-colors" />
-              <div className="absolute left-full ml-2 px-2 py-1 bg-amber-600 text-[10px] text-white font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-xl">
-                Funcionalidad Premium
-              </div>
+              <Lock size={12} className="text-amber-500/50 transition-colors" />
             </div>
           )}
           
@@ -89,12 +85,10 @@ export function Layout({ children, title }: LayoutProps) {
       </button>
 
       <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-ink-900 border-r border-white/5 flex flex-col transition-transform duration-300 lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        {/* LOGO - SHRINK 0 para que no se aplaste */}
         <div className="h-16 flex items-center justify-center border-b border-white/5 shrink-0">
           <Logo size={48} />
         </div>
 
-        {/* MENÚ NAVEGACIÓN - FLEX 1 Y SCROLL */}
         <div className="flex-1 flex flex-col px-3 py-4 overflow-y-auto custom-scrollbar">
           <div className="text-[9px] uppercase tracking-widest text-white/30 font-bold mb-3 px-3">
             {isAdmin ? 'ADMINISTRACIÓN' : 'AGENCIA'}
@@ -131,7 +125,6 @@ export function Layout({ children, title }: LayoutProps) {
           </div>
         </div>
 
-        {/* PERFIL BOTTOM - SHRINK 0 PARA QUE NUNCA SE QUEDE FUERA DE PANTALLA */}
         <div className="p-3 border-t border-white/5 shrink-0 bg-ink-950/30">
           <div className="flex items-center gap-2.5">
             <div className="h-9 w-9 rounded-lg bg-brand-500/10 flex items-center justify-center border border-brand-500/20 text-brand-400 font-bold shrink-0 overflow-hidden">
@@ -141,7 +134,8 @@ export function Layout({ children, title }: LayoutProps) {
               <div className="text-[12px] font-bold text-white truncate leading-tight">{perfil?.nombre}</div>
               <div className="text-[9px] text-white/40 truncate mt-0.5">{perfil?.email}</div>
             </div>
-            <button onClick={handleSignOut} className="h-8 w-8 flex items-center justify-center rounded-lg text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-colors shrink-0" title="Cerrar sesión">
+            {/* BOTÓN CERRAR SESIÓN EN ROJO */}
+            <button onClick={handleSignOut} className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors shrink-0" title="Cerrar sesión">
               <LogOut size={16} />
             </button>
           </div>
@@ -157,6 +151,7 @@ export function Layout({ children, title }: LayoutProps) {
             </h1>
           </div>
         </header>
+
         <div className="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
           {children}
         </div>

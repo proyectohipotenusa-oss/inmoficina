@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Redirect } from 'wouter';
+import { Redirect, useLocation } from 'wouter';
 import { useAuth } from '../context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
@@ -11,9 +11,8 @@ export function ProtectedRoute({
   requireAdmin?: boolean;
 }) {
   const { user, perfil, loading } = useAuth();
+  const [location] = useLocation();
 
-  // CORRECCIÓN: Si hay usuario pero aún no se ha descargado el perfil, ESPERAMOS.
-  // Así evitamos que te mande al Dashboard por error en ese milisegundo de carga.
   if (loading || (user && !perfil)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-ink-950">
@@ -24,13 +23,13 @@ export function ProtectedRoute({
 
   if (!user) return <Redirect to="/login" />;
 
-  // REGLA 1: Si la vista es de Admin y el usuario es un Agente -> Expulsado al dashboard
   if (requireAdmin && perfil?.rol !== 'admin') {
     return <Redirect to="/dashboard" />;
   }
 
   // REGLA 2: Si la vista es de Agente y el usuario es Admin -> Expulsado al panel de agencias
-  if (!requireAdmin && perfil?.rol === 'admin') {
+  // EXCEPCIÓN: El admin sí puede acceder a la ruta /perfil
+  if (!requireAdmin && perfil?.rol === 'admin' && location !== '/perfil') {
     return <Redirect to="/admin" />;
   }
 

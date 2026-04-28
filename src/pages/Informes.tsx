@@ -109,7 +109,8 @@ function CMAReport({ propiedad, onClose }: { propiedad: PropiedadCMA, onClose: (
   const impuestosAprox = valorEstimado * 0.08; 
   const netoPropietario = valorEstimado - comisionAgencia - impuestosAprox;
 
-  const nombreAgenciaFijo = propiedad.nombre_agencia || perfil?.agencia || perfil?.nombre_agencia || perfil?.empresa || formatAgencyName(perfil?.agencia_id);
+  // CORRECCIÓN: Nombre de la agencia dinámico
+  const nombreAgenciaFijo = perfil?.agencia || perfil?.nombre_agencia || perfil?.empresa || formatAgencyName(perfil?.agencia_id);
   const agenteNombre = perfil?.nombre || '';
   const agenteTelf = perfil?.telefono || '';
   const publicUrl = `${window.location.origin}/p/${propiedad.id}?an=${encodeURIComponent(nombreAgenciaFijo)}&un=${encodeURIComponent(agenteNombre)}&t=${encodeURIComponent(agenteTelf)}`;
@@ -134,6 +135,7 @@ function CMAReport({ propiedad, onClose }: { propiedad: PropiedadCMA, onClose: (
       <div className="max-w-[800px] mx-auto p-4 sm:p-6 print:p-0 print:max-w-full print:transform print:scale-[0.70] print:origin-top-left print:w-[142%]">
         <div className="flex justify-between items-end border-b border-white/10 pb-3 mb-4 print:border-slate-300">
           <div>
+            {/* CORRECCIÓN APLICADA AQUÍ */}
             <div className="text-brand-400 font-black text-xl sm:text-2xl tracking-tighter uppercase print:text-brand-600">{nombreAgenciaFijo}</div>
             <div className="text-[8px] uppercase tracking-[0.2em] text-white/40 font-bold print:text-[9px] print:text-slate-500">Luxury CRM • Análisis de Mercado • {displayId}</div>
           </div>

@@ -2,8 +2,8 @@ import { useEffect, useState, FormEvent } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useLocation } from 'wouter';
 import {
-  Shield, Plus, Building2, Loader2, Copy, Check, X, Users, KeyRound, Sparkles, ChevronRight, MapPin, Trash2,
-  TrendingUp, CheckCircle, Phone, Mail, CalendarDays, Timer, Lock, Unlock, MessageSquare, LogOut
+  Shield, Plus, Building2, Loader2, Copy, Check, X, Users, Sparkles, ChevronRight, MapPin, Trash2,
+  TrendingUp, CheckCircle, Phone, CalendarDays, MessageSquare, LogOut, UserCircle
 } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageHeader } from '../components/PageHeader';
@@ -48,12 +48,6 @@ interface MensajeContacto {
   created_at: string;
 }
 
-interface Agente {
-  id: string;
-  email: string;
-  nombre: string;
-}
-
 interface CreatedUser {
   email: string;
   password: string;
@@ -95,12 +89,24 @@ export default function AdminPanel() {
     setMensajes((msgs as MensajeContacto[]) || []);
 
     const { data: perfiles } = await supabase.from('perfiles').select('rol');
-    const totalAgencias = ags ? ags.filter(a => !a.bloqueada).length : 0;
+    
+    // CÁLCULO DE MRR REAL SEGÚN EL PLAN
+    let mrrCalculado = 0;
+    let agenciasActivas = 0;
+
+    if (ags) {
+      ags.forEach(a => {
+        if (!a.bloqueada) {
+          agenciasActivas++;
+          mrrCalculado += (a.plan === 'estandar' ? 29 : 49);
+        }
+      });
+    }
     
     setStats({
       total: perfiles?.length || 0,
-      ingresos: totalAgencias * 49,
-      agencias: totalAgencias
+      ingresos: mrrCalculado,
+      agencias: agenciasActivas
     });
     
     setLoading(false);
@@ -138,7 +144,6 @@ export default function AdminPanel() {
   const pendingMessages = mensajes.filter(m => !m.leido).map(m => ({ ...m, tipoEntrada: 'mensaje', sortDate: new Date(m.created_at).getTime() }));
   const bandejaEntrada = [...pendingTrials, ...pendingMessages].sort((a, b) => b.sortDate - a.sortDate);
 
-  // AQUÍ ESTÁ EL ARREGLO: La variable vuelve a llamarse activeTrials para coincidir con el HTML
   const activeTrials = solicitudes
     .filter(s => s.estado === 'procesado')
     .map(s => {
@@ -154,10 +159,18 @@ export default function AdminPanel() {
   return (
     <Layout title="Panel Admin">
       <PageHeader
-        title="SuperAdmin"
+        title={<span className="text-[17px] font-black tracking-tight">SÚPER ADMINISTRADOR</span>}
         subtitle="Centro de mando unificado para agencias, solicitudes y mensajes web."
         actions={
           <div className="flex items-center gap-3">
+            {/* BOTÓN FORZADO A PERFIL PARA EVITAR EL BUG DEL DASHBOARD */}
+            <button 
+              onClick={() => window.location.href = '/perfil'} 
+              className="p-2 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-brand-400 hover:bg-brand-500/20 hover:border-brand-500/30 transition-all"
+              title="Mi Perfil"
+            >
+              <UserCircle size={16} />
+            </button>
             <button 
               type="button" 
               onClick={() => setSelectedAgencia('new')}
@@ -167,7 +180,7 @@ export default function AdminPanel() {
             </button>
             <button 
               onClick={handleSignOut} 
-              className="p-2 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-red-500/20 hover:border-red-500/30 transition-all"
+              className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:text-white hover:bg-red-500 hover:border-red-500/30 transition-all"
               title="Cerrar sesión"
             >
               <LogOut size={16} />
@@ -208,7 +221,6 @@ export default function AdminPanel() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
         
-        {/* COLUMNA 1: BANDEJA DE ENTRADA UNIFICADA */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 flex items-center gap-1.5">
@@ -287,7 +299,6 @@ export default function AdminPanel() {
           )}
         </div>
 
-        {/* COLUMNA 2: AGENDA DE TRIALS */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-1.5">
@@ -333,7 +344,6 @@ export default function AdminPanel() {
           )}
         </div>
 
-        {/* COLUMNA 3: HISTORIAL MENSAJES WEB */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-400 flex items-center gap-1.5">
@@ -438,9 +448,6 @@ export default function AdminPanel() {
   );
 }
 
-// -------------------------------------------------------------
-// MODAL: CREAR / EDITAR AGENCIA (REDISEÑO PREMIUM)
-// -------------------------------------------------------------
 function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
   const isEdit = agencia !== 'new';
   const ag = isEdit ? agencia : null;
@@ -518,7 +525,6 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm animate-fade-in">
       <div className="relative w-full max-w-2xl bg-ink-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-slide-up flex flex-col max-h-[90vh]">
         
-        {/* HEADER DEL MODAL */}
         <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
           <div className="flex items-center gap-3">
              <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
@@ -534,7 +540,6 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
           </button>
         </div>
 
-        {/* CUERPO DEL FORMULARIO */}
         <form id="agency-form" onSubmit={onSubmit} className="p-6 overflow-y-auto custom-scrollbar space-y-6">
            
            <div className="space-y-2">
@@ -573,7 +578,6 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
                </div>
            </div>
 
-           {/* Sección: Ubicación y Plan */}
            <div className="pt-4 border-t border-white/5">
              <div className="grid grid-cols-3 gap-4">
                <div className="space-y-2 col-span-1">
@@ -606,7 +610,6 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
              </div>
            </div>
 
-           {/* Sección: Contacto */}
            <div className="pt-4 border-t border-white/5">
              <h4 className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4">Persona de contacto (Opcional)</h4>
              <div className="space-y-4">
@@ -644,7 +647,6 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
              </div>
            </div>
 
-           {/* Plan y Estado */}
            {isEdit && (
              <div className="pt-4 border-t border-white/5 flex flex-col justify-end">
                 <label className="flex items-center gap-3 cursor-pointer group p-4 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 transition-colors">
@@ -664,7 +666,6 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
 
         </form>
 
-        {/* FOOTER DEL MODAL */}
         <div className="px-6 py-4 border-t border-white/5 bg-ink-950 flex items-center justify-between shrink-0">
            {isEdit ? (
              <button type="button" onClick={handleDelete} disabled={submitting} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-red-400/80 hover:bg-red-500/10 hover:text-red-400 transition-all text-xs font-bold uppercase tracking-widest">
@@ -686,9 +687,6 @@ function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
   );
 }
 
-// -------------------------------------------------------------
-// MODAL: EDITAR SOLICITUD DE TRIAL
-// -------------------------------------------------------------
 function SolicitudDialog({ solicitud, onClose, onSave }: any) {
   const [formData, setFormData] = useState({ ...solicitud });
   const [submitting, setSubmitting] = useState(false);
@@ -734,9 +732,6 @@ function SolicitudDialog({ solicitud, onClose, onSave }: any) {
   );
 }
 
-// -------------------------------------------------------------
-// MODAL: EDITAR MENSAJE WEB
-// -------------------------------------------------------------
 function MensajeDialog({ mensaje, onClose, onSave, onDelete }: any) {
   const [formData, setFormData] = useState({ ...mensaje });
   const [submitting, setSubmitting] = useState(false);
