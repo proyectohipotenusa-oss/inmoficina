@@ -124,28 +124,29 @@ export default function Tutorial() {
       <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-brand-500/10 blur-[120px] pointer-events-none" />
       <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/5 blur-[120px] pointer-events-none" />
 
-      {/* NAVBAR */}
+      {/* NAVBAR IDÉNTICA A LANDING */}
       <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 w-full ${scrolled ? 'bg-ink-950/90 backdrop-blur-xl border-b border-white/5 py-1' : 'bg-transparent py-3'}`}>
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
           <Link href="/"><a className="flex items-center gap-3 group cursor-pointer">
             <img src={LOGO_URL} alt="Logo" className="w-[42px] h-[42px] rounded-lg opacity-90 group-hover:opacity-100 transition-opacity" />
-            <span className="text-xs font-semibold tracking-widest uppercase text-white/90 hidden sm:block font-sans">INMOFICINA</span>
+            <span className="text-xs font-semibold tracking-widest uppercase text-white/90 hidden sm:block">INMOFICINA</span>
           </a></Link>
-          
           <div className="hidden lg:flex items-center gap-8 text-[11px] uppercase tracking-[0.15em] font-medium text-white/50">
             <Link href="/#servicios"><a className="hover:text-white transition-colors">Funcionalidades</a></Link>
             <Link href="/#por-que-nosotros"><a className="hover:text-white transition-colors">La Diferencia</a></Link>
             <Link href="/#precios"><a className="hover:text-white transition-colors">Inversión</a></Link>
             <Link href="/#faq"><a className="hover:text-white transition-colors">Q&A</a></Link>
             <Link href="/#contacto"><a className="hover:text-white transition-colors">Contacto</a></Link>
-            <div className="text-brand-400 border-b-2 border-brand-500 pb-1 font-black cursor-default">Tutorial</div>
+            <Link href="/tutorial"><a className="text-brand-400 border-b-2 border-brand-500 pb-1 font-black cursor-default">Tutorial</a></Link>
             <Link href="/soporte"><a className="hover:text-white transition-colors">Soporte</a></Link>
           </div>
-
           <div className="flex items-center gap-4">
-            <Link href="/login" className="hidden sm:block text-[11px] font-medium uppercase tracking-widest hover:text-brand-400 text-white/70 transition-colors">Acceso</Link>
-            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-brand-400">
+            <Link href="/login"><a className="hidden sm:block text-[11px] font-medium uppercase tracking-widest hover:text-brand-400 text-white/70 transition-colors">Acceso</a></Link>
+            <Link href="/"><a className="hidden sm:block px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-white hover:text-ink-950 transition-all">
+              Probar Gratis
+            </a></Link>
+            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 text-brand-400">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect y="4" width="24" height="2.5" rx="1.25" fill="currentColor"/>
                 <rect y="10.75" width="24" height="2.5" rx="1.25" fill="currentColor"/>
                 <rect y="17.5" width="24" height="2.5" rx="1.25" fill="currentColor"/>
@@ -155,7 +156,7 @@ export default function Tutorial() {
         </div>
       </nav>
 
-      {/* MOBILE MENU */}
+      {/* MOBILE MENU IDÉNTICO A LANDING (FUERA DEL HEADER) */}
       {isMobileMenuOpen && (
         <div id="mobile-menu" className="fixed inset-0 z-[100] flex justify-end bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
           <div className="w-64 bg-ink-950 h-full border-l border-white/10 p-6 flex flex-col gap-6 shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
@@ -166,22 +167,25 @@ export default function Tutorial() {
               </button>
             </div>
             <div className="flex flex-col gap-5 text-xs uppercase tracking-widest font-medium text-white/70">
-              <Link href="/#servicios" onClick={() => setIsMobileMenuOpen(false)}><a className="hover:text-brand-400 transition-colors">Funcionalidades</a></Link>
-              <Link href="/#por-que-nosotros" onClick={() => setIsMobileMenuOpen(false)}><a className="hover:text-brand-400 transition-colors">La Diferencia</a></Link>
-              <Link href="/#precios" onClick={() => setIsMobileMenuOpen(false)}><a className="hover:text-brand-400 transition-colors">Inversión</a></Link>
-              <Link href="/#faq" onClick={() => setIsMobileMenuOpen(false)}><a className="hover:text-brand-400 transition-colors">Q&A</a></Link>
-              <Link href="/#contacto" onClick={() => setIsMobileMenuOpen(false)}><a className="hover:text-brand-400 transition-colors">Contacto</a></Link>
-              <div className="text-brand-400 font-black">Tutorial</div>
-              <Link href="/soporte" onClick={() => setIsMobileMenuOpen(false)}><a className="hover:text-brand-400 transition-colors">Soporte</a></Link>
+              <Link href="/#servicios"><a onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Funcionalidades</a></Link>
+              <Link href="/#por-que-nosotros"><a onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">La Diferencia</a></Link>
+              <Link href="/#precios"><a onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Inversión</a></Link>
+              <Link href="/#faq"><a onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Q&A</a></Link>
+              <Link href="/#contacto"><a onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Contacto</a></Link>
+              <Link href="/tutorial"><a onClick={() => setIsMobileMenuOpen(false)} className="text-brand-400 font-black">Tutorial</a></Link>
+              <Link href="/soporte"><a onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Soporte</a></Link>
               <div className="pt-4 border-t border-white/10 flex flex-col gap-4 mt-2">
-                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}><a className="text-brand-400 hover:text-white transition-colors">Acceso</a></Link>
+                <Link href="/"><a onClick={() => setIsMobileMenuOpen(false)} className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-white hover:text-ink-950 transition-all text-center">
+                  Probar Gratis
+                </a></Link>
+                <Link href="/login"><a onClick={() => setIsMobileMenuOpen(false)} className="text-brand-400 hover:text-white transition-colors">Acceso</a></Link>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* HERO TUTORIAL */}
+      {/* HERO TUTORIAL (TU CONTENIDO ORIGINAL) */}
       <section className="relative pt-48 pb-24 text-center w-full flex flex-col justify-center items-center px-4">
         <div className="max-w-3xl mx-auto z-10">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/[0.02] text-white/60 text-[9px] font-bold uppercase tracking-[0.2em] mb-8 backdrop-blur-md">
@@ -200,7 +204,7 @@ export default function Tutorial() {
         </div>
       </section>
 
-      {/* CONTENIDO DEL TUTORIAL */}
+      {/* CONTENIDO DEL TUTORIAL (TU CONTENIDO ORIGINAL) */}
       <section className="py-20 relative z-10">
         <div className="max-w-5xl mx-auto px-4 space-y-32">
           {tutorialSections.map((section, index) => (
@@ -235,8 +239,20 @@ export default function Tutorial() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer id="footer" className="py-10 px-4 border-t border-white/5 bg-ink-950 w-full text-center sm:text-left">
+      {/* CTA FINAL (TU CONTENIDO ORIGINAL) */}
+      <section className="py-32 px-4 text-center border-t border-white/5 bg-white/[0.01]">
+        <div className="max-w-2xl mx-auto">
+          <Zap size={40} className="text-brand-400 mx-auto mb-8 animate-pulse" />
+          <h2 className="font-serif text-3xl md:text-4xl font-medium mb-6">¿Listo para empezar?</h2>
+          <p className="text-white/40 text-sm mb-10 font-light">Accede ahora a tu panel y pon en práctica todo lo aprendido.</p>
+          <Link href="/login"><a className="px-10 py-4 bg-brand-600 text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-brand-500 transition-all shadow-2xl shadow-brand-500/20 inline-flex items-center gap-3">
+            Entrar al CRM <ArrowRight size={16} />
+          </a></Link>
+        </div>
+      </section>
+
+      {/* FOOTER IDÉNTICO A LANDING */}
+      <footer id="footer" className="py-10 px-4 border-t border-white/5 bg-ink-950 w-full text-center sm:text-left relative z-10">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-white/5 pb-10">
           <div className="md:col-span-2">
             <img src={LOGO_URL} className="w-[48px] h-[48px] mb-4 opacity-80 mx-auto sm:mx-0" alt="Logo Footer" />
@@ -246,13 +262,13 @@ export default function Tutorial() {
           </div>
           <div>
             <h4 className="text-[9px] font-semibold uppercase text-white/60 mb-4">Menú</h4>
-            <div className="flex flex-col gap-2.5 text-white/40 text-xs">
+            <div className="flex flex-col gap-2.5 text-white/40 text-xs uppercase tracking-widest">
               <Link href="/#servicios"><a className="hover:text-white transition-colors">Funcionalidades</a></Link>
               <Link href="/#por-que-nosotros"><a className="hover:text-white transition-colors">La Diferencia</a></Link>
               <Link href="/#precios"><a className="hover:text-white transition-colors">Inversión</a></Link>
               <Link href="/#faq"><a className="hover:text-white transition-colors">Q&A</a></Link>
               <Link href="/#contacto"><a className="hover:text-white transition-colors">Contacto</a></Link>
-              <div className="text-brand-400 font-bold">Tutorial</div>
+              <Link href="/tutorial"><a className="text-brand-400 font-bold">Tutorial</a></Link>
               <Link href="/soporte"><a className="hover:text-white transition-colors">Soporte</a></Link>
             </div>
           </div>
