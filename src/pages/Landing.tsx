@@ -29,10 +29,24 @@ export default function Landing() {
   const [scrolled, setScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
+  // 1. Efecto original para el color del header al hacer scroll
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 2. NUEVO EFECTO: Scroll automático a la sección si venimos de otra página con #
+  useEffect(() => {
+    if (window.location.hash) {
+      const id = window.location.hash.substring(1);
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+      }
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -145,12 +159,12 @@ export default function Landing() {
             <Link href="/soporte"><a className="hover:text-white transition-colors">Soporte</a></Link>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/login" className="text-[11px] font-medium uppercase tracking-widest hover:text-brand-400 text-white/70 transition-colors hidden sm:block">Acceso</Link>
+            <Link href="/login" className="hidden sm:block text-[11px] font-medium uppercase tracking-widest hover:text-brand-400 text-white/70 transition-colors">Acceso</Link>
             <button onClick={() => setIsModalOpen(true)} className="hidden sm:block px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-white hover:text-ink-950 transition-all">
               Probar Gratis
             </button>
-            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-brand-400">
+            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 text-brand-400">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect y="4" width="24" height="2.5" rx="1.25" fill="currentColor"/>
                 <rect y="10.75" width="24" height="2.5" rx="1.25" fill="currentColor"/>
                 <rect y="17.5" width="24" height="2.5" rx="1.25" fill="currentColor"/>
@@ -179,10 +193,10 @@ export default function Landing() {
               <Link href="/tutorial" onClick={() => setIsMobileMenuOpen(false)}><a className="hover:text-brand-400 transition-colors">Tutorial</a></Link>
               <Link href="/soporte" onClick={() => setIsMobileMenuOpen(false)}><a className="hover:text-brand-400 transition-colors">Soporte</a></Link>
               <div className="pt-4 border-t border-white/10 flex flex-col gap-4 mt-2">
-                <button onClick={() => { setIsMobileMenuOpen(false); setIsModalOpen(true); }} className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-white hover:text-ink-950 transition-all">
+                <button onClick={() => { setIsMobileMenuOpen(false); setIsModalOpen(true); }} className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-white hover:text-ink-950 transition-all text-center">
                   Probar Gratis
                 </button>
-                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}><a className="text-brand-400 hover:text-white transition-colors">Acceso</a></Link>
+                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}><a className="text-brand-400 hover:text-white transition-colors text-center">Acceso</a></Link>
               </div>
             </div>
           </div>
@@ -272,12 +286,13 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* PRECIOS */}
+      {/* PRECIOS A DOS COLUMNAS CON SELECTOR DE DESCUENTO ANUAL */}
       <section id="precios" className="py-24 bg-gradient-to-b from-brand-900/10 via-ink-900/40 to-ink-950 border-t border-white/5">
         <div className="max-w-4xl mx-auto text-center mb-16 px-4">
           <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4 text-brand-500">Inversión Inteligente</h2>
           <p className="text-white/50 text-sm font-light mb-8">Escala las herramientas de tu agencia a medida que creces. Sin permanencia.</p>
           
+          {/* Billing Switcher (Integrado elegantemente) */}
           <div className="inline-flex items-center p-1 bg-ink-900/60 rounded-xl border border-white/10 mb-4">
             <button 
               onClick={() => setBillingCycle('monthly')}
@@ -300,6 +315,7 @@ export default function Landing() {
         </div>
         
         <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          {/* PLAN ESTÁNDAR */}
           <div className="bg-ink-900/40 border border-white/10 p-8 rounded-[2rem] relative shadow-lg h-full flex flex-col justify-between">
             <div>
               <div className="text-center mb-8">
@@ -327,6 +343,7 @@ export default function Landing() {
             </button>
           </div>
 
+          {/* PLAN PREMIUM */}
           <div className="bg-ink-950 border border-brand-500/30 p-8 rounded-[2rem] text-center relative shadow-[0_0_40px_rgba(99,102,241,0.15)] md:scale-105 z-10 h-[105%] flex flex-col justify-between">
             <div className="absolute top-0 left-0 right-0 py-1.5 bg-brand-600 border-b border-brand-500 text-[9px] font-semibold text-white uppercase tracking-[0.2em] rounded-t-[2rem]">
               Pack Agencia Premium
@@ -440,7 +457,7 @@ export default function Landing() {
                   </div>
                   <div>
                     <label className="block text-[8px] uppercase tracking-[0.15em] font-medium text-white/50 mb-1.5 ml-1">Teléfono</label>
-                    <input type="tel" className="input bg-ink-950 border-white/5 text-xs px-3 py-2 w-full rounded-lg outline-none focus:border-brand-500 transition-colors" value={contactData.telefono} onChange={e => setContactData({...contactData, telefono: e.target.value})} />
+                    <input type="tel" className="input bg-ink-950 border-white/5 text-xs px-3 py-2 w-full rounded-lg outline-none focus:border-brand-500 transition-colors" value={contactData.telefono || ''} onChange={e => setContactData({...contactData, telefono: e.target.value})} />
                   </div>
                 </div>
                 <div>
@@ -467,7 +484,7 @@ export default function Landing() {
           </div>
           <div>
             <h4 className="text-[9px] font-semibold uppercase text-white/60 mb-4">Menú</h4>
-            <div className="flex flex-col gap-2.5 text-white/40 text-xs">
+            <div className="flex flex-col gap-2.5 text-white/40 text-xs uppercase tracking-widest">
               <a href="#servicios" className="hover:text-white transition-colors">Funcionalidades</a>
               <a href="#por-que-nosotros" className="hover:text-white transition-colors">La Diferencia</a>
               <a href="#precios" className="hover:text-white transition-colors">Inversión</a>
