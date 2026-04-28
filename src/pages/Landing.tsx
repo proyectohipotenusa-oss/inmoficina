@@ -7,6 +7,7 @@ import {
   Trophy, Landmark, LayoutDashboard, Send, 
   MousePointerClick, Mail, Phone, MapPin, Zap, Building2, ChevronDown, Users, QrCode, FileText, UserCircle
 } from 'lucide-react';
+import { SupportModal } from '../components/SupportModal';
 // IMPORTACIÓN PARA EL CÁLCULO DE PRECIOS
 import { formatEUR } from '../lib/format';
 
@@ -28,6 +29,7 @@ export default function Landing() {
   const [contactData, setContactData] = useState({ nombre: '', email: '', telefono: '', mensaje: '' });
   const [scrolled, setScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [showSupportModal, setShowSupportModal] = useState(false);
 
   // 1. Efecto original para el color del header al hacer scroll
   useEffect(() => {
@@ -156,7 +158,7 @@ export default function Landing() {
             <a href="#faq" className="hover:text-white transition-colors">Q&A</a>
             <a href="#contacto" className="hover:text-white transition-colors">Contacto</a>
             <Link href="/tutorial"><a className="hover:text-white transition-colors">Tutorial</a></Link>
-            <Link href="/soporte"><a className="hover:text-white transition-colors">Soporte</a></Link>
+            <button onClick={() => setShowSupportModal(true)} className="hover:text-white transition-colors">Soporte</button>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login" className="hidden sm:block text-[11px] font-medium uppercase tracking-widest hover:text-brand-400 text-white/70 transition-colors">Acceso</Link>
@@ -191,7 +193,7 @@ export default function Landing() {
               <a href="#faq" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Q&A</a>
               <a href="#contacto" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-400 transition-colors">Contacto</a>
               <Link href="/tutorial" onClick={() => setIsMobileMenuOpen(false)}><a className="hover:text-brand-400 transition-colors">Tutorial</a></Link>
-              <Link href="/soporte" onClick={() => setIsMobileMenuOpen(false)}><a className="hover:text-brand-400 transition-colors">Soporte</a></Link>
+              <button onClick={() => { setIsMobileMenuOpen(false); setShowSupportModal(true); }} className="hover:text-brand-400 transition-colors text-left">Soporte</button>
               <div className="pt-4 border-t border-white/10 flex flex-col gap-4 mt-2">
                 <button onClick={() => { setIsMobileMenuOpen(false); setIsModalOpen(true); }} className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-white hover:text-ink-950 transition-all text-center">
                   Probar Gratis
@@ -491,7 +493,7 @@ export default function Landing() {
               <a href="/#faq" className="hover:text-white transition-colors">Q&A</a>
               <a href="/#contacto" className="hover:text-white transition-colors">Contacto</a>
               <Link href="/tutorial"><a className="hover:text-white transition-colors">Tutorial</a></Link>
-              <Link href="/soporte"><a className="hover:text-white transition-colors">Soporte</a></Link>
+              <button onClick={() => setShowSupportModal(true)} className="hover:text-white transition-colors">Soporte</button>
             </div>
           </div>
           <div>
@@ -580,6 +582,8 @@ export default function Landing() {
           </div>
         </div>
       )}
+      {/* SUPPORT MODAL */}
+      {showSupportModal && <SupportModal onClose={() => setShowSupportModal(false)} />}
     </div>
   );
 }

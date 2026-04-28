@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { useLocation } from 'wouter';
 import {
   Shield, Plus, Building2, Loader2, Copy, Check, X, Users, KeyRound, Sparkles, ChevronRight, MapPin, Trash2,
-  TrendingUp, CheckCircle, Phone, Mail, CalendarDays, Timer, Lock, Unlock, MessageSquare, LogOut, LifeBuoy
+  TrendingUp, CheckCircle, CheckCircle2, Phone, Mail, CalendarDays, Timer, Lock, Unlock, MessageSquare, LogOut, LifeBuoy
 } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageHeader } from '../components/PageHeader';
@@ -175,6 +175,7 @@ export default function AdminPanel() {
 
   const historialMensajes = mensajes.filter(m => m.leido);
   const pendingTickets = tickets.filter(t => t.estado === 'pendiente');
+  const completedTickets = tickets.filter(t => t.estado === 'completado');
 
   return (
     <Layout title="Panel Admin">
@@ -234,35 +235,94 @@ export default function AdminPanel() {
 
       {/* SECCIÓN TICKETS DE SOPORTE */}
       <div className="mb-8">
+        {/* PENDIENTES */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 flex items-center gap-1.5">
-            <LifeBuoy size={14}/> Tickets de Soporte Pendientes
+            <LifeBuoy size={14}/> Tickets de Soporte — Pendientes
           </h3>
-          <span className="text-[9px] font-bold bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">
-            {pendingTickets.length} Nuevos
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] font-bold bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">
+              {pendingTickets.length} Pendientes
+            </span>
+            <button onClick={loadData} className="text-[9px] font-bold text-white/40 hover:text-white transition uppercase tracking-widest">
+              Actualizar
+            </button>
+          </div>
         </div>
-        
+
         {loading ? (
           <div className="py-8 flex justify-center">
             <Loader2 className="animate-spin text-orange-400" size={20} />
           </div>
         ) : pendingTickets.length === 0 ? (
           <div className="card p-6 text-center bg-white/[0.01] border-dashed border border-white/10 text-white/20 text-[10px] uppercase font-bold tracking-widest">
-            Sin tickets pendientes
+            Sin tickets pendientes ✓
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             {pendingTickets.map(t => (
-              <div key={t.id} onClick={() => setSelectedTicket(t)} className="card p-4 bg-ink-900 border-white/5 border-l-2 border-l-orange-500 hover:border-white/20 cursor-pointer transition-all shadow-lg shadow-orange-500/5">
+              <div key={t.id} className="card p-4 bg-ink-900 border-white/5 border-l-2 border-l-orange-500 hover:border-white/20 transition-all shadow-lg shadow-orange-500/5">
                 <div className="flex justify-between items-start mb-2">
-                  <div className="text-xs font-bold text-white uppercase truncate pr-2">{t.nombre_agencia}</div>
+                  <div className="text-xs font-bold text-white uppercase truncate pr-2 flex-1 cursor-pointer" onClick={() => setSelectedTicket(t)}>{t.nombre_agencia}</div>
                   <div className="text-[9px] text-white/30 whitespace-nowrap">{new Date(t.created_at).toLocaleDateString()}</div>
                 </div>
-                <div className="text-[10px] text-orange-400/80 font-medium mb-2 truncate">{t.motivo}</div>
-                <div className="text-[10px] text-white/50 line-clamp-2 italic">"{t.mensaje}"</div>
+                <div className="text-[10px] text-orange-400/80 font-medium mb-1 truncate cursor-pointer" onClick={() => setSelectedTicket(t)}>{t.motivo}</div>
+                <div className="text-[9px] text-white/40 mb-1">{t.nombre_usuario} · {t.telefono}</div>
+                <div className="text-[10px] text-white/50 line-clamp-2 italic mb-3 cursor-pointer" onClick={() => setSelectedTicket(t)}>"{t.mensaje}"</div>
+                <button
+                  onClick={async () => {
+                    await supabase.from('tickets_soporte').update({ estado: 'completado' }).eq('id', t.id);
+                    loadData();
+                  }}
+                  className="w-full py-1.5 text-[9px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-lg hover:bg-emerald-400/20 transition-all flex items-center justify-center gap-1.5"
+                >
+                  <CheckCircle2 size={11}/> Marcar como completado
+                </button>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* HISTORIAL COMPLETADOS */}
+        {completedTickets.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/60 flex items-center gap-1.5 mb-3">
+              <CheckCircle2 size={13}/> Historial — Completados ({completedTickets.length})
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {completedTickets.map(t => (
+                <div key={t.id} className="card p-3 bg-ink-900/40 border-white/5 border-l-2 border-l-emerald-500/30 opacity-70 hover:opacity-100 transition-all">
+                  <div className="flex justify-between items-start mb-1">
+                    <div className="text-[11px] font-bold text-white/60 uppercase truncate pr-2 flex-1 cursor-pointer" onClick={() => setSelectedTicket(t)}>{t.nombre_agencia}</div>
+                    <div className="text-[9px] text-white/20 whitespace-nowrap">{new Date(t.created_at).toLocaleDateString()}</div>
+                  </div>
+                  <div className="text-[10px] text-emerald-400/50 font-medium mb-1 truncate cursor-pointer" onClick={() => setSelectedTicket(t)}>{t.motivo}</div>
+                  <div className="text-[9px] text-white/30">{t.nombre_usuario}</div>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={async () => {
+                        await supabase.from('tickets_soporte').update({ estado: 'pendiente' }).eq('id', t.id);
+                        loadData();
+                      }}
+                      className="flex-1 py-1 text-[9px] font-bold uppercase tracking-widest text-white/30 bg-white/5 border border-white/5 rounded-lg hover:text-orange-400 hover:border-orange-400/20 transition-all"
+                    >
+                      Reabrir
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if(confirm('¿Borrar este ticket permanentemente?')) {
+                          await supabase.from('tickets_soporte').delete().eq('id', t.id);
+                          loadData();
+                        }
+                      }}
+                      className="px-2 py-1 text-[9px] font-bold text-white/20 bg-white/5 border border-white/5 rounded-lg hover:text-red-400 hover:border-red-400/20 transition-all"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -904,12 +964,12 @@ function TicketDialog({ ticket, onClose, onSave, onDelete }: any) {
             <label className="flex items-center gap-3 cursor-pointer group p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
                <input 
                  type="checkbox" 
-                 checked={formData.estado === 'resuelto'} 
-                 onChange={e => setFormData({...formData, estado: e.target.checked ? 'resuelto' : 'pendiente'})} 
+                 checked={formData.estado === 'completado'} 
+                 onChange={e => setFormData({...formData, estado: e.target.checked ? 'completado' : 'pendiente'})} 
                  className="w-5 h-5 rounded border-white/20 bg-ink-950 text-orange-500 focus:ring-orange-500" 
                />
                <div>
-                 <span className="text-sm font-medium text-white/90 group-hover:text-white transition-colors block">Marcar como Resuelto</span>
+                 <span className="text-sm font-medium text-white/90 group-hover:text-white transition-colors block">Tarea completada</span>
                  <span className="text-[10px] text-white/40 block">El ticket se moverá al historial.</span>
                </div>
             </label>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, Link } from 'wouter';
 import { supabase } from '../lib/supabase';
 import { LogIn, Loader2, X, Lock } from 'lucide-react';
+import { SupportModal } from '../components/SupportModal';
 
 const LOGO_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png";
 const TEMPORARY_LEGAL_URL = "https://www.ejemplo.com";
@@ -10,6 +11,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
   const [error, setError] = useState('');
   const [, setLocation] = useLocation();
 
@@ -195,6 +197,17 @@ export default function Login() {
                 </button>
               </div>
             </form>
+
+            {/* Olvidé mi contraseña */}
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(true)}
+                className="text-[10px] text-white/30 hover:text-brand-400 transition-colors uppercase tracking-widest underline underline-offset-2"
+              >
+                Olvidé mi contraseña / No puedo acceder
+              </button>
+            </div>
           </div>
 
           <div className="mt-8 text-center">
@@ -242,6 +255,13 @@ export default function Login() {
           <p className="uppercase tracking-widest mt-2 md:mt-0">Designed in Spain</p>
         </div>
       </footer>
+    {/* MODAL OLVIDÉ CONTRASEÑA / SOPORTE */}
+      {showForgotModal && (
+        <SupportModal
+          onClose={() => setShowForgotModal(false)}
+          prefillMotivo="Olvido de contraseña / Acceso bloqueado"
+        />
+      )}
     </div>
   );
 }

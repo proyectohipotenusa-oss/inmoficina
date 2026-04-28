@@ -3,7 +3,7 @@ import { useLocation, Link } from 'wouter';
 import { supabase } from '../lib/supabase';
 import { 
   LifeBuoy, Loader2, X, Send, CheckCircle2, 
-  Building2, IdCard, User, Mail, Phone, MessageSquare, ShieldCheck
+  Building2, CreditCard, User, Mail, Phone, MessageSquare, ShieldCheck
 } from 'lucide-react';
 
 const LOGO_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png";
@@ -203,7 +203,7 @@ export default function Soporte() {
                   {/* LICENCIA */}
                   <div>
                     <label className="flex items-center gap-2 text-[9px] uppercase tracking-widest font-bold text-white/50 mb-2 ml-1">
-                      <IdCard size={12}/> Licencia
+                      <CreditCard size={12}/> Licencia
                     </label>
                     <input required className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 outline-none transition-all" 
                       placeholder="ID de Licencia Asignada" value={formData.licencia} onChange={e => setFormData({...formData, licencia: e.target.value})} />
