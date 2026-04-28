@@ -37,7 +37,6 @@ export function Layout({ children, title }: LayoutProps) {
     }
   }, [perfil?.agencia_id]);
 
-  // CIERRE DE SESIÓN SUAVE
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -48,7 +47,7 @@ export function Layout({ children, title }: LayoutProps) {
     }
   };
 
-  // ENVÍO DEL TICKET AL MODAL
+  // ENVÍO DEL TICKET DE SOPORTE A SUPABASE
   const handleSupportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSupportError('');
@@ -120,18 +119,6 @@ export function Layout({ children, title }: LayoutProps) {
 
   const isAdmin = perfil?.rol === 'admin';
 
-  const motivosSoporte = [
-    "Error en Sincronización con Portales",
-    "Fallo en IA Predictor de Valor",
-    "Problema con Informe CMA / Dossier",
-    "Error en el Pipeline Kanban",
-    "Incidencia en la Agenda",
-    "Problemas de visualización",
-    "Error de Acceso / Sesión",
-    "Duda de uso general",
-    "Otro problema técnico"
-  ];
-
   return (
     <div className="min-h-screen bg-ink-950 flex font-sans selection:bg-brand-500/30 overflow-x-hidden w-full">
       <button className="lg:hidden fixed top-3 left-3 z-50 h-10 w-10 rounded-xl bg-ink-900 border border-white/10 flex items-center justify-center text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
@@ -150,11 +137,7 @@ export function Layout({ children, title }: LayoutProps) {
           
           <div className="flex flex-col flex-1 gap-0.5">
             {isAdmin ? (
-              <>
-                <NavItem href="/admin" icon={LayoutDashboard} label="Panel Admin" />
-                {/* BOTÓN PARA ADMINS: IR A VER LOS TICKETS */}
-                <NavItem href="/admin" icon={LifeBuoy} label="Tickets Soporte" />
-              </>
+              <NavItem href="/admin" icon={LayoutDashboard} label="Panel Admin" />
             ) : (
               <>
                 <NavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" />
@@ -173,7 +156,7 @@ export function Layout({ children, title }: LayoutProps) {
             <div className="mt-auto pt-4 border-t border-white/5 mt-4 space-y-0.5">
               <NavItem href="/perfil" icon={UserCircle} label="Perfil" />
               
-              {/* BOTÓN PARA AGENTES: ABRE POP UP MODAL */}
+              {/* AQUÍ ESTÁ LA MAGIA: EL BOTÓN DE SOPORTE QUE ABRE EL POP-UP */}
               {!isAdmin && (
                 <button 
                   onClick={() => { setShowSupportModal(true); setIsMobileMenuOpen(false); }}
@@ -220,7 +203,7 @@ export function Layout({ children, title }: LayoutProps) {
 
       {isMobileMenuOpen && <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />}
 
-      {/* POP-UP DE MEJORA DE PLAN */}
+      {/* POP-UP DE UPGRADE PREMIUM */}
       {showUpgradeModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="relative w-full max-w-sm bg-ink-900 border border-white/10 rounded-[2rem] p-8 text-center shadow-2xl animate-slide-up">
@@ -249,7 +232,7 @@ export function Layout({ children, title }: LayoutProps) {
         </div>
       )}
 
-      {/* NUEVO POP UP: FORMULARIO SOPORTE */}
+      {/* POP-UP DE SOPORTE TÉCNICO */}
       {showSupportModal && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="relative w-full max-w-md bg-ink-900 border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-2xl animate-slide-up">
@@ -291,7 +274,15 @@ export function Layout({ children, title }: LayoutProps) {
                     <select required className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 outline-none transition-all appearance-none cursor-pointer"
                       value={supportData.motivo} onChange={e => setSupportData({...supportData, motivo: e.target.value})}>
                       <option value="" disabled>Selecciona un motivo...</option>
-                      {motivosSoporte.map((m, i) => <option key={i} value={m} className="bg-ink-900">{m}</option>)}
+                      <option value="Error en Sincronización con Portales" className="bg-ink-900">Error en Sincronización con Portales</option>
+                      <option value="Fallo en IA Predictor de Valor" className="bg-ink-900">Fallo en IA Predictor de Valor</option>
+                      <option value="Problema con Informe CMA / Dossier" className="bg-ink-900">Problema con Informe CMA / Dossier</option>
+                      <option value="Error en el Pipeline Kanban" className="bg-ink-900">Error en el Pipeline Kanban</option>
+                      <option value="Incidencia en la Agenda" className="bg-ink-900">Incidencia en la Agenda</option>
+                      <option value="Problemas de visualización" className="bg-ink-900">Problemas de visualización</option>
+                      <option value="Error de Acceso / Sesión" className="bg-ink-900">Error de Acceso / Sesión</option>
+                      <option value="Duda de uso general" className="bg-ink-900">Duda de uso general</option>
+                      <option value="Otro problema técnico" className="bg-ink-900">Otro problema técnico</option>
                     </select>
                   </div>
 
