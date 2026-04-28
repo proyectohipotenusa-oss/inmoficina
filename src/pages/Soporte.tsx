@@ -5,8 +5,6 @@ import {
   LifeBuoy, Loader2, X, Send, CheckCircle2, 
   Building2, IdCard, User, Mail, Phone, MessageSquare, ShieldCheck
 } from 'lucide-react';
-// IMPORTACIÓN PARA EL HEADER
-import { formatEUR } from '../lib/format';
 
 const LOGO_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png";
 const TEMPORARY_LEGAL_URL = "https://www.ejemplo.com";
@@ -17,11 +15,9 @@ export default function Soporte() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  // Estados del Header/Footer
   const [scrolled, setScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Campos del Formulario
   const [formData, setFormData] = useState({
     nombre_agencia: '',
     licencia: '',
@@ -33,12 +29,10 @@ export default function Soporte() {
     mensaje: ''
   });
 
-  // Captcha simple (Suma de números)
   const [captcha, setCaptcha] = useState({ a: 0, b: 0, total: 0 });
   const [captchaInput, setCaptchaInput] = useState('');
 
   useEffect(() => {
-    // Generar captcha al cargar
     const a = Math.floor(Math.random() * 10) + 1;
     const b = Math.floor(Math.random() * 10) + 1;
     setCaptcha({ a, b, total: a + b });
@@ -48,7 +42,6 @@ export default function Soporte() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Lógica de Scroll para anclas #
   useEffect(() => {
     if (window.location.hash) {
       const id = window.location.hash.substring(1);
@@ -71,7 +64,7 @@ export default function Soporte() {
     setLoading(true);
     
     const { error: dbError } = await supabase
-      .from('tickets_soporte') // Asumiendo que creas esta tabla o la guardas en mensajes_contacto
+      .from('tickets_soporte')
       .insert([formData]);
 
     if (dbError) {
@@ -108,7 +101,6 @@ export default function Soporte() {
       <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-brand-500/10 blur-[120px] pointer-events-none" />
       <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/5 blur-[120px] pointer-events-none" />
 
-      {/* NAVBAR (IDÉNTICA A LANDING) */}
       <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 w-full ${scrolled ? 'bg-ink-950/90 backdrop-blur-xl border-b border-white/5 py-1' : 'bg-transparent py-3'}`}>
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
           <Link href="/"><a className="flex items-center gap-3 group cursor-pointer">
@@ -136,7 +128,6 @@ export default function Soporte() {
         </div>
       </nav>
 
-      {/* MOBILE MENU */}
       {isMobileMenuOpen && (
         <div id="mobile-menu" className="fixed inset-0 z-[100] flex justify-end bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
           <div className="w-64 bg-ink-950 h-full border-l border-white/10 p-6 flex flex-col gap-6 shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
@@ -158,7 +149,6 @@ export default function Soporte() {
         </div>
       )}
 
-      {/* FORMULARIO DE SOPORTE CENTRADO */}
       <main className="flex-1 flex items-center justify-center pt-32 pb-20 px-4 relative z-10">
         <div className="w-full max-w-2xl">
           {success ? (
@@ -194,7 +184,6 @@ export default function Soporte() {
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {/* AGENCIA */}
                   <div>
                     <label className="flex items-center gap-2 text-[9px] uppercase tracking-widest font-bold text-white/50 mb-2 ml-1">
                       <Building2 size={12}/> Agencia
@@ -202,7 +191,6 @@ export default function Soporte() {
                     <input required className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 outline-none transition-all" 
                       placeholder="Nombre de tu Agencia" value={formData.nombre_agencia} onChange={e => setFormData({...formData, nombre_agencia: e.target.value})} />
                   </div>
-                  {/* LICENCIA */}
                   <div>
                     <label className="flex items-center gap-2 text-[9px] uppercase tracking-widest font-bold text-white/50 mb-2 ml-1">
                       <IdCard size={12}/> Licencia
@@ -210,7 +198,6 @@ export default function Soporte() {
                     <input required className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 outline-none transition-all" 
                       placeholder="ID de Licencia Asignada" value={formData.licencia} onChange={e => setFormData({...formData, licencia: e.target.value})} />
                   </div>
-                  {/* NOMBRE USUARIO */}
                   <div>
                     <label className="flex items-center gap-2 text-[9px] uppercase tracking-widest font-bold text-white/50 mb-2 ml-1">
                       <User size={12}/> Tu Nombre
@@ -218,7 +205,6 @@ export default function Soporte() {
                     <input required className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 outline-none transition-all" 
                       placeholder="Nombre completo" value={formData.nombre_usuario} onChange={e => setFormData({...formData, nombre_usuario: e.target.value})} />
                   </div>
-                  {/* TELÉFONO */}
                   <div>
                     <label className="flex items-center gap-2 text-[9px] uppercase tracking-widest font-bold text-white/50 mb-2 ml-1">
                       <Phone size={12}/> Teléfono
@@ -226,7 +212,6 @@ export default function Soporte() {
                     <input required type="tel" className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 outline-none transition-all" 
                       placeholder="+34..." value={formData.telefono} onChange={e => setFormData({...formData, telefono: e.target.value})} />
                   </div>
-                  {/* EMAIL PLATAFORMA */}
                   <div>
                     <label className="flex items-center gap-2 text-[9px] uppercase tracking-widest font-bold text-white/50 mb-2 ml-1">
                       <Mail size={12}/> Email Inmoficina
@@ -234,7 +219,6 @@ export default function Soporte() {
                     <input required type="email" className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 outline-none transition-all" 
                       placeholder="usuario@inmoficina.es" value={formData.email_plataforma} onChange={e => setFormData({...formData, email_plataforma: e.target.value})} />
                   </div>
-                  {/* EMAIL PERSONAL */}
                   <div>
                     <label className="flex items-center gap-2 text-[9px] uppercase tracking-widest font-bold text-white/50 mb-2 ml-1">
                       <Mail size={12}/> Email Personal
@@ -244,7 +228,6 @@ export default function Soporte() {
                   </div>
                 </div>
 
-                {/* MOTIVO DE SOPORTE */}
                 <div>
                   <label className="block text-[9px] uppercase tracking-widest font-bold text-white/50 mb-2 ml-1">¿En qué podemos ayudarte?</label>
                   <select required className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 outline-none transition-all appearance-none cursor-pointer"
@@ -254,7 +237,6 @@ export default function Soporte() {
                   </select>
                 </div>
 
-                {/* DESCRIPCIÓN */}
                 <div>
                   <label className="flex items-center gap-2 text-[9px] uppercase tracking-widest font-bold text-white/50 mb-2 ml-1">
                     <MessageSquare size={12}/> Descripción del Problema
@@ -264,7 +246,6 @@ export default function Soporte() {
                     value={formData.mensaje} onChange={e => setFormData({...formData, mensaje: e.target.value})} />
                 </div>
 
-                {/* CAPTCHA SIMPLE */}
                 <div className="pt-4 border-t border-white/5 flex flex-col sm:flex-row items-center gap-4">
                   <div className="flex items-center gap-3 bg-white/5 px-4 py-2.5 rounded-xl border border-white/10 shrink-0">
                     <ShieldCheck size={18} className="text-emerald-400" />
@@ -285,7 +266,6 @@ export default function Soporte() {
         </div>
       </main>
 
-      {/* FOOTER (IDÉNTICO A LANDING) */}
       <footer id="footer" className="py-10 px-4 border-t border-white/5 bg-ink-950 w-full text-center sm:text-left mt-auto">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-white/5 pb-10">
           <div className="md:col-span-2">
