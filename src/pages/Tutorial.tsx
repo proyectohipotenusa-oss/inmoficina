@@ -251,8 +251,8 @@ export default function Tutorial() {
         </div>
       </section>
 
-      {/* FOOTER IDÉNTICO A LANDING */}
-      <footer id="footer" className="py-10 px-4 border-t border-white/5 bg-ink-950 w-full text-center sm:text-left relative z-10">
+      {/* FOOTER */}
+      <footer id="footer" className="py-10 px-4 border-t border-white/5 bg-ink-950 w-full text-center sm:text-left">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-white/5 pb-10">
           <div className="md:col-span-2">
             <img src={LOGO_URL} className="w-[48px] h-[48px] mb-4 opacity-80 mx-auto sm:mx-0" alt="Logo Footer" />
@@ -262,13 +262,13 @@ export default function Tutorial() {
           </div>
           <div>
             <h4 className="text-[9px] font-semibold uppercase text-white/60 mb-4">Menú</h4>
-            <div className="flex flex-col gap-2.5 text-white/40 text-xs uppercase tracking-widest">
-              <Link href="/#servicios"><a className="hover:text-white transition-colors">Funcionalidades</a></Link>
-              <Link href="/#por-que-nosotros"><a className="hover:text-white transition-colors">La Diferencia</a></Link>
-              <Link href="/#precios"><a className="hover:text-white transition-colors">Inversión</a></Link>
-              <Link href="/#faq"><a className="hover:text-white transition-colors">Q&A</a></Link>
-              <Link href="/#contacto"><a className="hover:text-white transition-colors">Contacto</a></Link>
-              <Link href="/tutorial"><a className="text-brand-400 font-bold">Tutorial</a></Link>
+            <div className="flex flex-col gap-2.5 text-white/40 text-xs">
+              <a href="#servicios" className="hover:text-white transition-colors">Funcionalidades</a>
+              <a href="#por-que-nosotros" className="hover:text-white transition-colors">La Diferencia</a>
+              <a href="#precios" className="hover:text-white transition-colors">Inversión</a>
+              <a href="#faq" className="hover:text-white transition-colors">Q&A</a>
+              <a href="#contacto" className="hover:text-white transition-colors">Contacto</a>
+              <Link href="/tutorial"><a className="hover:text-white transition-colors">Tutorial</a></Link>
               <Link href="/soporte"><a className="hover:text-white transition-colors">Soporte</a></Link>
             </div>
           </div>
@@ -288,6 +288,76 @@ export default function Tutorial() {
           <p className="uppercase tracking-widest mt-2 md:mt-0">Designed in Spain</p>
         </div>
       </footer>
+
+      {/* MODAL TRIAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
+          <div className="relative w-full max-w-sm bg-ink-950 border border-white/10 rounded-2xl p-6 shadow-2xl animate-slide-up">
+            <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-white/30 hover:text-white transition-colors"><X size={18} /></button>
+            
+            {formStatus === 'success' ? (
+              <div className="text-center py-4">
+                <CheckCircle2 className="text-emerald-400 mx-auto mb-4" size={32} />
+                <h3 className="text-lg font-medium text-white">Solicitud Enviada</h3>
+                <p className="text-white/40 text-xs mt-3 leading-relaxed">
+                  Revisaremos tu agencia y crearemos tus credenciales VIP. Te avisaremos por email a la brevedad.
+                </p>
+                <button onClick={() => setIsModalOpen(false)} className="mt-6 w-full py-2.5 bg-brand-600 hover:bg-brand-500 rounded-lg text-xs font-bold text-white uppercase tracking-widest transition-colors">
+                  Finalizar
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="text-center mb-6">
+                  <h3 className="text-lg font-medium text-white/90">Solicitar Acceso</h3>
+                  <p className="text-[9px] text-white/50 uppercase tracking-widest font-medium mt-1">14 Días Gratis • Pack Premium</p>
+                </div>
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <div>
+                    <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Inmobiliaria *</label>
+                    <input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.nombre_agencia} onChange={e => setFormData({...formData, nombre_agencia: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Dirección *</label>
+                    <input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.direccion} onChange={e => setFormData({...formData, direccion: e.target.value})} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Ciudad *</label>
+                      <input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.ciudad} onChange={e => setFormData({...formData, ciudad: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">C.P. *</label>
+                      <input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.codigo_postal} onChange={e => setFormData({...formData, codigo_postal: e.target.value})} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Responsable *</label>
+                    <input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.contacto_nombre} onChange={e => setFormData({...formData, contacto_nombre: e.target.value})} />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Teléfono *</label>
+                      <input required type="tel" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.telefono} onChange={e => setFormData({...formData, telefono: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Email *</label>
+                      <input required type="email" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white text-white focus:border-brand-500 transition-colors outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                    </div>
+                  </div>
+                  <button type="submit" disabled={formStatus === 'loading'} className="w-full py-3 mt-4 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20">
+                    {formStatus === 'loading' ? <Loader2 className="animate-spin" size={14} /> : 'Solicitar Acceso VIP'}
+                  </button>
+                  <p className="text-[9px] text-white/30 text-center uppercase tracking-widest flex items-center justify-center gap-1 mt-3">
+                    <CheckCircle2 size={10} className="text-emerald-400"/> Sin tarjeta de crédito
+                  </p>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
