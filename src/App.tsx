@@ -80,8 +80,7 @@ export default function App() {
       <Route path="/p/:id" component={FichaPropiedad} /> 
       <Route path="/a/:agencia_id" component={CatalogoPublico} />
       <Route path="/tutorial" component={Tutorial} /> 
-      
-      <Route path="/soporte" component={Soporte} />
+      <Route path="/soporte" component={Soporte} /> 
       
       <Route path="/admin"><ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute></Route>
       
