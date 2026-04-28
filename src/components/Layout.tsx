@@ -30,6 +30,7 @@ export function Layout({ children, title }: LayoutProps) {
     }
   }, [perfil?.agencia_id]);
 
+  // CIERRE DE SESIÓN SUAVE
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -114,11 +115,11 @@ export function Layout({ children, title }: LayoutProps) {
             
             <div className="mt-auto pt-4 border-t border-white/5 mt-4 space-y-0.5">
               <NavItem href="/perfil" icon={UserCircle} label="Perfil" />
-              {/* ENLACE DE SOPORTE */}
+              {/* ENLACE DE SOPORTE INYECTADO AQUÍ */}
               <Link href={isAdmin ? "/admin" : "/soporte"}>
-                <a className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-white/50 hover:bg-white/5 hover:text-white">
-                  <LifeBuoy size={16} className="text-white/40" />
-                  <span className="font-medium text-[13px]">{isAdmin ? 'Ver Tickets' : 'Soporte Técnico'}</span>
+                <a className="group relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-white/50 hover:bg-white/5 hover:text-white">
+                  <LifeBuoy size={16} className="text-white/40 group-hover:text-white" />
+                  <span className="font-medium text-[13px]">{isAdmin ? 'Soporte Técnico' : 'Soporte Técnico'}</span>
                 </a>
               </Link>
             </div>

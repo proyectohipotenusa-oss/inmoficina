@@ -2,8 +2,8 @@ import { useEffect, useState, FormEvent } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useLocation } from 'wouter';
 import {
-  Shield, Plus, Building2, Loader2, Copy, Check, X, Users, Sparkles, ChevronRight, MapPin, Trash2,
-  TrendingUp, CheckCircle, Phone, CalendarDays, MessageSquare, LogOut, LifeBuoy
+  Shield, Plus, Building2, Loader2, Copy, Check, X, Users, KeyRound, Sparkles, ChevronRight, MapPin, Trash2,
+  TrendingUp, CheckCircle, Phone, Mail, CalendarDays, Timer, Lock, Unlock, MessageSquare, LogOut, LifeBuoy
 } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageHeader } from '../components/PageHeader';
@@ -48,7 +48,6 @@ interface MensajeContacto {
   created_at: string;
 }
 
-// NUEVA INTERFAZ PARA TICKETS DE SOPORTE
 interface TicketSoporte {
   id: string;
   nombre_agencia: string;
@@ -61,6 +60,12 @@ interface TicketSoporte {
   mensaje: string;
   estado: string;
   created_at: string;
+}
+
+interface Agente {
+  id: string;
+  email: string;
+  nombre: string;
 }
 
 interface CreatedUser {
@@ -83,14 +88,14 @@ export default function AdminPanel() {
   const [agencias, setAgencias] = useState<Agencia[]>([]);
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [mensajes, setMensajes] = useState<MensajeContacto[]>([]);
-  const [tickets, setTickets] = useState<TicketSoporte[]>([]); // ESTADO PARA TICKETS
+  const [tickets, setTickets] = useState<TicketSoporte[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, ingresos: 0, agencias: 0 });
   
   const [selectedAgencia, setSelectedAgencia] = useState<Agencia | 'new' | null>(null);
   const [selectedSolicitud, setSelectedSolicitud] = useState<Solicitud | null>(null);
   const [selectedMensaje, setSelectedMensaje] = useState<MensajeContacto | null>(null);
-  const [selectedTicket, setSelectedTicket] = useState<TicketSoporte | null>(null); // ESTADO DEL MODAL TICKET
+  const [selectedTicket, setSelectedTicket] = useState<TicketSoporte | null>(null);
   const [result, setResult] = useState<CreatedResult | null>(null);
 
   const loadData = async () => {
@@ -105,7 +110,6 @@ export default function AdminPanel() {
     const { data: msgs } = await supabase.from('mensajes_contacto').select('*').order('created_at', { ascending: false });
     setMensajes((msgs as MensajeContacto[]) || []);
 
-    // CARGAMOS TICKETS
     const { data: tcks } = await supabase.from('tickets_soporte').select('*').order('created_at', { ascending: false });
     setTickets((tcks as TicketSoporte[]) || []);
 
@@ -155,12 +159,9 @@ export default function AdminPanel() {
     loadData();
   };
 
-  // BANDEJA DE ENTRADA UNIFICADA (TICKETS PRIMERO)
   const pendingTrials = solicitudes.filter(s => s.estado === 'pendiente' || s.estado === 'rechazado').map(s => ({ ...s, tipoEntrada: 'trial', sortDate: new Date(s.created_at).getTime() }));
   const pendingMessages = mensajes.filter(m => !m.leido).map(m => ({ ...m, tipoEntrada: 'mensaje', sortDate: new Date(m.created_at).getTime() }));
-  const pendingTickets = tickets.filter(t => t.estado === 'pendiente').map(t => ({ ...t, tipoEntrada: 'ticket', sortDate: new Date(t.created_at).getTime() + 9999999999 })); // Prioridad Absoluta
-  
-  const bandejaEntrada = [...pendingTickets, ...pendingTrials, ...pendingMessages].sort((a, b) => b.sortDate - a.sortDate);
+  const bandejaEntrada = [...pendingTrials, ...pendingMessages].sort((a, b) => b.sortDate - a.sortDate);
 
   const activeTrials = solicitudes
     .filter(s => s.estado === 'procesado')
@@ -173,14 +174,17 @@ export default function AdminPanel() {
     .sort((a, b) => a.daysLeft - b.daysLeft);
 
   const historialMensajes = mensajes.filter(m => m.leido);
-  const historialTickets = tickets.filter(t => t.estado === 'resuelto');
+  
+  // Clasificar tickets
+  const pendingTickets = tickets.filter(t => t.estado === 'pendiente');
+  const resolvedTickets = tickets.filter(t => t.estado === 'resuelto');
 
   return (
     <Layout title="Panel Admin">
       <PageHeader
         title="SÚPER ADMINISTRADOR"
         titleClassName="text-[14px] md:text-[18px] uppercase tracking-tighter"
-        subtitle="Centro de mando unificado para agencias, solicitudes y soporte técnico."
+        subtitle="Centro de mando unificado para agencias, solicitudes y mensajes web."
         actions={
           <div className="flex items-center gap-3">
             <button 
@@ -233,7 +237,6 @@ export default function AdminPanel() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
         
-        {/* BANDEJA PRINCIPAL (INCLUYE TICKETS) */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 flex items-center gap-1.5">
@@ -253,20 +256,19 @@ export default function AdminPanel() {
               Bandeja limpia
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+            <div className="grid grid-cols-1 gap-3">
               {bandejaEntrada.map((item: any) => {
                 const isTrial = item.tipoEntrada === 'trial';
-                const isTicket = item.tipoEntrada === 'ticket';
                 
                 return (
-                  <div key={`${item.tipoEntrada}-${item.id}`} onClick={() => isTrial ? setSelectedSolicitud(item) : isTicket ? setSelectedTicket(item) : setSelectedMensaje(item)} className={`card p-4 bg-ink-900 border-white/5 flex flex-col gap-3 transition-all cursor-pointer hover:border-white/20 border-l-2 shadow-md ${isTrial ? (item.estado === 'rechazado' ? 'opacity-40 grayscale border-l-red-500' : 'border-l-brand-500 shadow-brand-500/10') : isTicket ? 'border-l-orange-500 shadow-orange-500/10' : 'border-l-purple-500 shadow-purple-500/10 bg-white/[0.01]'}`}>
+                  <div key={`${item.tipoEntrada}-${item.id}`} onClick={() => isTrial ? setSelectedSolicitud(item) : setSelectedMensaje(item)} className={`card p-4 bg-ink-900 border-white/5 flex flex-col gap-3 transition-all cursor-pointer hover:border-white/20 border-l-2 shadow-md ${isTrial ? (item.estado === 'rechazado' ? 'opacity-40 grayscale border-l-red-500' : 'border-l-brand-500 shadow-brand-500/10') : 'border-l-purple-500 shadow-purple-500/10 bg-white/[0.01]'}`}>
                     <div className="flex items-start justify-between">
                       <div className="min-w-0 pr-3">
                         <div className="text-xs font-bold text-white truncate uppercase mb-1">
-                          {isTrial ? item.nombre_agencia : isTicket ? item.nombre_agencia : item.nombre}
+                          {isTrial ? item.nombre_agencia : item.nombre}
                         </div>
-                        <div className={`text-[8px] font-black px-2 py-0.5 rounded w-fit uppercase tracking-widest ${isTrial ? 'bg-brand-500/20 text-brand-400' : isTicket ? 'bg-orange-500/20 text-orange-400' : 'bg-purple-500/20 text-purple-400'}`}>
-                          {isTrial ? `Trial: ${item.estado}` : isTicket ? 'Ticket Soporte' : 'Mensaje Web'}
+                        <div className={`text-[8px] font-black px-2 py-0.5 rounded w-fit uppercase tracking-widest ${isTrial ? 'bg-brand-500/20 text-brand-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                          {isTrial ? `Trial: ${item.estado}` : 'Mensaje Web'}
                         </div>
                       </div>
                       <div className="text-[9px] font-medium text-white/40 shrink-0">
@@ -277,10 +279,6 @@ export default function AdminPanel() {
                     {isTrial ? (
                       <div className="text-[10px] text-white/50 flex items-center gap-1.5 truncate">
                         <MapPin size={10} className="text-white/30 shrink-0" /> {item.ciudad}
-                      </div>
-                    ) : isTicket ? (
-                      <div className="text-[10px] text-white/60 italic truncate leading-relaxed">
-                        "{item.motivo}"
                       </div>
                     ) : (
                       <div className="text-[10px] text-white/60 italic truncate leading-relaxed">
@@ -304,10 +302,6 @@ export default function AdminPanel() {
                             Revertir a Pendiente
                           </button>
                         )
-                      ) : isTicket ? (
-                        <button onClick={(e) => { e.stopPropagation(); setSelectedTicket(item); }} className="w-full py-1.5 rounded-lg bg-orange-500/20 text-orange-400 text-[9px] font-bold hover:bg-orange-500 hover:text-white transition uppercase tracking-widest flex items-center justify-center gap-1">
-                          <LifeBuoy size={12}/> Ver Ticket
-                        </button>
                       ) : (
                         <button onClick={(e) => { e.stopPropagation(); marcarMensajeLeido(item.id, true); }} className="w-full py-1.5 rounded-lg bg-purple-500/20 text-purple-400 text-[9px] font-bold hover:bg-purple-500 hover:text-white transition uppercase tracking-widest flex items-center justify-center gap-1">
                           <CheckCircle size={12}/> Marcar Leído
@@ -321,90 +315,51 @@ export default function AdminPanel() {
           )}
         </div>
 
-        {/* COLUMNA CENTRAL: TRIALS Y TICKETS RESUELTOS */}
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-1.5">
-                <CalendarDays size={14}/> Agenda de Trials
-              </h3>
-              <span className="text-[9px] font-bold text-emerald-400/80 bg-emerald-400/10 px-2 py-0.5 rounded-md">
-                {activeTrials.length} Activos
-              </span>
-            </div>
-
-            {loading ? (
-              <div className="py-8 flex justify-center">
-                <Loader2 className="animate-spin text-emerald-400" size={20} />
-              </div>
-            ) : activeTrials.length === 0 ? (
-              <div className="card p-6 text-center bg-white/[0.01] text-white/20 text-[10px] font-bold uppercase tracking-widest border-dashed border border-white/10">
-                No hay trials activos
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-                {activeTrials.map(t => {
-                  const isExpired = t.daysLeft <= 0;
-                  const isUrgent = !isExpired && t.daysLeft <= 3;
-                  const colorClass = isExpired ? 'text-red-400 bg-red-400/10 border-red-400/20' : isUrgent ? 'text-amber-400 bg-amber-400/10 border-amber-400/20' : 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
-                  
-                  return (
-                    <div key={t.id} onClick={() => setSelectedSolicitud(t)} className="card p-3 bg-ink-900 border-white/5 flex items-center justify-between gap-4 cursor-pointer hover:border-white/20 transition-colors shadow-sm">
-                      <div className="min-w-0 flex-1">
-                        <div className="text-xs font-bold text-white uppercase truncate mb-1">{t.nombre_agencia}</div>
-                        <div className="text-[9px] text-white/50 flex flex-col gap-0.5 truncate">
-                          <span><Users size={10} className="inline mr-1 opacity-50"/>{t.contacto_nombre}</span>
-                          <span><Phone size={10} className="inline mr-1 opacity-50"/>{t.telefono}</span>
-                        </div>
-                      </div>
-                      <div className={`shrink-0 flex flex-col items-center justify-center w-14 h-14 rounded-xl border ${colorClass}`}>
-                        <div className="text-xl font-black leading-none mb-0.5">{isExpired ? '0' : t.daysLeft}</div>
-                        <div className="text-[7px] uppercase tracking-widest font-bold opacity-80">{isExpired ? 'Caducado' : 'Días'}</div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-1.5">
+              <CalendarDays size={14}/> Agenda de Trials
+            </h3>
+            <span className="text-[9px] font-bold text-emerald-400/80 bg-emerald-400/10 px-2 py-0.5 rounded-md">
+              {activeTrials.length} Activos
+            </span>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between pt-4 border-t border-white/5">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 flex items-center gap-1.5">
-                <LifeBuoy size={14}/> Historial Soporte
-              </h3>
-              <span className="text-[9px] font-bold text-orange-400/80 bg-orange-400/10 px-2 py-0.5 rounded-md">
-                {historialTickets.length} Resueltos
-              </span>
+          {loading ? (
+            <div className="py-8 flex justify-center">
+              <Loader2 className="animate-spin text-emerald-400" size={20} />
             </div>
-
-            {loading ? (
-              <div className="py-8 flex justify-center">
-                <Loader2 className="animate-spin text-orange-400" size={20} />
-              </div>
-            ) : historialTickets.length === 0 ? (
-              <div className="card p-6 text-center bg-white/[0.01] text-white/20 text-[10px] font-bold uppercase tracking-widest border-dashed border border-white/10">
-                Historial vacío
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-                {historialTickets.map(t => (
-                  <div key={t.id} onClick={() => setSelectedTicket(t)} className="card p-4 bg-ink-900 border-white/5 opacity-60 hover:opacity-100 cursor-pointer transition-all shadow-sm border-l-2 border-l-orange-500/30">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="text-xs font-bold text-white truncate pr-2 uppercase">{t.nombre_agencia}</div>
-                      <div className="text-[9px] text-white/40 shrink-0 mt-0.5">{new Date(t.created_at).toLocaleDateString()}</div>
+          ) : activeTrials.length === 0 ? (
+            <div className="card p-6 text-center bg-white/[0.01] text-white/20 text-[10px] font-bold uppercase tracking-widest border-dashed border border-white/10">
+              No hay trials activos
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3">
+              {activeTrials.map(t => {
+                const isExpired = t.daysLeft <= 0;
+                const isUrgent = !isExpired && t.daysLeft <= 3;
+                const colorClass = isExpired ? 'text-red-400 bg-red-400/10 border-red-400/20' : isUrgent ? 'text-amber-400 bg-amber-400/10 border-amber-400/20' : 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
+                
+                return (
+                  <div key={t.id} onClick={() => setSelectedSolicitud(t)} className="card p-3 bg-ink-900 border-white/5 flex items-center justify-between gap-4 cursor-pointer hover:border-white/20 transition-colors shadow-sm">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-bold text-white uppercase truncate mb-1">{t.nombre_agencia}</div>
+                      <div className="text-[9px] text-white/50 flex flex-col gap-0.5 truncate">
+                        <span><Users size={10} className="inline mr-1 opacity-50"/>{t.contacto_nombre}</span>
+                        <span><Phone size={10} className="inline mr-1 opacity-50"/>{t.telefono}</span>
+                      </div>
                     </div>
-                    <div className="text-[10px] text-white/50 italic truncate leading-relaxed">
-                      "{t.motivo}"
+                    <div className={`shrink-0 flex flex-col items-center justify-center w-14 h-14 rounded-xl border ${colorClass}`}>
+                      <div className="text-xl font-black leading-none mb-0.5">{isExpired ? '0' : t.daysLeft}</div>
+                      <div className="text-[7px] uppercase tracking-widest font-bold opacity-80">{isExpired ? 'Caducado' : 'Días'}</div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
-        {/* COLUMNA DERECHA (Mensajes) */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-400 flex items-center gap-1.5">
@@ -424,7 +379,7 @@ export default function AdminPanel() {
               Historial vacío
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+            <div className="grid grid-cols-1 gap-3">
               {historialMensajes.map(m => (
                 <div key={m.id} onClick={() => setSelectedMensaje(m)} className="card p-4 bg-ink-900 border-white/5 opacity-60 hover:opacity-100 cursor-pointer transition-all shadow-sm">
                   <div className="flex justify-between items-start mb-2">
@@ -442,6 +397,62 @@ export default function AdminPanel() {
 
       </div>
 
+      {/* NUEVA SECCIÓN: TICKETS DE SOPORTE TÉCNICO */}
+      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-4 flex items-center gap-2 mt-12">
+        <LifeBuoy size={16} className="text-orange-400" /> Panel de Soporte Técnico
+      </h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-12">
+        {/* TICKETS PENDIENTES */}
+        <div className="card p-0 overflow-hidden shadow-xl border-white/5 bg-ink-900/50">
+          <div className="p-4 border-b border-white/5 flex items-center justify-between bg-orange-500/10">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400">Tickets Pendientes</span>
+            <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{pendingTickets.length}</span>
+          </div>
+          {loading ? (
+             <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-orange-400" size={20} /></div>
+          ) : pendingTickets.length === 0 ? (
+             <div className="p-6 text-center text-white/20 text-[10px] font-bold uppercase tracking-widest">Sin tickets pendientes</div>
+          ) : (
+            <div className="divide-y divide-white/5 max-h-[300px] overflow-y-auto">
+              {pendingTickets.map(t => (
+                <div key={t.id} onClick={() => setSelectedTicket(t)} className="p-4 hover:bg-white/[0.02] cursor-pointer transition-colors border-l-2 border-l-orange-500 group">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-xs font-bold text-white group-hover:text-orange-400 transition-colors uppercase">{t.nombre_agencia}</span>
+                    <span className="text-[9px] text-white/40">{new Date(t.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <div className="text-[10px] text-white/60 truncate">{t.motivo}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* TICKETS RESUELTOS */}
+        <div className="card p-0 overflow-hidden shadow-xl border-white/5 bg-ink-900/50">
+          <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">Historial Resueltos</span>
+          </div>
+          {loading ? (
+             <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-white/40" size={20} /></div>
+          ) : historialTickets.length === 0 ? (
+             <div className="p-6 text-center text-white/20 text-[10px] font-bold uppercase tracking-widest">Historial vacío</div>
+          ) : (
+            <div className="divide-y divide-white/5 max-h-[300px] overflow-y-auto opacity-70">
+              {historialTickets.map(t => (
+                <div key={t.id} onClick={() => setSelectedTicket(t)} className="p-4 hover:bg-white/[0.02] cursor-pointer transition-colors group">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-xs font-bold text-white uppercase">{t.nombre_agencia}</span>
+                    <span className="text-[9px] text-white/40">{new Date(t.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <div className="text-[10px] text-white/60 truncate">{t.motivo}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* BASE DE DATOS DE AGENCIAS (Tu tabla original) */}
       <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-4 flex items-center gap-2 mt-12">
         <Building2 size={16}/> Base de Datos de Agencias
       </h3>
@@ -504,13 +515,12 @@ export default function AdminPanel() {
       {selectedAgencia && <AgencyDialog agencia={selectedAgencia} onClose={() => setSelectedAgencia(null)} onSave={() => { setSelectedAgencia(null); loadData(); }} onCreated={(res: CreatedResult) => { setSelectedAgencia(null); setResult(res); loadData(); }} />}
       {selectedSolicitud && <SolicitudDialog solicitud={selectedSolicitud} onClose={() => setSelectedSolicitud(null)} onSave={() => { setSelectedSolicitud(null); loadData(); }} />}
       {selectedMensaje && <MensajeDialog mensaje={selectedMensaje} onClose={() => setSelectedMensaje(null)} onSave={() => { setSelectedMensaje(null); loadData(); }} onDelete={() => borrarMensaje(selectedMensaje.id)} />}
+      {/* NUEVO MODAL DE TICKET */}
       {selectedTicket && <TicketDialog ticket={selectedTicket} onClose={() => setSelectedTicket(null)} onSave={() => { setSelectedTicket(null); loadData(); }} onDelete={() => borrarTicket(selectedTicket.id)} />}
       {result && <CredentialsDialog result={result} onClose={() => setResult(null)} />}
     </Layout>
   );
 }
-
-// ... EL RESTO DE TUS DIALOGOS SE MANTIENEN INTACTOS (AgencyDialog, SolicitudDialog, MensajeDialog, CredentialsDialog) ...
 
 function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
   const isEdit = agencia !== 'new';
@@ -854,39 +864,7 @@ function MensajeDialog({ mensaje, onClose, onSave, onDelete }: any) {
   );
 }
 
-function CredentialsDialog({ result, onClose }: any) {
-  const [copied, setCopied] = useState<any>(null);
-  return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-ink-950/90 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-sm bg-ink-900 border border-white/10 rounded-2xl p-8 shadow-2xl animate-slide-up text-center">
-        <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
-          <Check size={32} className="text-emerald-400" />
-        </div>
-        <h3 className="text-xl font-bold text-white mb-2">Agencia Creada</h3>
-        <p className="text-white/50 text-xs mb-8">Copia las credenciales a continuación y envíaselas al responsable de la agencia.</p>
-        
-        <div className="space-y-3 text-left mb-8">
-          {result.usuarios.map((u: any, i: number) => (
-            <div key={i} className="p-4 bg-ink-950 border border-white/10 rounded-xl flex justify-between items-center group">
-              <div className="min-w-0 pr-4">
-                <div className="text-[11px] font-bold text-white truncate mb-0.5">{u.email}</div>
-                <div className="text-[10px] text-white/40 font-mono tracking-widest">{u.password}</div>
-              </div>
-              <button onClick={() => { navigator.clipboard.writeText(`${u.email} / ${u.password}`); setCopied(i); setTimeout(() => setCopied(null), 1500); }} className="p-2 rounded-lg bg-white/5 text-white/40 hover:text-white hover:bg-brand-500 transition-all shrink-0">
-                {copied === i ? <Check size={16} className="text-emerald-400"/> : <Copy size={16}/>}
-              </button>
-            </div>
-          ))}
-        </div>
-        <button onClick={onClose} className="w-full py-3.5 rounded-xl bg-brand-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-brand-500 transition-all shadow-lg shadow-brand-500/20">
-          Entendido, cerrar
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// NUEVO MODAL PARA LOS TICKETS DE SOPORTE
+// EL NUEVO MODAL DE TICKET DE SOPORTE
 function TicketDialog({ ticket, onClose, onSave, onDelete }: any) {
   const [formData, setFormData] = useState({ ...ticket });
   const [submitting, setSubmitting] = useState(false);
@@ -973,6 +951,38 @@ function TicketDialog({ ticket, onClose, onSave, onDelete }: any) {
             </div>
           </form>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CredentialsDialog({ result, onClose }: any) {
+  const [copied, setCopied] = useState<any>(null);
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-ink-950/90 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-sm bg-ink-900 border border-white/10 rounded-2xl p-8 shadow-2xl animate-slide-up text-center">
+        <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
+          <Check size={32} className="text-emerald-400" />
+        </div>
+        <h3 className="text-xl font-bold text-white mb-2">Agencia Creada</h3>
+        <p className="text-white/50 text-xs mb-8">Copia las credenciales a continuación y envíaselas al responsable de la agencia.</p>
+        
+        <div className="space-y-3 text-left mb-8">
+          {result.usuarios.map((u: any, i: number) => (
+            <div key={i} className="p-4 bg-ink-950 border border-white/10 rounded-xl flex justify-between items-center group">
+              <div className="min-w-0 pr-4">
+                <div className="text-[11px] font-bold text-white truncate mb-0.5">{u.email}</div>
+                <div className="text-[10px] text-white/40 font-mono tracking-widest">{u.password}</div>
+              </div>
+              <button onClick={() => { navigator.clipboard.writeText(`${u.email} / ${u.password}`); setCopied(i); setTimeout(() => setCopied(null), 1500); }} className="p-2 rounded-lg bg-white/5 text-white/40 hover:text-white hover:bg-brand-500 transition-all shrink-0">
+                {copied === i ? <Check size={16} className="text-emerald-400"/> : <Copy size={16}/>}
+              </button>
+            </div>
+          ))}
+        </div>
+        <button onClick={onClose} className="w-full py-3.5 rounded-xl bg-brand-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-brand-500 transition-all shadow-lg shadow-brand-500/20">
+          Entendido, cerrar
+        </button>
       </div>
     </div>
   );
