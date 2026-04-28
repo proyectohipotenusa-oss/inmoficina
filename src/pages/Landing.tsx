@@ -5,7 +5,7 @@ import {
   Globe, BarChart3, Sparkles, Smartphone, Rss,
   ArrowRight, CheckCircle2, Star, X, Loader2,
   Trophy, Landmark, LayoutDashboard, Send, 
-  MousePointerClick, Mail, Phone, MapPin, Zap, Building2, ChevronDown, Users, QrCode, FileText
+  MousePointerClick, Mail, Phone, MapPin, Zap, Building2, ChevronDown, Users, QrCode, FileText, UserCircle
 } from 'lucide-react';
 
 const LOGO_URL = "https://qqysbxfxetqbnucsmagc.supabase.co/storage/v1/object/public/assets/logocuadrado-png1024.png";
@@ -47,7 +47,6 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-ink-950 font-sans selection:bg-brand-500/30 text-white overflow-x-hidden">
       
-      {/* HEADER NAV */}
       <nav className="fixed w-full z-50 bg-ink-950/80 backdrop-blur-xl border-b border-white/5 transition-all">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -66,7 +65,6 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* HERO SECTION */}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-6 overflow-hidden min-h-screen flex items-center">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-brand-500/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-16 items-center">
@@ -105,13 +103,11 @@ export default function Landing() {
             </div>
           </div>
           
-          {/* HERO IMAGE APP PREVIEW */}
           <div className="relative animate-fade-in lg:block hidden" style={{ animationDelay: '300ms' }}>
             <div className="absolute inset-0 bg-gradient-to-tr from-brand-500/20 to-purple-500/20 rounded-[2.5rem] blur-3xl transform rotate-6" />
             <div className="relative rounded-[2rem] border border-white/10 bg-ink-900/50 p-2 shadow-2xl backdrop-blur-sm overflow-hidden">
                <img src={HERO_IMG_URL} alt="Inmoficina App Interface" className="w-full h-auto rounded-[1.5rem] border border-white/5 shadow-inner" />
                
-               {/* Floating elements */}
                <div className="absolute -left-6 top-1/4 bg-ink-900 border border-white/10 p-4 rounded-2xl shadow-xl flex items-center gap-3 animate-bounce" style={{animationDuration: '3s'}}>
                  <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20"><TrendingUp size={18} className="text-emerald-400"/></div>
                  <div>
@@ -132,7 +128,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* CARACTERÍSTICAS PRINCIPALES */}
       <section id="soluciones" className="py-24 px-6 border-y border-white/5 bg-ink-950 relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 max-w-3xl mx-auto">
@@ -162,7 +157,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* SECCIÓN EXCLUSIVIDAD (MÓVIL / DISEÑO) */}
       <section id="exclusividad" className="py-32 px-6 relative overflow-hidden">
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
@@ -197,7 +191,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* PRICING SECTION */}
       <section id="planes" className="py-24 px-6 border-t border-white/5 bg-ink-900/30 relative">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
@@ -205,7 +198,6 @@ export default function Landing() {
             <p className="text-white/50 text-sm mb-6 max-w-2xl mx-auto">
               Sin costes de instalación, sin permanencia oculta. Un precio simple que crece con el éxito de tu agencia.
             </p>
-            {/* ETIQUETA DESCUENTO ANUAL */}
             <div className="inline-flex flex-col items-center">
               <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full mb-2 flex items-center gap-1.5 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
                 <Sparkles size={12} /> Ahorra un 15% con pago anual
@@ -215,7 +207,6 @@ export default function Landing() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto relative z-10">
-            {/* PLAN ESTÁNDAR */}
             <div className="card p-8 bg-ink-950 border-white/5 hover:border-white/10 transition-colors flex flex-col">
               <div className="mb-6">
                 <h3 className="text-lg font-bold text-white mb-2">Plan Estándar</h3>
@@ -245,7 +236,6 @@ export default function Landing() {
               </button>
             </div>
 
-            {/* PLAN PREMIUM */}
             <div className="card p-8 bg-ink-900 border-brand-500/30 relative flex flex-col shadow-[0_0_50px_rgba(59,130,246,0.1)] transform md:-translate-y-4">
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-brand-400 to-purple-500" />
               <div className="absolute -top-3 right-6 bg-brand-500 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
@@ -282,7 +272,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* CTA FINAL */}
       <section className="py-24 px-6 border-t border-white/5 bg-ink-950 relative text-center">
         <div className="max-w-3xl mx-auto relative z-10">
           <h2 className="text-3xl md:text-5xl font-black text-white tracking-tighter mb-6">Pásate a la élite inmobiliaria.</h2>
@@ -293,7 +282,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* FOOTER LOW PROFILE */}
       <footer className="py-8 border-t border-white/5 text-center text-[10px] text-white/30 uppercase tracking-widest font-bold bg-ink-950">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <div>&copy; {new Date().getFullYear()} Inmoficina CRM. Todos los derechos reservados.</div>
@@ -304,7 +292,6 @@ export default function Landing() {
         </div>
       </footer>
 
-      {/* MODAL DE REGISTRO */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm animate-fade-in overflow-y-auto">
           <div className="relative w-full max-w-md bg-ink-900 border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl animate-slide-up my-8">
