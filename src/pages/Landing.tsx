@@ -19,478 +19,363 @@ export default function Landing() {
     nombre_agencia: '', direccion: '', ciudad: '', codigo_postal: '', contacto_nombre: '', telefono: '', email: ''
   });
 
-  const [contactStatus, setContactStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [contactData, setContactData] = useState({ nombre: '', email: '', telefono: '', mensaje: '' });
-  const [scrolled, setScrolled] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus('loading');
-    const { error } = await supabase.from('solicitudes_registro').insert([formData]);
-    if (error) setFormStatus('error'); else setFormStatus('success');
-  };
-
-  const handleContactSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setContactStatus('loading');
-    const payload = {
-      nombre: contactData.nombre,
-      email: contactData.email,
-      telefono: contactData.telefono || null,
-      mensaje: contactData.mensaje
-    };
-
-    const { error } = await supabase.from('mensajes_contacto').insert([payload]);
-    if (error) setContactStatus('error'); 
-    else { 
-      setContactStatus('success'); 
-      setContactData({ nombre: '', email: '', telefono: '', mensaje: '' }); 
+    
+    try {
+      const { error } = await supabase.from('solicitudes_registro').insert([formData]);
+      if (error) throw error;
+      setFormStatus('success');
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setFormStatus('idle');
+        setFormData({ nombre_agencia: '', direccion: '', ciudad: '', codigo_postal: '', contacto_nombre: '', telefono: '', email: '' });
+      }, 4000);
+    } catch (error) {
+      console.error('Error:', error);
+      setFormStatus('error');
+      setTimeout(() => setFormStatus('idle'), 3000);
     }
   };
 
-  const FAQS = [
-    { 
-      q: "¿Tengo que introducir mi tarjeta de crédito para la prueba gratis?", 
-      a: "Absolutamente no. Queremos que pruebes todo el potencial de Inmoficina durante 14 días sin compromiso ni riesgo." 
-    },
-    { 
-      q: "¿Es Inmoficina difícil de usar?", 
-      a: "Al contrario. Es intuitivo y minimalista. Si sabes usar WhatsApp, sabrás usar Inmoficina desde el primer minuto." 
-    },
-    { 
-      q: "¿Qué sucede al finalizar los 14 días de prueba?", 
-      a: "Tú decides. Si te encanta, puedes elegir el plan que mejor se adapte a ti. Si no, tu cuenta se pausará sin ningún cargo automático, ya que no pedimos tarjeta por adelantado." 
-    },
-    { 
-      q: "¿Cómo ayuda la Inteligencia Artificial a vender más?", 
-      a: "Nuestra IA analiza los datos de la propiedad y redacta memorias descriptivas aplicando técnicas de copywriting persuasivo orientadas a la venta emocional, no solo a listar características." 
-    },
-    { 
-      q: "¿Qué impacto tiene el diseño inmersivo en mis ventas?", 
-      a: "Nuestras fichas VIP y dossiers retienen al cliente un 300% más de tiempo que un PDF estático, aumentando drásticamente la conversión." 
-    },
-    { 
-      q: "¿Qué es exactamente el Dossier de Inversión?", 
-      a: "Es un reporte automático que calcula el ROI, Cash Flow y Yield Neto para inversores. Les habla en su idioma (números puros) en lugar de darles descripciones genéricas." 
-    },
-    { 
-      q: "¿Puedo gestionar a mi equipo de agentes en el CRM?", 
-      a: "Por supuesto. El Plan Premium incluye 3 licencias para que tú y tu equipo trabajéis sobre la misma base de datos, compartiendo el Pipeline y la agenda." 
-    },
-    { 
-      q: "¿Realmente cerraré más ventas con Inmoficina?", 
-      a: "Sí. No somos un archivador de propiedades, somos una herramienta de persuasión. Cada informe que envías está diseñado para generar autoridad inmediata." 
-    },
-    { 
-      q: "¿Hay permanencia?", 
-      a: "No. Gánamos tu confianza mes a mes. Cancelas cuando quieras con un clic." 
-    },
-    { 
-      q: "¿Están seguros mis datos?", 
-      a: "Cifrado de grado militar (Row Level Security). Tu información es privada y exclusiva de tu agencia." 
-    }
-  ];
-
-  const PREMIUM_FEATURES = [
-    { text: "Licencia para 3 usuarios", icon: Users, isExclusive: false },
-    { text: "Fichas VIP Inmersivas", icon: Globe, isExclusive: false },
-    { text: "Multipublicación Portales", icon: Rss, isExclusive: false },
-    { text: "Pipeline y Gestión Leads", icon: MousePointerClick, isExclusive: false },
-    { text: "Códigos QR Dinámicos", icon: QrCode, isExclusive: false },
-    { text: "Compresión Fotos Nube", icon: Zap, isExclusive: false },
-    { text: "Informes CMA Ilimitados", icon: FileText, isExclusive: true },
-    { text: "Dossiers Inversión Pro", icon: Landmark, isExclusive: true },
-    { text: "IA de Redacción Integrada", icon: Sparkles, isExclusive: true },
-    { text: "Catálogo Público Digital", icon: LayoutDashboard, isExclusive: true }
-  ];
+  useEffect(() => {
+    document.documentElement.style.scrollBehavior = 'smooth';
+    return () => { document.documentElement.style.scrollBehavior = 'auto'; };
+  }, []);
 
   return (
-    <div className="min-h-screen bg-ink-950 text-white font-sans selection:bg-brand-500/30 overflow-x-hidden w-full relative">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap'); 
-        .font-sans { font-family: 'Inter', sans-serif; } 
-        .font-serif { font-family: 'Playfair Display', serif; } 
-        html { scroll-behavior: smooth; }
-      `}</style>
+    <div className="min-h-screen bg-ink-950 font-sans selection:bg-brand-500/30 text-white overflow-x-hidden">
       
-      <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-brand-500/10 blur-[120px] pointer-events-none" />
-      <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/5 blur-[120px] pointer-events-none" />
-
-      {/* NAVBAR */}
-      <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 w-full ${scrolled ? 'bg-ink-950/90 backdrop-blur-xl border-b border-white/5 py-1' : 'bg-transparent py-3'}`}>
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
-          <a href="#hero" className="flex items-center gap-3 group cursor-pointer">
-            <img src={LOGO_URL} alt="Logo" className="w-[42px] h-[42px] rounded-lg opacity-90 group-hover:opacity-100 transition-opacity" />
-            <span className="text-xs font-semibold tracking-widest uppercase text-white/90 hidden sm:block">INMOFICINA</span>
-          </a>
-          <div className="hidden lg:flex items-center gap-8 text-[11px] uppercase tracking-[0.15em] font-medium text-white/50">
-            <a href="#servicios" className="hover:text-white transition-colors">Funcionalidades</a>
-            <a href="#por-que-nosotros" className="hover:text-white transition-colors">La Diferencia</a>
-            <a href="#precios" className="hover:text-white transition-colors">Inversión</a>
-            <a href="#faq" className="hover:text-white transition-colors">Q&A</a>
-            <a href="#contacto" className="hover:text-white transition-colors">Contacto</a>
+      {/* HEADER NAV */}
+      <nav className="fixed w-full z-50 bg-ink-950/80 backdrop-blur-xl border-b border-white/5 transition-all">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src={LOGO_URL} alt="Inmoficina Logo" className="w-8 h-8 rounded-xl object-contain bg-white/5 p-1 border border-white/10 shadow-lg" />
+            <span className="text-xl font-black tracking-tighter text-white">Inmoficina <span className="text-brand-400 font-bold tracking-widest text-[10px] uppercase ml-1">Luxury</span></span>
+          </div>
+          <div className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-white/60">
+            <a href="#soluciones" className="hover:text-brand-400 transition-colors">Soluciones</a>
+            <a href="#exclusividad" className="hover:text-brand-400 transition-colors">Exclusividad</a>
+            <a href="#planes" className="hover:text-brand-400 transition-colors">Inversión</a>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/login" className="text-[11px] font-medium uppercase tracking-widest hover:text-brand-400 text-white/70 transition-colors">Acceso</Link>
-            <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-white hover:text-ink-950 transition-all">
-              Probar Gratis
-            </button>
+            <Link href="/login" className="text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors hidden sm:block">Acceso VIP</Link>
+            <button onClick={() => setIsModalOpen(true)} className="btn-primary text-[10px] sm:text-xs py-2.5 px-6 shadow-xl shadow-brand-500/20">Solicitar Demo</button>
           </div>
         </div>
       </nav>
 
-      {/* HERO */}
-      <section id="hero" className="relative pt-32 pb-16 text-center w-full min-h-[85vh] flex flex-col justify-center items-center">
-        <div className="max-w-3xl mx-auto z-10 px-4">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/[0.02] text-white/60 text-[9px] font-medium uppercase tracking-[0.2em] mb-6 backdrop-blur-md">
-            <Trophy size={12} className="text-brand-400/80" /> Digitaliza tu agencia inmobiliaria
-          </div>
-          <h1 className="font-serif text-4xl sm:text-6xl font-medium leading-[1.1] mb-6">
-            Vende Lujo, <span className="italic text-white/80">No Ladrillo.</span>
-          </h1>
-          <p className="text-sm sm:text-base text-white/50 max-w-xl mx-auto mb-10 leading-relaxed font-light">
-            El CRM concebido para agencias inmobiliarias que entienden que la marca propia es su activo más valioso. Sin tarjeta de crédito.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto px-6 py-3 bg-brand-600 text-white rounded-lg font-medium uppercase tracking-widest text-[11px] hover:bg-brand-500 transition-all flex items-center justify-center gap-2">
-              Comenzar 14 días gratis <ArrowRight size={14} />
-            </button>
-            <a href="#servicios" className="w-full sm:w-auto px-6 py-3 rounded-lg border border-white/10 text-white/70 font-medium uppercase tracking-widest text-[11px] hover:bg-white/5 transition-all flex items-center justify-center">
-              Ver Funcionalidades
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* SERVICIOS */}
-      <section id="servicios" className="py-20 bg-white/[0.01] border-y border-white/5">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4">Arsenal para el Cierre de Propiedades</h2>
-            <p className="text-white/50 text-sm max-w-xl mx-auto font-light">Herramientas de vanguardia diseñadas para impresionar a tus clientes.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {[
-              { icon: Globe, title: "Fichas VIP Inmersivas", desc: "Cálculo de hipoteca en tiempo real y branding 100% tuyo." },
-              { icon: BarChart3, title: "CMA Reports", desc: "Valoraciones de mercado justificadas con diseño editorial." },
-              { icon: Landmark, title: "Dossiers de Inversión", desc: "Yield, Cash Flow y ROI calculados automáticamente." },
-              { icon: Rss, title: "Multipublicación Portales", desc: "Sincroniza con Idealista, Fotocasa y Kyero en un clic." },
-              { icon: Sparkles, title: "Copywriter IA", desc: "Redacción persuasiva basada en la ubicación del inmueble." },
-              { icon: LayoutDashboard, title: "Pipeline Kanban", desc: "Control visual de leads y detección de clientes fríos." }
-            ].map((s, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-ink-900/40 border border-white/5 hover:border-brand-500/20 transition-all">
-                <s.icon className="text-brand-500 mb-5" size={20} />
-                <h3 className="text-base font-medium mb-2 text-white/90">{s.title}</h3>
-                <p className="text-white/40 text-xs font-light leading-relaxed">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* POR QUÉ NOSOTROS */}
-      <section id="por-que-nosotros" className="py-20">
-        <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="relative aspect-[4/5] rounded-[1.5rem] w-full max-w-[70%] mx-auto overflow-hidden border border-white/10 shadow-2xl bg-ink-900">
-            <img src={HERO_IMG_URL} className="w-full h-full object-cover grayscale-[0.2]" alt="Oficina Inmobiliaria" />
-            <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-transparent to-transparent opacity-80" />
-            <div className="absolute bottom-6 left-6 right-6">
-              <div className="p-4 bg-ink-950/80 backdrop-blur-md rounded-xl border border-white/10 flex items-center gap-3">
-                <Star size={18} className="text-brand-400" />
-                <p className="text-sm font-medium text-white/90">Tu identidad en el centro.</p>
-              </div>
+      {/* HERO SECTION */}
+      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-6 overflow-hidden min-h-screen flex items-center">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-brand-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-16 items-center">
+          <div className="space-y-8 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-[10px] font-black uppercase tracking-widest animate-fade-in">
+              <Sparkles size={12} /> La evolución del sector inmobiliario
             </div>
-          </div>
-          <div className="space-y-8">
-            <h2 className="font-serif text-3xl md:text-4xl font-medium leading-tight">La percepción lo es <span className="italic text-white/60">todo.</span></h2>
-            <div className="space-y-6">
-              {[
-                { title: "Independencia Total", desc: "Tecnología propia sin robarte protagonismo." },
-                { title: "Ahorro de Tiempo", desc: "Automatiza portales, redacción y cálculos." },
-                { title: "Seguridad y Privacidad", desc: "Datos protegidos bajo cifrado de grado militar." }
-              ].map((item, i) => (
-                <div key={i} className="flex gap-4">
-                  <CheckCircle2 className="text-brand-500 mt-0.5" size={18} />
-                  <div>
-                    <h4 className="text-sm font-medium mb-1 text-brand-500">{item.title}</h4>
-                    <p className="text-white/40 text-xs font-light leading-relaxed">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PRECIOS A DOS COLUMNAS */}
-      <section id="precios" className="py-24 bg-gradient-to-b from-brand-900/10 via-ink-900/40 to-ink-950 border-t border-white/5">
-        <div className="max-w-4xl mx-auto text-center mb-16 px-4">
-          <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4 text-brand-500">Inversión Inteligente</h2>
-          <p className="text-white/50 text-sm font-light">Escala las herramientas de tu agencia a medida que creces. Sin permanencia.</p>
-        </div>
-        
-        <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          {/* PLAN ESTÁNDAR */}
-          <div className="bg-ink-900/40 border border-white/10 p-8 rounded-[2rem] relative shadow-lg h-full flex flex-col justify-between">
-            <div>
-              <div className="text-center mb-8">
-                <h3 className="text-lg font-medium text-white/80 mb-2">Plan Estándar</h3>
-                <div className="flex items-start justify-center gap-1">
-                  <span className="text-xl font-medium text-white/40 mt-1">€</span>
-                  <span className="text-5xl font-semibold text-white/90">29</span>
-                  <span className="text-sm text-white/40 self-end mb-1.5">/mes</span>
-                </div>
-              </div>
-              <div className="space-y-4 text-left mb-8">
-                {PREMIUM_FEATURES.map((item, i) => (
-                  <div key={i} className={`flex items-center gap-3 font-light text-xs ${item.isExclusive ? 'text-white/30 line-through' : 'text-white/80'}`}>
-                    {item.isExclusive ? <X size={16} className="text-red-500/50 shrink-0"/> : <CheckCircle2 size={16} className="text-emerald-400 shrink-0"/>}
-                    {item.isExclusive ? item.text : item.text.replace("3 usuarios", "1 usuario")}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <button onClick={() => setIsModalOpen(true)} className="w-full py-3 rounded-lg border border-white/10 text-white font-semibold text-[11px] uppercase tracking-[0.1em] hover:bg-white/5 transition-all mt-auto">
-              Comenzar Prueba
-            </button>
-          </div>
-
-          {/* PLAN PREMIUM */}
-          <div className="bg-ink-950 border border-brand-500/30 p-8 rounded-[2rem] text-center relative shadow-[0_0_40px_rgba(99,102,241,0.15)] md:scale-105 z-10 h-[105%] flex flex-col justify-between">
-            <div className="absolute top-0 left-0 right-0 py-1.5 bg-brand-600 border-b border-brand-500 text-[9px] font-semibold text-white uppercase tracking-[0.2em] rounded-t-[2rem]">
-              Pack Agencia Premium
-            </div>
-            <div>
-              <div className="mt-8 mb-8">
-                <div className="flex items-start justify-center gap-1 mb-2">
-                  <span className="text-xl font-medium text-brand-400/50 mt-1">€</span>
-                  <span className="text-5xl font-semibold text-white/90">49</span>
-                  <span className="text-sm text-brand-400/50 self-end mb-1.5">/mes</span>
-                </div>
-              </div>
-              <div className="space-y-4 text-left mb-8">
-                {PREMIUM_FEATURES.map((item, i) => (
-                  <div key={i} className="flex items-center gap-3 text-white/90 font-light text-xs">
-                    <CheckCircle2 size={16} className={`shrink-0 ${item.isExclusive ? 'text-brand-400' : 'text-emerald-400'}`} />
-                    {item.text}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="mt-auto">
-              <button onClick={() => setIsModalOpen(true)} className="w-full py-4 rounded-xl bg-brand-600 text-white font-bold text-[11px] uppercase tracking-widest hover:bg-brand-500 transition-all shadow-lg shadow-brand-500/20">
-                Prueba 14 días gratis de este plan
+            <h1 className="text-5xl lg:text-7xl font-black tracking-tighter leading-[1.1] animate-slide-up" style={{ animationDelay: '100ms' }}>
+              Vende Más. <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-indigo-400">Trabaja Menos.</span>
+            </h1>
+            <p className="text-lg text-white/50 leading-relaxed max-w-xl animate-slide-up" style={{ animationDelay: '200ms' }}>
+              El CRM definitivo diseñado exclusivamente para agencias inmobiliarias de alto rendimiento. Automatiza tu captación, impresiona a tus clientes y cierra ventas a una velocidad sin precedentes.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 animate-slide-up" style={{ animationDelay: '300ms' }}>
+              <button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto px-8 py-4 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold uppercase tracking-widest text-xs transition-all shadow-[0_0_40px_rgba(59,130,246,0.3)] flex items-center justify-center gap-2">
+                Descubrir Inmoficina <ArrowRight size={16} />
               </button>
-              <p className="mt-4 text-[9px] text-white/30 uppercase flex items-center justify-center gap-1">
-                <CheckCircle2 size={10} className="text-emerald-400"/> Sin tarjeta de crédito
-              </p>
+              <Link href="/login" className="w-full sm:w-auto px-8 py-4 rounded-xl border border-white/10 text-white hover:bg-white/5 font-bold uppercase tracking-widest text-xs transition-all flex items-center justify-center text-center">
+                Ya soy miembro
+              </Link>
+            </div>
+            <div className="flex items-center gap-6 pt-8 border-t border-white/5 animate-slide-up" style={{ animationDelay: '400ms' }}>
+              <div className="flex -space-x-3">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="w-10 h-10 rounded-full border-2 border-ink-950 bg-ink-900 flex items-center justify-center overflow-hidden">
+                    <UserCircle size={20} className="text-white/20"/>
+                  </div>
+                ))}
+              </div>
+              <div className="text-xs">
+                <div className="flex items-center gap-1 text-amber-400 mb-1">
+                  <Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" />
+                </div>
+                <span className="text-white/40 font-medium">Confiado por +50 agencias top en España</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* HERO IMAGE APP PREVIEW */}
+          <div className="relative animate-fade-in lg:block hidden" style={{ animationDelay: '300ms' }}>
+            <div className="absolute inset-0 bg-gradient-to-tr from-brand-500/20 to-purple-500/20 rounded-[2.5rem] blur-3xl transform rotate-6" />
+            <div className="relative rounded-[2rem] border border-white/10 bg-ink-900/50 p-2 shadow-2xl backdrop-blur-sm overflow-hidden">
+               <img src={HERO_IMG_URL} alt="Inmoficina App Interface" className="w-full h-auto rounded-[1.5rem] border border-white/5 shadow-inner" />
+               
+               {/* Floating elements */}
+               <div className="absolute -left-6 top-1/4 bg-ink-900 border border-white/10 p-4 rounded-2xl shadow-xl flex items-center gap-3 animate-bounce" style={{animationDuration: '3s'}}>
+                 <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20"><TrendingUp size={18} className="text-emerald-400"/></div>
+                 <div>
+                   <div className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-0.5">Nuevo Cierre</div>
+                   <div className="text-sm font-black text-white">+12,500€</div>
+                 </div>
+               </div>
+
+               <div className="absolute -right-6 bottom-1/4 bg-ink-900 border border-white/10 p-4 rounded-2xl shadow-xl flex items-center gap-3 animate-bounce" style={{animationDuration: '4s', animationDelay: '1s'}}>
+                 <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center border border-purple-500/20"><Users size={18} className="text-purple-400"/></div>
+                 <div>
+                   <div className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-0.5">Captación Web</div>
+                   <div className="text-sm font-black text-white">Lead Caliente</div>
+                 </div>
+               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Q&A */}
-      <section id="faq" className="py-20 px-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="font-serif text-3xl font-medium mb-4">Preguntas Frecuentes</h2>
-            <p className="text-brand-500 text-sm font-light">Todo lo que necesitas saber antes de empezar.</p>
+      {/* CARACTERÍSTICAS PRINCIPALES */}
+      <section id="soluciones" className="py-24 px-6 border-y border-white/5 bg-ink-950 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16 max-w-3xl mx-auto">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-400 mb-4">Ecosistema Completo</h2>
+            <h3 className="text-3xl md:text-5xl font-black text-white tracking-tighter mb-6">Todo lo que necesitas, <br/>en una sola plataforma.</h3>
+            <p className="text-white/50 text-sm leading-relaxed">Olvídate de usar 5 herramientas distintas. Inmoficina unifica la gestión de clientes, inmuebles, marketing y análisis financiero en un entorno diseñado para la alta productividad.</p>
           </div>
-          <div className="space-y-3">
-            {FAQS.map((faq, i) => (
-              <div key={i} className="bg-ink-900/40 border border-white/5 rounded-xl overflow-hidden transition-all">
-                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/[0.02] transition">
-                  <span className="font-medium text-sm text-white/90">{faq.q}</span>
-                  <ChevronDown size={16} className={`text-brand-500 transition-transform ${openFaq === i ? 'rotate-180' : ''}`} />
-                </button>
-                <div className={`px-6 overflow-hidden transition-all duration-300 ${openFaq === i ? 'max-h-40 pb-4 opacity-100' : 'max-h-0 opacity-0'}`}>
-                  <p className="text-xs text-white/50 leading-relaxed font-light">{faq.a}</p>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: LayoutDashboard, title: "Pipeline de Ventas UI", desc: "Visualiza todo tu embudo de ventas en un tablero Kanban intuitivo. Arrastra, suelta y cierra tratos más rápido." },
+              { icon: Rss, title: "Sincronización Portales", desc: "Publica en Idealista, Fotocasa y Habitaclia con un solo clic. Tus propiedades en todas partes al instante." },
+              { icon: FileText, title: "Informes CMA Pro", desc: "Genera análisis comparativos de mercado en PDF que dejarán a los propietarios sin palabras." },
+              { icon: Sparkles, title: "IA Predictor de Valor", desc: "Nuestra inteligencia artificial analiza +11.000 códigos postales para darte el valor real de mercado al instante." },
+              { icon: QrCode, title: "Escaparate Interactivo", desc: "Fichas VIP públicas con códigos QR para tus escaparates. Que tus clientes interactúen desde la calle." },
+              { icon: Landmark, title: "Dossier Inversionista", desc: "Calculadoras hipotecarias y de rentabilidad integradas para convencer a inversores con números claros." }
+            ].map((f, i) => (
+              <div key={i} className="card p-8 bg-ink-900/50 hover:bg-ink-900 border-white/5 hover:border-brand-500/30 transition-all group">
+                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand-500/10 transition-colors border border-white/5 group-hover:border-brand-500/20">
+                  <f.icon size={24} className="text-white/40 group-hover:text-brand-400 transition-colors" />
                 </div>
+                <h4 className="text-lg font-bold text-white mb-3">{f.title}</h4>
+                <p className="text-sm text-white/40 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CONTACTO */}
-      <section id="contacto" className="py-20 px-4 bg-ink-900/20 border-t border-white/5">
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
-          <div>
-            <h2 className="font-serif text-2xl md:text-3xl font-medium mb-4 text-brand-500">¿Hablamos?</h2>
-            <p className="text-white/50 text-xs font-light leading-relaxed mb-8">
-              Si tienes dudas, requerimientos especiales, volumen de agencia o necesitas un tutorial de uso, contáctanos.
+      {/* SECCIÓN EXCLUSIVIDAD (MÓVIL / DISEÑO) */}
+      <section id="exclusividad" className="py-32 px-6 relative overflow-hidden">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+          <div className="space-y-8 relative z-10">
+            <h2 className="text-3xl md:text-5xl font-black text-white tracking-tighter leading-tight">
+              Diseñado para verse <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">espectacular</span> en cualquier dispositivo.
+            </h2>
+            <p className="text-white/50 text-sm leading-relaxed">
+              Tus agentes no están siempre en la oficina. Inmoficina es 100% responsivo, permitiendo gestionar leads, firmar documentos y consultar la agenda desde un smartphone mientras están enseñando una propiedad.
             </p>
-            <div className="space-y-5">
-              <div className="flex items-center gap-4">
-                <Mail className="text-brand-500" size={20} />
-                <div>
-                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-medium">Email</p>
-                  <p className="text-sm font-medium text-white/80">admin@inmoficina.es</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <Phone className="text-brand-500" size={20} />
-                <div>
-                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-medium">Teléfono</p>
-                  <p className="text-sm font-medium text-white/80">+34 644 314 460</p>
-                </div>
-              </div>
-            </div>
+            <ul className="space-y-4">
+              {[
+                "Interfaz Dark Mode de alto contraste y nula fatiga visual.",
+                "Fichas de propiedad adaptadas para enviar por WhatsApp.",
+                "Gestión de agenda táctil y ultra rápida."
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-3 text-sm text-white/70 font-medium">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                    <CheckCircle2 size={12} className="text-emerald-400" />
+                  </div>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
-
-          <div className="bg-ink-900/40 border border-white/5 p-6 rounded-2xl">
-            {contactStatus === 'success' ? (
-              <div className="text-center py-6 animate-fade-in">
-                <CheckCircle2 className="text-emerald-400 mx-auto mb-4" size={32} />
-                <h3 className="text-lg font-medium text-white/90">Mensaje Recibido</h3>
-                <p className="text-white/40 text-xs mt-2">Te responderemos a la brevedad.</p>
-                <button onClick={() => setContactStatus('idle')} className="mt-6 px-4 py-1.5 border border-white/10 rounded-lg text-[10px] uppercase text-white/60 transition-colors hover:text-white">
-                  Enviar otro
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleContactSubmit} className="space-y-4">
-                {contactStatus === 'error' && (
-                  <div className="p-3 text-[10px] bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-center">
-                    Error de conexión. Inténtalo de nuevo.
-                  </div>
-                )}
-                <div>
-                  <label className="block text-[8px] uppercase tracking-[0.15em] font-medium text-white/50 mb-1.5 ml-1">Nombre *</label>
-                  <input required className="input bg-ink-950 border-white/5 text-xs px-3 py-2 w-full rounded-lg outline-none focus:border-brand-500 transition-colors" value={contactData.nombre} onChange={e => setContactData({...contactData, nombre: e.target.value})} />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[8px] uppercase tracking-[0.15em] font-medium text-white/50 mb-1.5 ml-1">Email *</label>
-                    <input required type="email" className="input bg-ink-950 border-white/5 text-xs px-3 py-2 w-full rounded-lg outline-none focus:border-brand-500 transition-colors" value={contactData.email} onChange={e => setContactData({...contactData, email: e.target.value})} />
-                  </div>
-                  <div>
-                    <label className="block text-[8px] uppercase tracking-[0.15em] font-medium text-white/50 mb-1.5 ml-1">Teléfono</label>
-                    <input type="tel" className="input bg-ink-950 border-white/5 text-xs px-3 py-2 w-full rounded-lg outline-none focus:border-brand-500 transition-colors" value={contactData.telefono} onChange={e => setContactData({...contactData, telefono: e.target.value})} />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[8px] uppercase tracking-[0.15em] font-medium text-white/50 mb-1.5 ml-1">Mensaje *</label>
-                  <textarea required rows={3} className="input bg-ink-950 border-white/5 text-xs px-3 py-2 w-full rounded-lg resize-none outline-none focus:border-brand-500 transition-colors" value={contactData.mensaje} onChange={e => setContactData({...contactData, mensaje: e.target.value})} />
-                </div>
-                <button type="submit" disabled={contactStatus === 'loading'} className="w-full py-2.5 bg-brand-600 text-white rounded-lg font-medium uppercase tracking-widest text-[10px] hover:bg-brand-500 transition-all flex items-center justify-center gap-2">
-                  {contactStatus === 'loading' ? <Loader2 className="animate-spin" size={14} /> : <><Send size={14} /> Enviar Mensaje</>}
-                </button>
-              </form>
-            )}
+          <div className="relative z-10 flex justify-center lg:justify-end">
+            <div className="w-[300px] h-[600px] border-[8px] border-ink-900 rounded-[3rem] bg-ink-950 relative shadow-2xl overflow-hidden ring-1 ring-white/10">
+              <div className="absolute top-0 inset-x-0 h-6 bg-ink-900 rounded-b-xl w-32 mx-auto" />
+              <img src={HERO_IMG_URL} alt="Mobile App" className="w-full h-full object-cover object-left-top opacity-80" />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer id="footer" className="py-10 px-4 border-t border-white/5 bg-ink-950 w-full text-center sm:text-left">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-white/5 pb-10">
-          <div className="md:col-span-2">
-            <img src={LOGO_URL} className="w-[48px] h-[48px] mb-4 opacity-80 mx-auto sm:mx-0" alt="Logo Footer" />
-            <p className="text-white/40 text-xs font-light max-w-sm mx-auto sm:mx-0 leading-relaxed">
-              CRM diseñado exclusivamente para profesionalizar más aún tu agencia inmobiliaria.
+      {/* PRICING SECTION */}
+      <section id="planes" className="py-24 px-6 border-t border-white/5 bg-ink-900/30 relative">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-black text-white tracking-tighter mb-4">Inversión Transparente.</h2>
+            <p className="text-white/50 text-sm mb-6 max-w-2xl mx-auto">
+              Sin costes de instalación, sin permanencia oculta. Un precio simple que crece con el éxito de tu agencia.
             </p>
-          </div>
-          <div>
-            <h4 className="text-[9px] font-semibold uppercase text-white/60 mb-4">Menú</h4>
-            <div className="flex flex-col gap-2.5 text-white/40 text-xs">
-              <a href="#servicios" className="hover:text-white transition-colors">Funcionalidades</a>
-              <a href="#por-que-nosotros" className="hover:text-white transition-colors">La Diferencia</a>
-              <a href="#precios" className="hover:text-white transition-colors">Inversión</a>
-              <a href="#faq" className="hover:text-white transition-colors">Q&A</a>
-              <a href="#contacto" className="hover:text-white transition-colors">Contacto</a>
+            {/* ETIQUETA DESCUENTO ANUAL */}
+            <div className="inline-flex flex-col items-center">
+              <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full mb-2 flex items-center gap-1.5 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+                <Sparkles size={12} /> Ahorra un 15% con pago anual
+              </span>
+              <span className="text-[10px] text-white/30 uppercase tracking-widest font-bold">Paga el año por adelantado y obtén un 15% de descuento directo en cualquier plan.</span>
             </div>
           </div>
-          <div>
-            <h4 className="text-[9px] font-semibold uppercase text-white/60 mb-4">Legal</h4>
-            <div className="flex flex-col gap-2.5 text-white/40 text-xs">
-              <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Política de Cookies</a>
-              <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Privacidad</a>
-              <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Aviso Legal</a>
-              <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Condiciones de Uso</a>
-              <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Contratación</a>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto relative z-10">
+            {/* PLAN ESTÁNDAR */}
+            <div className="card p-8 bg-ink-950 border-white/5 hover:border-white/10 transition-colors flex flex-col">
+              <div className="mb-6">
+                <h3 className="text-lg font-bold text-white mb-2">Plan Estándar</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-white">29€</span>
+                  <span className="text-xs text-white/40 font-bold uppercase tracking-widest">/mes</span>
+                </div>
+                <p className="text-[11px] text-white/40 mt-3 h-8">Ideal para agentes independientes que quieren digitalizar su gestión.</p>
+              </div>
+              <ul className="space-y-4 mb-8 flex-1">
+                {[
+                  "1 Usuario Agente",
+                  "Gestión de Leads Ilimitada",
+                  "Pipeline de Ventas (Kanban)",
+                  "Cartera de Propiedades Ilimitada",
+                  "Sincronización a Portales Básicos",
+                  "Agenda y Tareas",
+                  "Fichas VIP sin marca blanca"
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-center gap-3 text-xs text-white/60">
+                    <CheckCircle2 size={14} className="text-white/20 shrink-0" /> {feature}
+                  </li>
+                ))}
+              </ul>
+              <button onClick={() => setIsModalOpen(true)} className="w-full py-3.5 rounded-xl border border-white/10 text-white font-bold text-[11px] uppercase tracking-widest hover:bg-white/5 transition-colors">
+                Solicitar Acceso
+              </button>
+            </div>
+
+            {/* PLAN PREMIUM */}
+            <div className="card p-8 bg-ink-900 border-brand-500/30 relative flex flex-col shadow-[0_0_50px_rgba(59,130,246,0.1)] transform md:-translate-y-4">
+              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-brand-400 to-purple-500" />
+              <div className="absolute -top-3 right-6 bg-brand-500 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
+                Más Popular
+              </div>
+              <div className="mb-6">
+                <h3 className="text-lg font-bold text-brand-400 mb-2">Plan Premium Luxury</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-white">49€</span>
+                  <span className="text-xs text-white/40 font-bold uppercase tracking-widest">/mes</span>
+                </div>
+                <p className="text-[11px] text-white/50 mt-3 h-8">Para agencias consolidadas que buscan herramientas de cierre avanzadas.</p>
+              </div>
+              <ul className="space-y-4 mb-8 flex-1">
+                {[
+                  "Hasta 3 Usuarios Agentes",
+                  "Todo lo incluido en Estándar",
+                  "Fichas VIP con Marca Blanca (Tu Logo)",
+                  "Informes de Valoración CMA en PDF",
+                  "Dossier para Inversores en PDF",
+                  "IA Predictor de Valor de Mercado",
+                  "Soporte Prioritario 24/7"
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-center gap-3 text-xs text-white/80 font-medium">
+                    <CheckCircle2 size={14} className="text-brand-400 shrink-0" /> {feature}
+                  </li>
+                ))}
+              </ul>
+              <button onClick={() => setIsModalOpen(true)} className="w-full py-3.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-[11px] uppercase tracking-widest shadow-lg shadow-brand-500/20 transition-all">
+                Obtener Premium
+              </button>
             </div>
           </div>
         </div>
-        <div className="max-w-6xl mx-auto pt-6 flex flex-col md:flex-row justify-between items-center text-[10px] text-white/30 font-medium">
-          <p>© {new Date().getFullYear()} Inmoficina. Una marca de Hipotenusa Online.</p>
-          <p className="uppercase tracking-widest mt-2 md:mt-0">Designed in Spain</p>
+      </section>
+
+      {/* CTA FINAL */}
+      <section className="py-24 px-6 border-t border-white/5 bg-ink-950 relative text-center">
+        <div className="max-w-3xl mx-auto relative z-10">
+          <h2 className="text-3xl md:text-5xl font-black text-white tracking-tighter mb-6">Pásate a la élite inmobiliaria.</h2>
+          <p className="text-white/50 mb-8 text-sm">Empieza a usar Inmoficina hoy y descubre por qué las agencias que facturan más de 1M€ confían en plataformas de alto rendimiento.</p>
+          <button onClick={() => setIsModalOpen(true)} className="px-8 py-4 bg-white text-ink-950 rounded-xl font-black uppercase tracking-widest text-xs transition-transform hover:scale-105 shadow-xl flex items-center justify-center gap-2 mx-auto">
+            <Zap size={16} /> Quiero mi cuenta VIP
+          </button>
+        </div>
+      </section>
+
+      {/* FOOTER LOW PROFILE */}
+      <footer className="py-8 border-t border-white/5 text-center text-[10px] text-white/30 uppercase tracking-widest font-bold bg-ink-950">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div>&copy; {new Date().getFullYear()} Inmoficina CRM. Todos los derechos reservados.</div>
+          <div className="flex gap-4">
+            <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Términos Legales</a>
+            <a href={TEMPORARY_LEGAL_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Privacidad</a>
+          </div>
         </div>
       </footer>
 
-      {/* MODAL TRIAL */}
+      {/* MODAL DE REGISTRO */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-          <div className="relative w-full max-w-sm bg-ink-950 border border-white/10 rounded-2xl p-6 shadow-2xl animate-slide-up">
-            <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-white/30 hover:text-white transition-colors"><X size={18} /></button>
-            
-            {formStatus === 'success' ? (
-              <div className="text-center py-4">
-                <CheckCircle2 className="text-emerald-400 mx-auto mb-4" size={32} />
-                <h3 className="text-lg font-medium text-white">Solicitud Enviada</h3>
-                <p className="text-white/40 text-xs mt-3 leading-relaxed">
-                  Revisaremos tu agencia y crearemos tus credenciales VIP. Te avisaremos por email a la brevedad.
-                </p>
-                <button onClick={() => setIsModalOpen(false)} className="mt-6 w-full py-2.5 bg-brand-600 hover:bg-brand-500 rounded-lg text-xs font-bold text-white uppercase tracking-widest transition-colors">
-                  Finalizar
-                </button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-md bg-ink-900 border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl animate-slide-up my-8">
+            <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02] sticky top-0 z-10">
+              <div>
+                <h3 className="text-lg font-black text-white tracking-tight">Solicitud de Acceso VIP</h3>
+                <p className="text-[10px] uppercase tracking-widest text-brand-400 font-bold mt-1">Plazas limitadas mensuales</p>
               </div>
-            ) : (
-              <>
-                <div className="text-center mb-6">
-                  <h3 className="text-lg font-medium text-white/90">Solicitar Acceso</h3>
-                  <p className="text-[9px] text-white/50 uppercase tracking-widest font-medium mt-1">14 Días Gratis • Pack Premium</p>
+              <button onClick={() => setIsModalOpen(false)} className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
+              {formStatus === 'success' ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+                    <CheckCircle2 size={32} className="text-emerald-400" />
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-2">Solicitud Recibida</h4>
+                  <p className="text-sm text-white/50">Nuestro equipo revisará tu perfil de agencia y se pondrá en contacto contigo en menos de 24 horas.</p>
                 </div>
-                <form onSubmit={handleSubmit} className="space-y-3">
-                  <div>
-                    <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Inmobiliaria *</label>
-                    <input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.nombre_agencia} onChange={e => setFormData({...formData, nombre_agencia: e.target.value})} />
+              ) : formStatus === 'error' ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                    <X size={32} className="text-red-400" />
                   </div>
-                  <div>
-                    <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Dirección *</label>
-                    <input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.direccion} onChange={e => setFormData({...formData, direccion: e.target.value})} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <h4 className="text-xl font-bold text-white mb-2">Error de conexión</h4>
+                  <p className="text-sm text-white/50">Ha habido un problema al enviar tu solicitud. Inténtalo de nuevo más tarde o escríbenos directamente.</p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xs text-white/50 mb-6 leading-relaxed">Debido a la alta demanda y para garantizar el rendimiento de nuestros servidores, el registro está sujeto a aprobación manual.</p>
+                  <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                      <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Ciudad *</label>
-                      <input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.ciudad} onChange={e => setFormData({...formData, ciudad: e.target.value})} />
+                      <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Nombre de la Agencia *</label>
+                      <input required type="text" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.nombre_agencia} onChange={e => setFormData({...formData, nombre_agencia: e.target.value})} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Ciudad *</label>
+                        <input required type="text" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.ciudad} onChange={e => setFormData({...formData, ciudad: e.target.value})} />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">C.P. *</label>
+                        <input required type="text" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.codigo_postal} onChange={e => setFormData({...formData, codigo_postal: e.target.value})} />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">C.P. *</label>
-                      <input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.codigo_postal} onChange={e => setFormData({...formData, codigo_postal: e.target.value})} />
+                      <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Persona de Contacto *</label>
+                      <input required type="text" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.contacto_nombre} onChange={e => setFormData({...formData, contacto_nombre: e.target.value})} />
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Responsable *</label>
-                    <input required className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.contacto_nombre} onChange={e => setFormData({...formData, contacto_nombre: e.target.value})} />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Teléfono *</label>
+                      <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Teléfono Móvil *</label>
                       <input required type="tel" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.telefono} onChange={e => setFormData({...formData, telefono: e.target.value})} />
                     </div>
                     <div>
                       <label className="block text-[9px] font-medium uppercase tracking-widest text-white/40 mb-1 ml-1">Email *</label>
-                      <input required type="email" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-500 transition-colors outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                      <input required type="email" className="w-full bg-ink-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white text-white focus:border-brand-500 transition-colors outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
                     </div>
-                  </div>
-                  <button type="submit" disabled={formStatus === 'loading'} className="w-full py-3 mt-4 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
-                    {formStatus === 'loading' ? <Loader2 className="animate-spin" size={14} /> : 'Solicitar Acceso VIP'}
-                  </button>
-                  <p className="text-[9px] text-white/30 text-center uppercase tracking-widest flex items-center justify-center gap-1 mt-3">
-                    <CheckCircle2 size={10} className="text-emerald-400"/> Sin tarjeta de crédito
-                  </p>
-                </form>
-              </>
-            )}
+                  
+                    <button type="submit" disabled={formStatus === 'loading'} className="w-full py-3 mt-4 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20">
+                      {formStatus === 'loading' ? <Loader2 className="animate-spin" size={14} /> : 'Solicitar Acceso VIP'}
+                    </button>
+                    <p className="text-[9px] text-white/30 text-center uppercase tracking-widest flex items-center justify-center gap-1 mt-3">
+                      <CheckCircle2 size={10} className="text-emerald-400"/> Sin tarjeta de crédito
+                    </p>
+                  </form>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
