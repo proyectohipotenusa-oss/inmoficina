@@ -21,8 +21,8 @@ import AdminPanel from './pages/AdminPanel';
 import PublicProfile from './pages/PublicProfile';
 import FichaPropiedad from './pages/FichaPropiedad';
 import CatalogoPublico from './pages/CatalogoPublico';
-import Tutorial from './pages/Tutorial'; 
-import Soporte from './pages/Soporte'; // <--- IMPORTACIÓN DE SOPORTE
+import Tutorial from './pages/Tutorial';
+import Soporte from './pages/Soporte'; // <-- RUTA IMPORTADA
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 function PlanGuard({ children, premium = false }: { children: React.ReactNode, premium?: boolean }) {
@@ -74,17 +74,14 @@ function PlanGuard({ children, premium = false }: { children: React.ReactNode, p
 export default function App() {
   return (
     <Switch>
-      {/* RUTAS PÚBLICAS (Sin protección) */}
       <Route path="/" component={Landing} />
       <Route path="/login" component={Login} />
-      <Route path="/tutorial" component={Tutorial} />
-      <Route path="/soporte" component={Soporte} /> {/* <--- AHORA SÍ ES PÚBLICA */}
-      
       <Route path="/u/:slug" component={PublicProfile} />
       <Route path="/p/:id" component={FichaPropiedad} /> 
       <Route path="/a/:agencia_id" component={CatalogoPublico} />
+      <Route path="/tutorial" component={Tutorial} /> 
+      <Route path="/soporte" component={Soporte} /> {/* <-- RUTA AÑADIDA */}
       
-      {/* RUTAS PROTEGIDAS */}
       <Route path="/admin"><ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute></Route>
       
       <Route path="/dashboard"><ProtectedRoute><PlanGuard><Dashboard /></PlanGuard></ProtectedRoute></Route>
@@ -100,9 +97,9 @@ export default function App() {
       <Route path="/agenda"><ProtectedRoute><PlanGuard><Agenda /></PlanGuard></ProtectedRoute></Route>
       <Route path="/historico"><ProtectedRoute><PlanGuard><Historico /></PlanGuard></ProtectedRoute></Route>
       
+      {/* ELIMINAMOS PLANGUARD EN EL PERFIL PARA QUE EL ADMIN PUEDA ENTRAR */}
       <Route path="/perfil"><ProtectedRoute><Perfil /></ProtectedRoute></Route>
       
-      {/* RUTA POR DEFECTO (Si no encuentra la URL, manda al Dashboard) */}
       <Route><ProtectedRoute><PlanGuard><Dashboard /></PlanGuard></ProtectedRoute></Route>
     </Switch>
   );
