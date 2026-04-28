@@ -45,17 +45,17 @@ export default function Dashboard() {
         const hoyStr = new Date().toISOString().split('T')[0];
         const ahoraDate = new Date();
         
-        // Tareas para hoy
         setTareasHoy(t.data
           .filter(x => x.fecha === hoyStr && !x.completada)
           .sort((a, b) => a.hora.localeCompare(b.hora)));
 
-        // Tareas atrasadas (fecha anterior a hoy, o de hoy pero hora anterior a la actual, y no completadas)
         const atrasadas = t.data.filter(x => {
           if (x.completada) return false;
+          // Si no tiene hora definida, asumimos 23:59 para no marcarla atrasada prematuramente hoy
           const tareaDate = new Date(`${x.fecha}T${x.hora || '23:59'}:00`);
           return tareaDate < ahoraDate;
         });
+        
         setTareasAtrasadas(atrasadas.sort((a, b) => new Date(`${a.fecha}T${a.hora}`).getTime() - new Date(`${b.fecha}T${b.hora}`).getTime()));
       }
 
@@ -102,7 +102,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[400px]">
-        {/* ATENCIÓN URGENTE (LEADS DORMIDOS + TAREAS ATRASADAS) */}
+        {/* ATENCIÓN URGENTE (TAREAS ATRASADAS + LEADS DORMIDOS) */}
         <div className="card p-0 bg-ink-900 border-white/5 flex flex-col h-full overflow-hidden relative">
           <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-bl-full blur-xl" />
           <div className="p-4 pb-2 border-b border-white/5 shrink-0 flex justify-between items-center z-10">
@@ -120,11 +120,15 @@ export default function Dashboard() {
              </div>
           ) : (
             <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2 relative z-10">
-              {/* Bloque Tareas Atrasadas */}
+              
+              {/* BLOQUE DE TAREAS ATRASADAS */}
               {tareasAtrasadas.map(t => (
                 <div key={`tarea-${t.id}`} onClick={() => setLocation('/agenda')} className="flex items-center justify-between p-3 rounded-xl bg-red-500/5 border border-red-500/10 hover:border-red-500/30 cursor-pointer transition-colors group">
                   <div className="min-w-0 pr-2">
-                    <div className="text-[11px] font-bold text-white truncate flex items-center gap-1.5"><AlertCircle size={10} className="text-red-400" /> {t.titulo}</div>
+                    <div className="text-[12px] font-bold text-white truncate flex items-center gap-1.5">
+                      <AlertCircle size={12} className="text-red-400 shrink-0" /> 
+                      {t.titulo}
+                    </div>
                     <div className="text-[9px] text-white/40 capitalize mt-0.5">{t.tipo}</div>
                   </div>
                   <div className="text-[9px] font-bold text-red-400 flex flex-col items-end gap-0.5 bg-red-500/10 px-2 py-1 rounded-md shrink-0">
@@ -133,13 +137,13 @@ export default function Dashboard() {
                   </div>
                 </div>
               ))}
-              
-              {/* Bloque Leads Dormidos */}
+
+              {/* BLOQUE DE LEADS DORMIDOS */}
               {leadsCongelados.map(l => (
                 <div key={`lead-${l.id}`} onClick={() => setLocation('/pipeline')} className="flex items-center justify-between p-3 rounded-xl bg-ink-950/50 border border-white/5 hover:border-white/10 cursor-pointer transition-colors group">
                   <div className="min-w-0 pr-2">
                     <div className="text-[12px] font-bold text-white truncate">{l.nombre}</div>
-                    <div className="text-[9px] text-white/40 capitalize">{l.estado}</div>
+                    <div className="text-[9px] text-white/40 capitalize mt-0.5">{l.estado}</div>
                   </div>
                   <div className="text-[9px] font-bold text-amber-400 flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-md shrink-0">
                     <Flame size={10}/> +3 días
