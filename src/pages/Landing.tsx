@@ -157,7 +157,7 @@ export default function Landing() {
             <Trophy size={12} className="text-brand-400/80" /> Digitaliza tu agencia inmobiliaria
           </div>
           <h1 className="font-serif text-4xl sm:text-6xl font-medium leading-[1.1] mb-6">
-            Vende Lujo, <span className="italic text-white/80">No Ladrillo.</span>
+            Potencia tu Agencia. <span className="italic text-white/80">Domina tu mercado.</span>
           </h1>
           <p className="text-sm sm:text-base text-white/50 max-w-xl mx-auto mb-10 leading-relaxed font-light">
             El CRM concebido para agencias inmobiliarias que entienden que la marca propia es su activo más valioso. Sin tarjeta de crédito.
