@@ -6,13 +6,13 @@ import { supabase } from '../lib/supabase';
 import { 
   Users, Building2, Euro, ArrowUpRight, ChevronRight, 
   KanbanSquare, Flame, CheckCircle2, Calendar, Clock,
-  Home, Phone, Mail, PenTool, Circle, StickyNote, AlertCircle
+  Home, Phone, Mail, PenTool, Circle, StickyNote
 } from 'lucide-react';
 import { formatEUR } from '../lib/format';
 
 interface LeadDash { id: string; estado: string; ultimo_contacto: string; created_at: string; nombre: string; }
 interface PropDash { id: string; transaccion: string; }
-interface TareaDash { id: string; tipo: string; titulo: string; hora: string; completada: boolean; fecha: string; }
+interface TareaDash { id: string; tipo: string; titulo: string; hora: string; completada: boolean; }
 
 const TIPO_ICONO: Record<string, any> = {
   'Visita': Home, 'Llamada': Phone, 'Correo': Mail, 'Reunión': Users, 'Firma': PenTool, 'Otro': Circle
@@ -26,140 +26,203 @@ export default function Dashboard() {
   const [leads, setLeads] = useState<LeadDash[]>([]);
   const [propiedades, setPropiedades] = useState<PropDash[]>([]);
   const [tareasHoy, setTareasHoy] = useState<TareaDash[]>([]);
-  const [tareasAtrasadas, setTareasAtrasadas] = useState<TareaDash[]>([]);
-  const [notas, setNotas] = useState('');
-  const [guardandoNotas, setGuardandoNotas] = useState(false);
+  const [ventasMes, setVentasMes] = useState(0);
+  const [cantidadVentasMes, setCantidadVentasMes] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [notaRapida, setNotaRapida] = useState('');
+
+  useEffect(() => {
+    const savedNote = localStorage.getItem('inmo_postit');
+    if (savedNote) setNotaRapida(savedNote);
+  }, []);
+
+  const handleNotaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNotaRapida(e.target.value);
+    localStorage.setItem('inmo_postit', e.target.value);
+  };
 
   useEffect(() => {
     if (!perfil?.agencia_id) return;
-    
-    const load = async () => {
-      // Función para envolver peticiones a Supabase de forma segura
-      const safeFetch = async (query: any) => {
-        try {
-          const res = await query;
-          // Si la tabla no existe o hay error, Supabase devuelve { error }, evitamos que crashee retornando []
-          if (res.error) return [];
-          return res.data || [];
-        } catch (err) {
-          return [];
-        }
-      };
+    const fetchData = async () => {
+      setLoading(true);
+      const hoyISO = new Date().toISOString().split('T')[0];
 
-      const leadsData = await safeFetch(supabase.from('leads').select('*').eq('agencia_id', perfil.agencia_id));
-      const propsData = await safeFetch(supabase.from('propiedades').select('id, transaccion').eq('agencia_id', perfil.agencia_id));
-      const agendaData = await safeFetch(supabase.from('agenda').select('*').eq('agencia_id', perfil.agencia_id));
+      const [resLeads, resProps, resVentas, resTareas] = await Promise.all([
+        supabase.from('leads').select('id, estado, ultimo_contacto, created_at, nombre').eq('agencia_id', perfil.agencia_id),
+        supabase.from('propiedades').select('id, transaccion').eq('agencia_id', perfil.agencia_id),
+        supabase.from('ventas').select('importe, fecha').eq('agencia_id', perfil.agencia_id),
+        supabase.from('tareas').select('id, tipo, titulo, hora, completada').eq('agencia_id', perfil.agencia_id).eq('fecha', hoyISO).order('hora', { ascending: true })
+      ]);
 
-      setLeads(leadsData as LeadDash[]);
-      setPropiedades(propsData as PropDash[]);
-      
-      if (agendaData && Array.isArray(agendaData)) {
-        const hoyStr = new Date().toISOString().split('T')[0];
-        const ahoraDate = new Date();
-        
-        setTareasHoy(agendaData
-          .filter(x => x.fecha === hoyStr && !x.completada)
-          .sort((a, b) => (a.hora || '').localeCompare(b.hora || '')));
+      setLeads((resLeads.data as LeadDash[]) || []);
+      setPropiedades((resProps.data as PropDash[]) || []);
+      setTareasHoy((resTareas.data as TareaDash[]) || []);
 
-        const atrasadas = agendaData.filter(x => {
-          if (x.completada) return false;
-          // Si no tiene hora definida, asumimos 23:59 para no marcarla atrasada prematuramente hoy
-          const tareaDate = new Date(`${x.fecha}T${x.hora || '23:59'}:00`);
-          return tareaDate < ahoraDate;
+      if (resVentas.data) {
+        const hoy = new Date();
+        const curMonth = hoy.getMonth() + 1; 
+        const curYear = hoy.getFullYear();
+        const ventasDelMes = resVentas.data.filter(v => {
+          if (!v.fecha) return false;
+          const [vYear, vMonth] = v.fecha.split('-');
+          return parseInt(vYear, 10) === curYear && parseInt(vMonth, 10) === curMonth;
         });
-        
-        setTareasAtrasadas(atrasadas.sort((a, b) => new Date(`${a.fecha}T${a.hora || '00:00'}`).getTime() - new Date(`${b.fecha}T${b.hora || '00:00'}`).getTime()));
+        setVentasMes(ventasDelMes.reduce((acc, v) => acc + Number(v.importe), 0));
+        setCantidadVentasMes(ventasDelMes.length);
       }
-
-      const notaKey = `notas_${perfil.agencia_id}_${perfil.id}`;
-      setNotas(localStorage.getItem(notaKey) || '');
+      setLoading(false);
     };
+    fetchData();
+  }, [perfil?.agencia_id]);
 
-    load();
-  }, [perfil]);
+  const leadsActivos = leads.filter(l => !['cerrado', 'perdido'].includes((l.estado || '').toLowerCase())).length;
+  const propsActivas = propiedades.filter(p => !['Vendida', 'Alquilada'].includes(p.transaccion));
+  
+  const leadsFrios = leads.filter(l => {
+    if (['cerrado', 'perdido'].includes((l.estado || '').toLowerCase())) return false;
+    const lastAction = l.ultimo_contacto || l.created_at;
+    if (!lastAction) return false;
+    const days = (new Date().getTime() - new Date(lastAction).getTime()) / (1000 * 3600 * 24);
+    return days >= 3;
+  }).sort((a, b) => new Date(a.ultimo_contacto || a.created_at).getTime() - new Date(b.ultimo_contacto || b.created_at).getTime());
 
-  const handleNotas = (val: string) => {
-    setNotas(val); setGuardandoNotas(true);
-    localStorage.setItem(`notas_${perfil?.agencia_id}_${perfil?.id}`, val);
-    setTimeout(() => setGuardandoNotas(false), 500);
-  };
-
-  const tresDiasAtras = new Date(); tresDiasAtras.setDate(tresDiasAtras.getDate() - 3);
-  const leadsCongelados = leads.filter(l => l.estado !== 'Cerrado' && l.estado !== 'Perdido' && new Date(l.ultimo_contacto || l.created_at) < tresDiasAtras);
-  const conversiones = leads.filter(l => l.estado === 'Cerrado').length;
-  const tasaConversion = leads.length > 0 ? Math.round((conversiones / leads.length) * 100) : 0;
-  const pipelineActivo = leads.filter(l => l.estado !== 'Cerrado' && l.estado !== 'Perdido').length;
+  const embudo = [
+    { label: 'Nuevo', count: leads.filter(l => (l.estado?.toLowerCase() || 'nuevo') === 'nuevo').length, color: 'bg-sky-400' },
+    { label: 'Contactado', count: leads.filter(l => l.estado?.toLowerCase() === 'contactado').length, color: 'bg-brand-400' },
+    { label: 'Visita', count: leads.filter(l => l.estado?.toLowerCase() === 'visita').length, color: 'bg-amber-400' },
+    { label: 'Negociación', count: leads.filter(l => l.estado?.toLowerCase() === 'negociacion').length, color: 'bg-purple-400' },
+    { label: 'Cerrado', count: leads.filter(l => l.estado?.toLowerCase() === 'cerrado').length, color: 'bg-emerald-400' },
+    { label: 'Perdido', count: leads.filter(l => l.estado?.toLowerCase() === 'perdido').length, color: 'bg-red-400' },
+  ];
+  const maxEmbudo = Math.max(...embudo.map(e => e.count), 1);
 
   return (
-    <div className="space-y-4 max-w-full overflow-hidden">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 mt-2">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Hola, {nombreUsuario} <span className="inline-block animate-wave origin-bottom-right">👋</span></h1>
-          <p className="text-xs text-white/50 mt-1 uppercase tracking-widest font-bold">Resumen de tu jornada</p>
+    <Layout title="Dashboard">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold tracking-tight text-white/90">Hola, {nombreUsuario}</h1>
+        <p className="mt-1 text-[13px] text-white/50">Resumen ejecutivo con lo que ocurre hoy en tu agencia.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+        <div className="card p-5 relative overflow-hidden bg-ink-900 border-white/5 hover:border-white/10 transition cursor-pointer" onClick={() => setLocation('/leads')}>
+          <div className="absolute top-4 right-4 text-white/20"><ArrowUpRight size={18} /></div>
+          <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center mb-4"><Users size={18} className="text-brand-400" /></div>
+          <div className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-1">Leads activos</div>
+          <div className="text-3xl font-semibold text-white">{loading ? '...' : leadsActivos}</div>
+          <div className="text-[11px] text-white/40 mt-1">de {loading ? '...' : leads.length} totales</div>
+        </div>
+
+        <div className="card p-5 relative overflow-hidden bg-ink-900 border-white/5 hover:border-white/10 transition cursor-pointer" onClick={() => setLocation('/propiedades')}>
+          <div className="absolute top-4 right-4 text-white/20"><ArrowUpRight size={18} /></div>
+          <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center mb-4"><Building2 size={18} className="text-brand-400" /></div>
+          <div className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-1">Propiedades activas</div>
+          <div className="text-3xl font-semibold text-white">{loading ? '...' : propsActivas.length}</div>
+          <div className="text-[11px] text-white/40 mt-1">en catálogo público</div>
+        </div>
+
+        <div className="card p-5 relative overflow-hidden bg-ink-900 border-white/5 hover:border-white/10 transition cursor-pointer" onClick={() => setLocation('/historico')}>
+          <div className="absolute top-4 right-4 text-white/20"><ArrowUpRight size={18} /></div>
+          <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center mb-4"><Euro size={18} className="text-brand-400" /></div>
+          <div className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-1">Ventas este mes</div>
+          <div className="text-3xl font-semibold text-white">{loading ? '...' : formatEUR(ventasMes)}</div>
+          <div className="text-[11px] text-white/40 mt-1">{loading ? '...' : cantidadVentasMes} operaciones</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[ 
-          { title: "Pipeline", val: pipelineActivo, icon: KanbanSquare, color: "text-blue-400" },
-          { title: "Propiedades", val: propiedades.length, icon: Building2, color: "text-indigo-400" },
-          { title: "Leads Totales", val: leads.length, icon: Users, color: "text-brand-400" },
-          { title: "Conversión", val: `${tasaConversion}%`, icon: ArrowUpRight, color: "text-emerald-400" }
-        ].map((s, i) => (
-          <div key={i} className="card p-4 bg-ink-900 border-white/5 relative overflow-hidden group">
-            <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-10 transition-opacity"><s.icon size={80}/></div>
-            <div className="flex items-center gap-2 mb-3"><s.icon size={14} className={s.color}/><h3 className="text-[9px] font-bold text-white/40 uppercase tracking-widest">{s.title}</h3></div>
-            <p className="text-3xl font-black text-white tracking-tighter">{s.val}</p>
+      <div className={`grid grid-cols-1 xl:grid-cols-3 gap-5 mt-5 transition-opacity duration-500 ${loading ? 'opacity-50' : 'opacity-100'}`}>
+        <div className="card p-6 xl:col-span-2 bg-ink-900 border-white/5">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2"><div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center"><KanbanSquare size={16} className="text-brand-400" /></div><h3 className="text-sm font-semibold text-white">Embudo de leads</h3></div>
+            <button onClick={() => setLocation('/pipeline')} className="flex items-center gap-1 text-[11px] text-white/40 hover:text-white transition px-3 py-1.5 rounded-full border border-white/10 hover:bg-white/5">Ver Pipeline <ChevronRight size={12} /></button>
           </div>
-        ))}
-      </div>
+          <div className="space-y-4">
+            {embudo.map((step) => (
+              <div key={step.label} className="flex items-center justify-between group">
+                <div className="flex items-center gap-2.5 w-32"><span className={`h-2 w-2 rounded-full ${step.color}`} /><span className="text-[12px] text-white/70 font-medium">{step.label}</span></div>
+                <div className="flex-1 mx-4"><div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden"><div className={`h-full ${step.color} opacity-80 transition-all duration-1000`} style={{ width: `${(step.count / maxEmbudo) * 100}%` }} /></div></div>
+                <div className="text-[12px] font-medium text-white w-4 text-right">{step.count}</div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[400px]">
-        {/* ATENCIÓN URGENTE (TAREAS ATRASADAS + LEADS DORMIDOS) */}
-        <div className="card p-0 bg-ink-900 border-white/5 flex flex-col h-full overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-bl-full blur-xl" />
-          <div className="p-4 pb-2 border-b border-white/5 shrink-0 flex justify-between items-center z-10">
+        <div className="card p-6 bg-ink-900 border-white/5">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <Flame size={14} className="text-red-400" />
-              <h3 className="text-xs font-bold text-red-400 uppercase tracking-widest">Atención Urgente</h3>
+              <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center"><Calendar size={16} className="text-brand-400" /></div>
+              <h3 className="text-sm font-semibold text-white">Agenda</h3>
             </div>
-            <span className="text-[10px] font-black text-red-400/50 bg-red-500/10 px-2 py-0.5 rounded">{leadsCongelados.length + tareasAtrasadas.length}</span>
+            <button onClick={() => setLocation('/agenda')} className="flex items-center gap-1 text-[11px] text-white/40 hover:text-white transition px-3 py-1.5 rounded-full border border-white/10 hover:bg-white/5">Ver Agenda <ChevronRight size={12} /></button>
           </div>
           
-          {(leadsCongelados.length === 0 && tareasAtrasadas.length === 0) ? (
-             <div className="flex-1 flex flex-col items-center justify-center p-6 text-white/20">
-               <CheckCircle2 size={32} className="mb-3 opacity-20" />
-               <p className="text-xs font-bold uppercase tracking-widest text-center">Todo al día</p>
-             </div>
-          ) : (
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2 relative z-10">
-              
-              {/* BLOQUE DE TAREAS ATRASADAS */}
-              {tareasAtrasadas.map(t => (
-                <div key={`tarea-${t.id}`} onClick={() => setLocation('/agenda')} className="flex items-center justify-between p-3 rounded-xl bg-red-500/5 border border-red-500/10 hover:border-red-500/30 cursor-pointer transition-colors group">
-                  <div className="min-w-0 pr-2">
-                    <div className="text-[12px] font-bold text-white truncate flex items-center gap-1.5">
-                      <AlertCircle size={12} className="text-red-400 shrink-0" /> 
-                      {t.titulo}
-                    </div>
-                    <div className="text-[9px] text-white/40 capitalize mt-0.5">{t.tipo}</div>
-                  </div>
-                  <div className="text-[9px] font-bold text-red-400 flex flex-col items-end gap-0.5 bg-red-500/10 px-2 py-1 rounded-md shrink-0">
-                    <span>{new Date(t.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit'})}</span>
-                    <span>{t.hora}</span>
-                  </div>
-                </div>
-              ))}
+          <div className={`inline-flex px-2 py-1 rounded-md text-[10px] font-bold mb-6 ${tareasHoy.length > 0 ? 'bg-amber-500/10 border border-amber-500/20 text-amber-400' : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'}`}>
+            {tareasHoy.length} {tareasHoy.length === 1 ? 'tarea' : 'tareas'} hoy
+          </div>
 
-              {/* BLOQUE DE LEADS DORMIDOS */}
-              {leadsCongelados.map(l => (
-                <div key={`lead-${l.id}`} onClick={() => setLocation('/pipeline')} className="flex items-center justify-between p-3 rounded-xl bg-ink-950/50 border border-white/5 hover:border-white/10 cursor-pointer transition-colors group">
-                  <div className="min-w-0 pr-2">
-                    <div className="text-[12px] font-bold text-white truncate">{l.nombre}</div>
-                    <div className="text-[9px] text-white/40 capitalize mt-0.5">{l.estado}</div>
+          <div className="space-y-4">
+            {tareasHoy.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center h-32 text-white/30 text-[12px]">
+                <CheckCircle2 size={24} className="mb-2 text-emerald-500/20" />
+                No tienes tareas pendientes para hoy.
+              </div>
+            ) : (
+              tareasHoy.slice(0, 3).map(t => {
+                const Icono = TIPO_ICONO[t.tipo] || Circle;
+                return (
+                  <div key={t.id} className="flex items-start gap-3 group cursor-pointer" onClick={() => setLocation('/agenda')}>
+                    <div className="mt-1 h-2 w-2 rounded-full bg-brand-500 shrink-0 group-hover:scale-125 transition-transform" />
+                    <div className="min-w-0 flex-1">
+                      <div className={`text-[13px] font-medium truncate ${t.completada ? 'text-white/30 line-through' : 'text-white/80'}`}>
+                        {t.titulo}
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Icono size={10} className="text-white/20" />
+                        <span className="text-[10px] text-white/40 font-medium flex items-center gap-1">
+                          <Clock size={10} /> {t.hora || 'Todo el día'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-[9px] font-bold text-amber-400 flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-md shrink-0">
-                    <Flame size={10}/> +3 días
+                );
+              })
+            )}
+          </div>
+          
+          {tareasHoy.length > 3 && (
+            <div className="mt-6 pt-4 border-t border-white/5 text-center">
+              <button onClick={() => setLocation('/agenda')} className="text-[11px] text-brand-400 font-bold hover:text-brand-300 transition">
+                + ver {tareasHoy.length - 3} más
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 mt-5">
+        <div className="card p-6 bg-ink-900 border-white/5 xl:col-span-2">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center"><Flame size={16} className="text-red-400" /></div>
+              <h3 className="text-sm font-bold text-white">Atención Urgente</h3>
+            </div>
+            <button onClick={() => setLocation('/pipeline')} className="flex items-center gap-1 text-[11px] text-white/40 hover:text-white transition px-3 py-1.5 rounded-full border border-white/10 hover:bg-white/5">Ir a Pipeline <ChevronRight size={12} /></button>
+          </div>
+          
+          {leadsFrios.length === 0 ? (
+            <div className="flex flex-col items-center justify-center text-center h-24 text-white/40 text-[12px]">
+              <div className="font-bold text-white/80 mb-1">¡Todo bajo control!</div>
+              Ningún cliente requiere atención inmediata.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {leadsFrios.slice(0, 3).map(l => (
+                <div key={l.id} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-red-500/30 transition cursor-pointer group" onClick={() => setLocation('/pipeline')}>
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-bold text-white truncate">{l.nombre}</div>
+                    <div className="text-[10px] text-white/40 capitalize">{l.estado}</div>
+                  </div>
+                  <div className="text-[10px] font-bold text-red-400 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded-md">
+                    <Flame size={12}/> +3 días
                   </div>
                 </div>
               ))}
@@ -169,37 +232,18 @@ export default function Dashboard() {
 
         <div className="card p-0 bg-amber-500/5 border border-amber-500/20 flex flex-col h-full overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-8 h-8 bg-gradient-to-bl from-amber-500/20 to-transparent rounded-bl-xl opacity-50" />
-          <div className="flex items-center gap-2 p-4 pb-2 shrink-0">
+          <div className="flex items-center gap-2 p-4 pb-2">
             <StickyNote size={14} className="text-amber-400/80" />
             <h3 className="text-xs font-bold text-amber-400/80 uppercase tracking-widest">Bloc de Notas</h3>
           </div>
-          <textarea className="flex-1 w-full bg-transparent border-none resize-none p-4 pt-2 text-sm text-amber-100/90 placeholder:text-amber-500/30 focus:outline-none focus:ring-0 custom-scrollbar leading-relaxed" placeholder="Apuntes rápidos, ideas, teléfonos..." value={notas} onChange={(e) => handleNotas(e.target.value)} />
-          <div className={`absolute bottom-3 right-3 text-[9px] font-bold uppercase tracking-widest text-amber-500/50 transition-opacity duration-300 ${guardandoNotas ? 'opacity-100' : 'opacity-0'}`}>Guardando...</div>
-        </div>
-
-        <div className="card p-0 bg-ink-900 border-white/5 flex flex-col h-full overflow-hidden">
-          <div className="p-4 pb-2 border-b border-white/5 flex justify-between items-center shrink-0">
-             <div className="flex items-center gap-2"><Calendar size={14} className="text-brand-400" /><h3 className="text-xs font-bold text-white uppercase tracking-widest">Agenda Hoy</h3></div>
-             <button onClick={() => setLocation('/agenda')} className="text-white/30 hover:text-white transition"><ChevronRight size={16}/></button>
-          </div>
-          {tareasHoy.length === 0 ? (
-             <div className="flex-1 flex flex-col items-center justify-center p-6 text-white/20"><Calendar size={32} className="mb-3 opacity-20" /><p className="text-xs font-bold uppercase tracking-widest text-center">Día Libre</p></div>
-          ) : (
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
-              {tareasHoy.map(t => {
-                const Icon = TIPO_ICONO[t.tipo] || Circle;
-                return (
-                  <div key={t.id} className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-ink-950 flex items-center justify-center border border-white/5 shrink-0"><Icon size={14} className="text-brand-400" /></div>
-                    <div className="flex-1 min-w-0"><p className="text-[12px] font-bold text-white truncate">{t.titulo}</p><p className="text-[9px] text-white/40 uppercase tracking-wider">{t.tipo}</p></div>
-                    <div className="text-[10px] font-mono font-bold text-brand-400 bg-brand-500/10 px-2 py-1 rounded shrink-0">{t.hora}</div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+          <textarea 
+            className="flex-1 w-full bg-transparent border-none resize-none p-4 pt-2 text-sm text-amber-100/90 placeholder:text-amber-500/30 focus:ring-0 outline-none custom-scrollbar leading-relaxed"
+            placeholder="Apunta aquí llamadas rápidas, recados o ideas brillantes. Se guarda solo. ✨"
+            value={notaRapida}
+            onChange={handleNotaChange}
+          />
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }
