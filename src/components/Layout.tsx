@@ -30,6 +30,7 @@ export function Layout({ children, title }: LayoutProps) {
     }
   }, [perfil?.agencia_id]);
 
+  // CIERRE DE SESIÓN SUAVE
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -66,7 +67,7 @@ export function Layout({ children, title }: LayoutProps) {
           
           {isLocked && (
             <div className="ml-auto relative flex items-center">
-              <Lock size={12} className="text-amber-500/50 transition-colors" />
+              <Lock size={12} className="text-amber-500/50 group-hover:text-amber-500 transition-colors" />
             </div>
           )}
           
@@ -114,13 +115,13 @@ export function Layout({ children, title }: LayoutProps) {
             
             <div className="mt-auto pt-4 border-t border-white/5 mt-4 space-y-0.5">
               <NavItem href="/perfil" icon={UserCircle} label="Perfil" />
-              <a 
-                href="mailto:admin@inmoficina.es?subject=Necesito%20ayuda%20con..." 
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-white/50 hover:bg-white/5 hover:text-white"
-              >
-                <LifeBuoy size={16} className="text-white/40" />
-                <span className="font-medium text-[13px]">Soporte Técnico</span>
-              </a>
+              {/* ENLACE INTELIGENTE DE SOPORTE */}
+              <Link href={isAdmin ? "/admin" : "/soporte"}>
+                <a className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-white/50 hover:bg-white/5 hover:text-white">
+                  <LifeBuoy size={16} className="text-white/40" />
+                  <span className="font-medium text-[13px]">{isAdmin ? 'Ver Tickets' : 'Soporte Técnico'}</span>
+                </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -134,8 +135,7 @@ export function Layout({ children, title }: LayoutProps) {
               <div className="text-[12px] font-bold text-white truncate leading-tight">{perfil?.nombre}</div>
               <div className="text-[9px] text-white/40 truncate mt-0.5">{perfil?.email}</div>
             </div>
-            {/* BOTÓN CERRAR SESIÓN EN ROJO */}
-            <button onClick={handleSignOut} className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors shrink-0" title="Cerrar sesión">
+            <button onClick={handleSignOut} className="h-8 w-8 flex items-center justify-center rounded-lg text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-colors shrink-0" title="Cerrar sesión">
               <LogOut size={16} />
             </button>
           </div>
@@ -159,7 +159,6 @@ export function Layout({ children, title }: LayoutProps) {
 
       {isMobileMenuOpen && <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />}
 
-      {/* MODAL DE MEJORA (UPGRADE) */}
       {showUpgradeModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="relative w-full max-w-sm bg-ink-900 border border-white/10 rounded-[2rem] p-8 text-center shadow-2xl animate-slide-up">
