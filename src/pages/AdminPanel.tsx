@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { useLocation } from 'wouter';
 import {
   Shield, Plus, Building2, Loader2, Copy, Check, X, Users, Sparkles, ChevronRight, MapPin, Trash2,
-  TrendingUp, CheckCircle, Phone, CalendarDays, MessageSquare, LogOut
+  TrendingUp, CheckCircle, Phone, CalendarDays, LogOut
 } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageHeader } from '../components/PageHeader';
@@ -38,16 +38,6 @@ interface Solicitud {
   created_at: string;
 }
 
-interface MensajeContacto {
-  id: string;
-  nombre: string;
-  email: string;
-  telefono?: string;
-  mensaje: string;
-  leido: boolean;
-  created_at: string;
-}
-
 interface CreatedResult {
   agencia: Agencia;
   usuarios: { email: string; password: string }[];
@@ -62,13 +52,11 @@ export default function AdminPanel() {
   const [, setLocation] = useLocation();
   const [agencias, setAgencias] = useState<Agencia[]>([]);
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
-  const [mensajes, setMensajes] = useState<MensajeContacto[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, ingresos: 0, agencias: 0 });
   
   const [selectedAgencia, setSelectedAgencia] = useState<Agencia | 'new' | null>(null);
   const [selectedSolicitud, setSelectedSolicitud] = useState<Solicitud | null>(null);
-  const [selectedMensaje, setSelectedMensaje] = useState<MensajeContacto | null>(null);
   const [result, setResult] = useState<CreatedResult | null>(null);
 
   const loadData = async () => {
@@ -79,9 +67,6 @@ export default function AdminPanel() {
 
     const { data: sols } = await supabase.from('solicitudes_registro').select('*').order('created_at', { ascending: false });
     setSolicitudes((sols as Solicitud[]) || []);
-
-    const { data: msgs } = await supabase.from('mensajes_contacto').select('*').order('created_at', { ascending: false });
-    setMensajes((msgs as MensajeContacto[]) || []);
 
     const { data: perfiles } = await supabase.from('perfiles').select('rol');
     const totalAgencias = ags ? ags.filter(a => !a.bloqueada).length : 0;
@@ -112,20 +97,7 @@ export default function AdminPanel() {
     loadData();
   };
 
-  const marcarMensajeLeido = async (id: string, estadoLeido: boolean) => {
-    await supabase.from('mensajes_contacto').update({ leido: estadoLeido }).eq('id', id);
-    loadData();
-  };
-
-  const borrarMensaje = async (id: string) => {
-    if(!confirm('¿Borrar este mensaje definitivamente?')) return;
-    await supabase.from('mensajes_contacto').delete().eq('id', id);
-    loadData();
-  };
-
   const pendingTrials = solicitudes.filter(s => s.estado === 'pendiente' || s.estado === 'rechazado').map(s => ({ ...s, tipoEntrada: 'trial', sortDate: new Date(s.created_at).getTime() }));
-  const pendingMessages = mensajes.filter(m => !m.leido).map(m => ({ ...m, tipoEntrada: 'mensaje', sortDate: new Date(m.created_at).getTime() }));
-  const bandejaEntrada = [...pendingTrials, ...pendingMessages].sort((a, b) => b.sortDate - a.sortDate);
 
   const activeTrials = solicitudes
     .filter(s => s.estado === 'procesado')
@@ -137,14 +109,12 @@ export default function AdminPanel() {
     })
     .sort((a, b) => a.daysLeft - b.daysLeft);
 
-  const historialMensajes = mensajes.filter(m => m.leido);
-
   return (
     <Layout title="Panel Admin">
       <PageHeader
         title="SÚPER ADMINISTRADOR"
         titleClassName="text-[14px] md:text-[18px] uppercase tracking-tighter"
-        subtitle="Centro de mando unificado para agencias, solicitudes y mensajes web."
+        subtitle="Centro de mando unificado para gestión de Agencias y Trials."
         actions={
           <div className="flex items-center gap-3">
             <button onClick={() => setSelectedAgencia('new')} className="btn-primary py-2 px-4 text-xs flex items-center gap-2">
@@ -157,7 +127,7 @@ export default function AdminPanel() {
         }
       />
 
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
         <div className="card p-4 bg-ink-900 border-white/5 flex items-center gap-4">
            <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center shrink-0 border border-brand-500/20"><Users size={18} className="text-brand-400"/></div>
            <div><p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Usuarios</p><p className="text-2xl font-black text-white leading-none">{stats.total}</p></div>
@@ -172,113 +142,77 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+        {/* COLUMNA: SOLICITUDES PENDIENTES */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 flex items-center gap-1.5"><Users size={14}/> Bandeja de Entrada</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 flex items-center gap-1.5"><Users size={14}/> Solicitudes de Trial (Nuevas)</h3>
             <button onClick={loadData} className="text-[9px] font-bold text-white/40 hover:text-white transition uppercase tracking-widest">Actualizar</button>
           </div>
           {loading ? (
             <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-brand-400" size={20} /></div>
-          ) : bandejaEntrada.length === 0 ? (
+          ) : pendingTrials.length === 0 ? (
             <div className="card p-6 text-center bg-white/[0.01] text-white/20 text-[10px] font-bold uppercase tracking-widest border-dashed border border-white/10">Bandeja limpia</div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
-              {bandejaEntrada.map((item: any) => {
-                const isTrial = item.tipoEntrada === 'trial';
-                return (
-                  <div key={`${item.tipoEntrada}-${item.id}`} onClick={() => isTrial ? setSelectedSolicitud(item) : setSelectedMensaje(item)} className={`card p-4 bg-ink-900 border-white/5 flex flex-col gap-3 transition-all cursor-pointer hover:border-white/20 border-l-2 shadow-md ${isTrial ? (item.estado === 'rechazado' ? 'opacity-40 grayscale border-l-red-500' : 'border-l-brand-500 shadow-brand-500/10') : 'border-l-purple-500 shadow-purple-500/10 bg-white/[0.01]'}`}>
-                    <div className="flex items-start justify-between">
-                      <div className="min-w-0 pr-3">
-                        <div className="text-xs font-bold text-white truncate uppercase mb-1">{isTrial ? item.nombre_agencia : item.nombre}</div>
-                        <div className={`text-[8px] font-black px-2 py-0.5 rounded w-fit uppercase tracking-widest ${isTrial ? 'bg-brand-500/20 text-brand-400' : 'bg-purple-500/20 text-purple-400'}`}>{isTrial ? `Trial: ${item.estado}` : 'Mensaje Web'}</div>
-                      </div>
-                      <div className="text-[9px] font-medium text-white/40 shrink-0">{new Date(item.created_at).toLocaleDateString()}</div>
+            <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+              {pendingTrials.map((item: any) => (
+                <div key={item.id} onClick={() => setSelectedSolicitud(item)} className={`card p-4 bg-ink-900 border-white/5 flex flex-col gap-3 transition-all cursor-pointer hover:border-white/20 border-l-2 shadow-md ${item.estado === 'rechazado' ? 'opacity-40 grayscale border-l-red-500' : 'border-l-brand-500 shadow-brand-500/10'}`}>
+                  <div className="flex items-start justify-between">
+                    <div className="min-w-0 pr-3">
+                      <div className="text-xs font-bold text-white truncate uppercase mb-1">{item.nombre_agencia}</div>
+                      <div className={`text-[8px] font-black px-2 py-0.5 rounded w-fit uppercase tracking-widest ${item.estado === 'rechazado' ? 'bg-red-500/20 text-red-400' : 'bg-brand-500/20 text-brand-400'}`}>Trial: {item.estado}</div>
                     </div>
-                    {isTrial ? (
-                      <div className="text-[10px] text-white/50 flex items-center gap-1.5 truncate"><MapPin size={10} className="text-white/30 shrink-0" /> {item.ciudad}</div>
+                    <div className="text-[9px] font-medium text-white/40 shrink-0">{new Date(item.created_at).toLocaleDateString()}</div>
+                  </div>
+                  <div className="text-[10px] text-white/50 flex items-center gap-1.5 truncate"><MapPin size={10} className="text-white/30 shrink-0" /> {item.ciudad}</div>
+                  <div className="flex gap-2 pt-2 border-t border-white/5">
+                    {item.estado === 'pendiente' ? (
+                      <><button onClick={(e) => { e.stopPropagation(); actualizarEstadoTrial(item.id, 'procesado'); }} className="flex-1 py-1.5 rounded-lg bg-brand-500/20 text-brand-400 text-[9px] font-bold hover:bg-brand-500 hover:text-white transition uppercase flex items-center justify-center gap-1"><CheckCircle size={12}/> Activar</button><button onClick={(e) => { e.stopPropagation(); actualizarEstadoTrial(item.id, 'rechazado'); }} className="py-1.5 px-3 rounded-lg bg-red-500/10 text-red-400 text-[9px] font-bold hover:bg-red-500 hover:text-white transition uppercase"><X size={12}/></button></>
                     ) : (
-                      <div className="text-[10px] text-white/60 italic truncate leading-relaxed">"{item.mensaje}"</div>
+                      <button onClick={(e) => { e.stopPropagation(); actualizarEstadoTrial(item.id, 'pendiente'); }} className="w-full py-1.5 rounded-lg bg-white/5 text-white/40 hover:bg-white/10 transition text-[9px] font-bold uppercase tracking-widest">Revertir a Pendiente</button>
                     )}
-                    <div className="flex gap-2 pt-2 border-t border-white/5">
-                      {isTrial ? (
-                        item.estado === 'pendiente' ? (
-                          <><button onClick={(e) => { e.stopPropagation(); actualizarEstadoTrial(item.id, 'procesado'); }} className="flex-1 py-1.5 rounded-lg bg-brand-500/20 text-brand-400 text-[9px] font-bold hover:bg-brand-500 hover:text-white transition uppercase flex items-center justify-center gap-1"><CheckCircle size={12}/> Activar</button><button onClick={(e) => { e.stopPropagation(); actualizarEstadoTrial(item.id, 'rechazado'); }} className="py-1.5 px-3 rounded-lg bg-red-500/10 text-red-400 text-[9px] font-bold hover:bg-red-500 hover:text-white transition uppercase"><X size={12}/></button></>
-                        ) : (
-                          <button onClick={(e) => { e.stopPropagation(); actualizarEstadoTrial(item.id, 'pendiente'); }} className="w-full py-1.5 rounded-lg bg-white/5 text-white/40 hover:bg-white/10 transition text-[9px] font-bold uppercase tracking-widest">Revertir a Pendiente</button>
-                        )
-                      ) : (
-                        <button onClick={(e) => { e.stopPropagation(); marcarMensajeLeido(item.id, true); }} className="w-full py-1.5 rounded-lg bg-purple-500/20 text-purple-400 text-[9px] font-bold hover:bg-purple-500 hover:text-white transition uppercase tracking-widest flex items-center justify-center gap-1"><CheckCircle size={12}/> Marcar Leído</button>
-                      )}
-                    </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-1.5"><CalendarDays size={14}/> Agenda de Trials</h3>
-              <span className="text-[9px] font-bold text-emerald-400/80 bg-emerald-400/10 px-2 py-0.5 rounded-md">{activeTrials.length} Activos</span>
-            </div>
-            {loading ? (
-              <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-emerald-400" size={20} /></div>
-            ) : activeTrials.length === 0 ? (
-              <div className="card p-6 text-center bg-white/[0.01] text-white/20 text-[10px] font-bold uppercase tracking-widest border-dashed border border-white/10">No hay trials activos</div>
-            ) : (
-              <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-                {activeTrials.map(t => {
-                  const isExpired = t.daysLeft <= 0;
-                  const isUrgent = !isExpired && t.daysLeft <= 3;
-                  const colorClass = isExpired ? 'text-red-400 bg-red-400/10 border-red-400/20' : isUrgent ? 'text-amber-400 bg-amber-400/10 border-amber-400/20' : 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
-                  return (
-                    <div key={t.id} onClick={() => setSelectedSolicitud(t)} className="card p-3 bg-ink-900 border-white/5 flex items-center justify-between gap-4 cursor-pointer hover:border-white/20 transition-colors shadow-sm">
-                      <div className="min-w-0 flex-1">
-                        <div className="text-xs font-bold text-white uppercase truncate mb-1">{t.nombre_agencia}</div>
-                        <div className="text-[9px] text-white/50 flex flex-col gap-0.5 truncate">
-                          <span><Users size={10} className="inline mr-1 opacity-50"/>{t.contacto_nombre}</span>
-                          <span><Phone size={10} className="inline mr-1 opacity-50"/>{t.telefono}</span>
-                        </div>
-                      </div>
-                      <div className={`shrink-0 flex flex-col items-center justify-center w-14 h-14 rounded-xl border ${colorClass}`}>
-                        <div className="text-xl font-black leading-none mb-0.5">{isExpired ? '0' : t.daysLeft}</div>
-                        <div className="text-[7px] uppercase tracking-widest font-bold opacity-80">{isExpired ? 'Caducado' : 'Días'}</div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-400 flex items-center gap-1.5"><MessageSquare size={14}/> Mensajes Web</h3>
-            <span className="text-[9px] font-bold text-purple-400/80 bg-purple-400/10 px-2 py-0.5 rounded-md">{historialMensajes.length} Leídos</span>
-          </div>
-          {loading ? (
-            <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-purple-400" size={20} /></div>
-          ) : historialMensajes.length === 0 ? (
-            <div className="card p-6 text-center bg-white/[0.01] text-white/20 text-[10px] font-bold uppercase tracking-widest border-dashed border border-white/10">Historial vacío</div>
-          ) : (
-            <div className="grid grid-cols-1 gap-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
-              {historialMensajes.map(m => (
-                <div key={m.id} onClick={() => setSelectedMensaje(m)} className="card p-4 bg-ink-900 border-white/5 opacity-60 hover:opacity-100 cursor-pointer transition-all shadow-sm">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="text-xs font-bold text-white truncate pr-2">{m.nombre}</div>
-                    <div className="text-[9px] text-white/40 shrink-0 mt-0.5">{new Date(m.created_at).toLocaleDateString()}</div>
-                  </div>
-                  <div className="text-[10px] text-white/50 italic truncate leading-relaxed">"{m.mensaje}"</div>
                 </div>
               ))}
             </div>
           )}
         </div>
 
+        {/* COLUMNA: AGENDA DE TRIALS ACTIVOS */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-1.5"><CalendarDays size={14}/> Agenda de Trials Activos</h3>
+            <span className="text-[9px] font-bold text-emerald-400/80 bg-emerald-400/10 px-2 py-0.5 rounded-md">{activeTrials.length} Activos</span>
+          </div>
+          {loading ? (
+            <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-emerald-400" size={20} /></div>
+          ) : activeTrials.length === 0 ? (
+            <div className="card p-6 text-center bg-white/[0.01] text-white/20 text-[10px] font-bold uppercase tracking-widest border-dashed border border-white/10">No hay trials activos</div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+              {activeTrials.map(t => {
+                const isExpired = t.daysLeft <= 0;
+                const isUrgent = !isExpired && t.daysLeft <= 3;
+                const colorClass = isExpired ? 'text-red-400 bg-red-400/10 border-red-400/20' : isUrgent ? 'text-amber-400 bg-amber-400/10 border-amber-400/20' : 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
+                return (
+                  <div key={t.id} onClick={() => setSelectedSolicitud(t)} className="card p-3 bg-ink-900 border-white/5 flex items-center justify-between gap-4 cursor-pointer hover:border-white/20 transition-colors shadow-sm">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-bold text-white uppercase truncate mb-1">{t.nombre_agencia}</div>
+                      <div className="text-[9px] text-white/50 flex flex-col gap-0.5 truncate">
+                        <span><Users size={10} className="inline mr-1 opacity-50"/>{t.contacto_nombre}</span>
+                        <span><Phone size={10} className="inline mr-1 opacity-50"/>{t.telefono}</span>
+                      </div>
+                    </div>
+                    <div className={`shrink-0 flex flex-col items-center justify-center w-14 h-14 rounded-xl border ${colorClass}`}>
+                      <div className="text-xl font-black leading-none mb-0.5">{isExpired ? '0' : t.daysLeft}</div>
+                      <div className="text-[7px] uppercase tracking-widest font-bold opacity-80">{isExpired ? 'Caducado' : 'Días'}</div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-4 mt-12"><Building2 size={16} className="inline mr-2"/> Base de Datos de Agencias</h3>
@@ -326,14 +260,13 @@ export default function AdminPanel() {
 
       {selectedAgencia && <AgencyDialog agencia={selectedAgencia} onClose={() => setSelectedAgencia(null)} onSave={() => { setSelectedAgencia(null); loadData(); }} onCreated={(res: CreatedResult) => { setSelectedAgencia(null); setResult(res); loadData(); }} />}
       {selectedSolicitud && <SolicitudDialog solicitud={selectedSolicitud} onClose={() => setSelectedSolicitud(null)} onSave={() => { setSelectedSolicitud(null); loadData(); }} />}
-      {selectedMensaje && <MensajeDialog mensaje={selectedMensaje} onClose={() => setSelectedMensaje(null)} onSave={() => { setSelectedMensaje(null); loadData(); }} onDelete={() => borrarMensaje(selectedMensaje.id)} />}
       {result && <CredentialsDialog result={result} onClose={() => setResult(null)} />}
     </Layout>
   );
 }
 
 // ---------------------------
-// DIALOGOS (AGENCIA / MENSAJES / SOLICITUD)
+// DIALOGOS ORIGINALES (NO TOCAR)
 // ---------------------------
 function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
   const isEdit = agencia !== 'new';
@@ -418,15 +351,6 @@ function SolicitudDialog({ solicitud, onClose, onSave }: any) {
   const onSubmit = async (e: FormEvent) => { e.preventDefault(); setSubmitting(true); await supabase.from('solicitudes_registro').update(formData).eq('id', solicitud.id); setSubmitting(false); onSave(); };
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm animate-fade-in"><div className="relative w-full max-w-lg bg-ink-900 border border-white/10 rounded-2xl p-6 shadow-2xl animate-slide-up"><div className="flex justify-between items-center mb-6"><h3 className="text-sm font-bold text-white uppercase">Editar Solicitud</h3><button onClick={onClose} className="text-white/40 hover:text-white"><X size={20}/></button></div><form onSubmit={onSubmit} className="space-y-4"><input className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white" value={formData.nombre_agencia} onChange={e => setFormData({...formData, nombre_agencia: e.target.value})} /><button type="submit" className="w-full py-3.5 bg-brand-600 text-white rounded-xl font-bold uppercase text-xs">Guardar Cambios</button></form></div></div>
-  );
-}
-
-function MensajeDialog({ mensaje, onClose, onSave, onDelete }: any) {
-  const [formData, setFormData] = useState({ ...mensaje });
-  const [submitting, setSubmitting] = useState(false);
-  const onSubmit = async (e: FormEvent) => { e.preventDefault(); setSubmitting(true); await supabase.from('mensajes_contacto').update(formData).eq('id', mensaje.id); setSubmitting(false); onSave(); };
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm animate-fade-in"><div className="relative w-full max-w-lg bg-ink-900 border border-white/10 rounded-2xl p-6 shadow-2xl animate-slide-up"><div className="flex justify-between items-center mb-6"><h3 className="text-sm font-bold text-white uppercase">Mensaje Contacto</h3><button onClick={onClose} className="text-white/40 hover:text-white"><X size={20}/></button></div><form onSubmit={onSubmit} className="space-y-4"><input className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white" value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} /><textarea rows={5} className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white" value={formData.mensaje} onChange={e => setFormData({...formData, mensaje: e.target.value})} /><label className="flex items-center gap-3"><input type="checkbox" checked={formData.leido} onChange={e => setFormData({...formData, leido: e.target.checked})} className="w-5 h-5 rounded bg-ink-950 text-brand-500" /><span className="text-sm text-white">Marcar como procesado</span></label><div className="flex gap-3"><button type="button" onClick={() => { onDelete(); onClose(); }} className="px-6 py-3.5 bg-red-500/10 text-red-400 rounded-xl font-bold uppercase text-xs">Borrar</button><button type="submit" className="flex-1 py-3.5 bg-brand-600 text-white rounded-xl font-bold uppercase text-xs">Guardar Cambios</button></div></form></div></div>
   );
 }
 

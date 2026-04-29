@@ -54,11 +54,11 @@ export function Layout({ children, title }: LayoutProps) {
 
     const ticketPayload = {
       nombre_agencia: perfil?.agencia_id || 'Desconocida',
-      licencia: 'N/A',
+      licencia: 'Agente CRM', 
       nombre_usuario: perfil?.nombre || 'Agente',
       email_plataforma: perfil?.email || '',
       email_personal: perfil?.email || '',
-      telefono: 'No especificado',
+      telefono: 'Registrado en sistema',
       motivo: supportData.motivo,
       mensaje: supportData.mensaje,
       estado: 'pendiente'
@@ -151,6 +151,7 @@ export function Layout({ children, title }: LayoutProps) {
               <>
                 <NavItem href="/admin" icon={LayoutDashboard} label="Panel Admin" />
                 <NavItem href="/admin/tickets" icon={LifeBuoy} label="Tickets Soporte" />
+                <NavItem href="/admin/mensajes" icon={MessageSquare} label="Mensajes Web" />
               </>
             ) : (
               <>
