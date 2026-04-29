@@ -79,9 +79,9 @@ export default function App() {
       <Route path="/u/:slug" component={PublicProfile} />
       <Route path="/p/:id" component={FichaPropiedad} /> 
       <Route path="/a/:agencia_id" component={CatalogoPublico} />
-      <Route path="/tutorial" component={Tutorial} /> 
-      <Route path="/soporte" component={Soporte} /> 
-      
+      <Route path="/tutorial" component={Tutorial} />
+      <Route path="/soporte" component={Soporte} />
+
       <Route path="/admin"><ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute></Route>
       
       <Route path="/dashboard"><ProtectedRoute><PlanGuard><Dashboard /></PlanGuard></ProtectedRoute></Route>
