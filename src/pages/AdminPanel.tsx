@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { useLocation } from 'wouter';
 import {
   Shield, Plus, Building2, Loader2, Copy, Check, X, Users, KeyRound, Sparkles, ChevronRight, MapPin, Trash2,
-  TrendingUp, CheckCircle, CheckCircle2, Phone, Mail, CalendarDays, Timer, Lock, Unlock, MessageSquare, LogOut, LifeBuoy
+  TrendingUp, CheckCircle, CheckCircle2, Phone, Mail, CalendarDays, Timer, Lock, Unlock, MessageSquare, LogOut
 } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageHeader } from '../components/PageHeader';
@@ -49,20 +49,6 @@ interface MensajeContacto {
 }
 
 // Nueva Interfaz de Ticket
-interface TicketSoporte {
-  id: string;
-  nombre_agencia: string;
-  licencia: string;
-  nombre_usuario: string;
-  email_plataforma: string;
-  email_personal: string;
-  telefono: string;
-  motivo: string;
-  mensaje: string;
-  estado: string;
-  created_at: string;
-}
-
 interface Agente {
   id: string;
   email: string;
@@ -89,14 +75,12 @@ export default function AdminPanel() {
   const [agencias, setAgencias] = useState<Agencia[]>([]);
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [mensajes, setMensajes] = useState<MensajeContacto[]>([]);
-  const [tickets, setTickets] = useState<TicketSoporte[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, ingresos: 0, agencias: 0 });
   
   const [selectedAgencia, setSelectedAgencia] = useState<Agencia | 'new' | null>(null);
   const [selectedSolicitud, setSelectedSolicitud] = useState<Solicitud | null>(null);
   const [selectedMensaje, setSelectedMensaje] = useState<MensajeContacto | null>(null);
-  const [selectedTicket, setSelectedTicket] = useState<TicketSoporte | null>(null);
   const [result, setResult] = useState<CreatedResult | null>(null);
 
   const loadData = async () => {
@@ -111,8 +95,6 @@ export default function AdminPanel() {
     const { data: msgs } = await supabase.from('mensajes_contacto').select('*').order('created_at', { ascending: false });
     setMensajes((msgs as MensajeContacto[]) || []);
 
-    const { data: tcks } = await supabase.from('tickets_soporte').select('*').order('created_at', { ascending: false });
-    setTickets((tcks as TicketSoporte[]) || []);
 
     const { data: perfiles } = await supabase.from('perfiles').select('rol');
     const totalAgencias = ags ? ags.filter(a => !a.bloqueada).length : 0;
@@ -154,11 +136,6 @@ export default function AdminPanel() {
     loadData();
   };
 
-  const borrarTicket = async (id: string) => {
-    if(!confirm('¿Borrar este ticket de soporte permanentemente?')) return;
-    await supabase.from('tickets_soporte').delete().eq('id', id);
-    loadData();
-  };
 
   // Filtrado de Bandejas
   const pendingTrials = solicitudes.filter(s => s.estado === 'pendiente' || s.estado === 'rechazado').map(s => ({ ...s, tipoEntrada: 'trial', sortDate: new Date(s.created_at).getTime() }));
@@ -166,8 +143,6 @@ export default function AdminPanel() {
   
   const bandejaEntrada = [...pendingTrials, ...pendingMessages].sort((a, b) => b.sortDate - a.sortDate);
 
-  const pendingTickets = tickets.filter(t => t.estado === 'pendiente');
-  const historialTickets = tickets.filter(t => t.estado === 'resuelto');
 
   const activeTrials = solicitudes
     .filter(s => s.estado === 'procesado')
@@ -237,42 +212,7 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* NUEVO BLOQUE: BANDEJA DE TICKETS DE SOPORTE */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 flex items-center gap-1.5">
-            <LifeBuoy size={14}/> Tickets de Soporte
-          </h3>
-          <span className="text-[9px] font-bold text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded-md">
-            {pendingTickets.length} Pendientes
-          </span>
-        </div>
-        
-        {loading ? (
-          <div className="py-8 flex justify-center">
-            <Loader2 className="animate-spin text-orange-400" size={20} />
-          </div>
-        ) : pendingTickets.length === 0 ? (
-          <div className="card p-6 text-center bg-white/[0.01] text-white/20 text-[10px] font-bold uppercase tracking-widest border-dashed border border-white/10">
-            Bandeja de soporte limpia.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {pendingTickets.map(t => (
-              <div key={t.id} onClick={() => setSelectedTicket(t)} className="card p-4 bg-ink-900 border-white/5 border-l-2 border-l-orange-500 cursor-pointer hover:border-white/20 shadow-md transition-all">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="text-xs font-bold text-white uppercase truncate pr-2">{t.nombre_usuario} ({t.nombre_agencia})</div>
-                  <div className="text-[9px] text-white/40 shrink-0">{new Date(t.created_at).toLocaleDateString()}</div>
-                </div>
-                <div className="text-[10px] text-orange-400 font-bold truncate mb-1">{t.motivo}</div>
-                <div className="text-[10px] text-white/50 italic line-clamp-2 leading-relaxed">
-                  "{t.mensaje}"
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+
 
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
@@ -401,30 +341,7 @@ export default function AdminPanel() {
             )}
           </div>
 
-          {/* HISTORIAL TICKETS */}
-          <div className="space-y-3 pt-4 border-t border-white/5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 flex items-center gap-1.5"><LifeBuoy size={14}/> Historial Soporte</h3>
-              <span className="text-[9px] font-bold text-orange-400/80 bg-orange-400/10 px-2 py-0.5 rounded-md">{historialTickets.length} Resueltos</span>
-            </div>
-            {loading ? (
-              <div className="py-8 flex justify-center"><Loader2 className="animate-spin text-orange-400" size={20} /></div>
-            ) : historialTickets.length === 0 ? (
-              <div className="card p-6 text-center bg-white/[0.01] text-white/20 text-[10px] font-bold uppercase tracking-widest border-dashed border border-white/10">Historial vacío</div>
-            ) : (
-              <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-                {historialTickets.map(t => (
-                  <div key={t.id} onClick={() => setSelectedTicket(t)} className="card p-4 bg-ink-900 border-white/5 opacity-60 hover:opacity-100 cursor-pointer transition-all shadow-sm border-l-2 border-l-orange-500/30">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="text-xs font-bold text-white truncate pr-2 uppercase">{t.nombre_agencia}</div>
-                      <div className="text-[9px] text-white/40 shrink-0 mt-0.5">{new Date(t.created_at).toLocaleDateString()}</div>
-                    </div>
-                    <div className="text-[10px] text-white/50 italic truncate leading-relaxed">"{t.motivo}"</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+
 
         </div>
 
@@ -528,92 +445,11 @@ export default function AdminPanel() {
       {selectedSolicitud && <SolicitudDialog solicitud={selectedSolicitud} onClose={() => setSelectedSolicitud(null)} onSave={() => { setSelectedSolicitud(null); loadData(); }} />}
       {selectedMensaje && <MensajeDialog mensaje={selectedMensaje} onClose={() => setSelectedMensaje(null)} onSave={() => { setSelectedMensaje(null); loadData(); }} onDelete={() => borrarMensaje(selectedMensaje.id)} />}
       
-      {/* TICKET DIALOG EN ADMIN PANEL */}
-      {selectedTicket && <TicketDialog ticket={selectedTicket} onClose={() => setSelectedTicket(null)} onSave={() => { setSelectedTicket(null); loadData(); }} onDelete={() => borrarTicket(selectedTicket.id)} />}
       {result && <CredentialsDialog result={result} onClose={() => setResult(null)} />}
     </Layout>
   );
 }
 
-function TicketDialog({ ticket, onClose, onSave, onDelete }: any) {
-  const [formData, setFormData] = useState({ ...ticket });
-  const [submitting, setSubmitting] = useState(false);
-
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault(); setSubmitting(true);
-    await supabase.from('tickets_soporte').update({ estado: formData.estado }).eq('id', ticket.id);
-    setSubmitting(false); onSave();
-  };
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-lg bg-ink-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-slide-up flex flex-col max-h-[90vh]">
-        <div className="px-6 py-5 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-          <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2"><LifeBuoy size={16} className="text-orange-400"/> Ticket de Soporte</h3>
-          <button onClick={onClose} className="text-white/40 hover:text-white transition-colors p-1"><X size={20}/></button>
-        </div>
-        <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5 block">Agencia</label>
-              <div className="text-sm font-bold text-white bg-ink-950 border border-white/5 px-3 py-2 rounded-lg">{ticket.nombre_agencia}</div>
-            </div>
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5 block">Usuario (Agente)</label>
-              <div className="text-sm text-white/80 bg-ink-950 border border-white/5 px-3 py-2 rounded-lg">{ticket.nombre_usuario}</div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5 block">Email Plataforma</label>
-              <div className="text-xs text-white/80 bg-ink-950 border border-white/5 px-3 py-2 rounded-lg truncate" title={ticket.email_plataforma}>{ticket.email_plataforma}</div>
-            </div>
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5 block">Teléfono</label>
-              <div className="text-xs text-white/80 bg-ink-950 border border-white/5 px-3 py-2 rounded-lg truncate" title={ticket.telefono}>{ticket.telefono}</div>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5 block">Motivo</label>
-            <div className="text-sm font-bold text-orange-400 bg-orange-400/10 border border-orange-400/20 px-3 py-2 rounded-lg">{ticket.motivo}</div>
-          </div>
-
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5 block">Mensaje / Detalle del error</label>
-            <div className="text-sm text-white/80 bg-ink-950 border border-white/5 px-4 py-3 rounded-lg leading-relaxed whitespace-pre-wrap">{ticket.mensaje}</div>
-          </div>
-          
-          <form onSubmit={onSubmit} className="pt-4">
-            <label className="flex items-center gap-3 cursor-pointer group p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
-               <input 
-                 type="checkbox" 
-                 checked={formData.estado === 'resuelto'} 
-                 onChange={e => setFormData({...formData, estado: e.target.checked ? 'resuelto' : 'pendiente'})} 
-                 className="w-5 h-5 rounded border-white/20 bg-ink-950 text-orange-500 focus:ring-orange-500" 
-               />
-               <div>
-                 <span className="text-sm font-medium text-white/90 group-hover:text-white transition-colors block">Marcar como Resuelto</span>
-                 <span className="text-[10px] text-white/40 block">El ticket se moverá al historial.</span>
-               </div>
-            </label>
-
-            <div className="flex gap-3 pt-6 border-t border-white/5 mt-6">
-              <button type="button" onClick={() => { onDelete(); onClose(); }} className="px-6 py-3.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2">
-                <Trash2 size={16}/> Borrar
-              </button>
-              <button type="submit" className="flex-1 py-3.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-orange-500/20" disabled={submitting}>
-                {submitting ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Guardar Estado'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
   const isEdit = agencia !== 'new';
