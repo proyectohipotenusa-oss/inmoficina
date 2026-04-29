@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { useLocation } from 'wouter';
 import {
   Shield, Plus, Building2, Loader2, Copy, Check, X, Users, KeyRound, Sparkles, ChevronRight, MapPin, Trash2,
-  TrendingUp, CheckCircle, CheckCircle2, Phone, Mail, CalendarDays, Timer, Lock, Unlock, MessageSquare, LogOut
+  TrendingUp, CheckCircle, CheckCircle2, Phone, Mail, CalendarDays, Timer, Lock, Unlock, MessageSquare, LogOut, LifeBuoy
 } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageHeader } from '../components/PageHeader';
@@ -48,7 +48,20 @@ interface MensajeContacto {
   created_at: string;
 }
 
-// Nueva Interfaz de Ticket
+interface TicketSoporte {
+  id: string;
+  nombre_agencia: string;
+  licencia: string;
+  nombre_usuario: string;
+  email_plataforma: string;
+  email_personal: string;
+  telefono: string;
+  motivo: string;
+  mensaje: string;
+  estado: string;
+  created_at: string;
+}
+
 interface Agente {
   id: string;
   email: string;
@@ -75,12 +88,14 @@ export default function AdminPanel() {
   const [agencias, setAgencias] = useState<Agencia[]>([]);
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [mensajes, setMensajes] = useState<MensajeContacto[]>([]);
+  const [tickets, setTickets] = useState<TicketSoporte[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, ingresos: 0, agencias: 0 });
   
   const [selectedAgencia, setSelectedAgencia] = useState<Agencia | 'new' | null>(null);
   const [selectedSolicitud, setSelectedSolicitud] = useState<Solicitud | null>(null);
   const [selectedMensaje, setSelectedMensaje] = useState<MensajeContacto | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<TicketSoporte | null>(null);
   const [result, setResult] = useState<CreatedResult | null>(null);
 
   const loadData = async () => {
@@ -95,6 +110,8 @@ export default function AdminPanel() {
     const { data: msgs } = await supabase.from('mensajes_contacto').select('*').order('created_at', { ascending: false });
     setMensajes((msgs as MensajeContacto[]) || []);
 
+    const { data: tcks } = await supabase.from('tickets_soporte').select('*').order('created_at', { ascending: false });
+    setTickets((tcks as TicketSoporte[]) || []);
 
     const { data: perfiles } = await supabase.from('perfiles').select('rol');
     const totalAgencias = ags ? ags.filter(a => !a.bloqueada).length : 0;
@@ -136,13 +153,15 @@ export default function AdminPanel() {
     loadData();
   };
 
+  const borrarTicket = async (id: string) => {
+    if(!confirm('¿Borrar este ticket de soporte permanentemente?')) return;
+    await supabase.from('tickets_soporte').delete().eq('id', id);
+    loadData();
+  };
 
-  // Filtrado de Bandejas
   const pendingTrials = solicitudes.filter(s => s.estado === 'pendiente' || s.estado === 'rechazado').map(s => ({ ...s, tipoEntrada: 'trial', sortDate: new Date(s.created_at).getTime() }));
   const pendingMessages = mensajes.filter(m => !m.leido).map(m => ({ ...m, tipoEntrada: 'mensaje', sortDate: new Date(m.created_at).getTime() }));
-  
   const bandejaEntrada = [...pendingTrials, ...pendingMessages].sort((a, b) => b.sortDate - a.sortDate);
-
 
   const activeTrials = solicitudes
     .filter(s => s.estado === 'procesado')
@@ -155,6 +174,8 @@ export default function AdminPanel() {
     .sort((a, b) => a.daysLeft - b.daysLeft);
 
   const historialMensajes = mensajes.filter(m => m.leido);
+  const pendingTickets = tickets.filter(t => t.estado === 'pendiente');
+  const completedTickets = tickets.filter(t => t.estado === 'completado');
 
   return (
     <Layout title="Panel Admin">
@@ -212,15 +233,105 @@ export default function AdminPanel() {
         </div>
       </div>
 
+      {/* SECCIÓN TICKETS DE SOPORTE */}
+      <div className="mb-8">
+        {/* PENDIENTES */}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 flex items-center gap-1.5">
+            <LifeBuoy size={14}/> Tickets de Soporte — Pendientes
+          </h3>
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] font-bold bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">
+              {pendingTickets.length} Pendientes
+            </span>
+            <button onClick={loadData} className="text-[9px] font-bold text-white/40 hover:text-white transition uppercase tracking-widest">
+              Actualizar
+            </button>
+          </div>
+        </div>
 
+        {loading ? (
+          <div className="py-8 flex justify-center">
+            <Loader2 className="animate-spin text-orange-400" size={20} />
+          </div>
+        ) : pendingTickets.length === 0 ? (
+          <div className="card p-6 text-center bg-white/[0.01] border-dashed border border-white/10 text-white/20 text-[10px] uppercase font-bold tracking-widest">
+            Sin tickets pendientes ✓
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {pendingTickets.map(t => (
+              <div key={t.id} className="card p-4 bg-ink-900 border-white/5 border-l-2 border-l-orange-500 hover:border-white/20 transition-all shadow-lg shadow-orange-500/5">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-xs font-bold text-white uppercase truncate pr-2 flex-1 cursor-pointer" onClick={() => setSelectedTicket(t)}>{t.nombre_agencia}</div>
+                  <div className="text-[9px] text-white/30 whitespace-nowrap">{new Date(t.created_at).toLocaleDateString()}</div>
+                </div>
+                <div className="text-[10px] text-orange-400/80 font-medium mb-1 truncate cursor-pointer" onClick={() => setSelectedTicket(t)}>{t.motivo}</div>
+                <div className="text-[9px] text-white/40 mb-1">{t.nombre_usuario} · {t.telefono}</div>
+                <div className="text-[10px] text-white/50 line-clamp-2 italic mb-3 cursor-pointer" onClick={() => setSelectedTicket(t)}>"{t.mensaje}"</div>
+                <button
+                  onClick={async () => {
+                    await supabase.from('tickets_soporte').update({ estado: 'completado' }).eq('id', t.id);
+                    loadData();
+                  }}
+                  className="w-full py-1.5 text-[9px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-lg hover:bg-emerald-400/20 transition-all flex items-center justify-center gap-1.5"
+                >
+                  <CheckCircle2 size={11}/> Marcar como completado
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
+        {/* HISTORIAL COMPLETADOS */}
+        {completedTickets.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/60 flex items-center gap-1.5 mb-3">
+              <CheckCircle2 size={13}/> Historial — Completados ({completedTickets.length})
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {completedTickets.map(t => (
+                <div key={t.id} className="card p-3 bg-ink-900/40 border-white/5 border-l-2 border-l-emerald-500/30 opacity-70 hover:opacity-100 transition-all">
+                  <div className="flex justify-between items-start mb-1">
+                    <div className="text-[11px] font-bold text-white/60 uppercase truncate pr-2 flex-1 cursor-pointer" onClick={() => setSelectedTicket(t)}>{t.nombre_agencia}</div>
+                    <div className="text-[9px] text-white/20 whitespace-nowrap">{new Date(t.created_at).toLocaleDateString()}</div>
+                  </div>
+                  <div className="text-[10px] text-emerald-400/50 font-medium mb-1 truncate cursor-pointer" onClick={() => setSelectedTicket(t)}>{t.motivo}</div>
+                  <div className="text-[9px] text-white/30">{t.nombre_usuario}</div>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={async () => {
+                        await supabase.from('tickets_soporte').update({ estado: 'pendiente' }).eq('id', t.id);
+                        loadData();
+                      }}
+                      className="flex-1 py-1 text-[9px] font-bold uppercase tracking-widest text-white/30 bg-white/5 border border-white/5 rounded-lg hover:text-orange-400 hover:border-orange-400/20 transition-all"
+                    >
+                      Reabrir
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if(confirm('¿Borrar este ticket permanentemente?')) {
+                          await supabase.from('tickets_soporte').delete().eq('id', t.id);
+                          loadData();
+                        }
+                      }}
+                      className="px-2 py-1 text-[9px] font-bold text-white/20 bg-white/5 border border-white/5 rounded-lg hover:text-red-400 hover:border-red-400/20 transition-all"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-        
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 flex items-center gap-1.5">
-              <Users size={14}/> Bandeja de Trials y Web
+              <Users size={14}/> Bandeja de Entrada
             </h3>
             <button onClick={loadData} className="text-[9px] font-bold text-white/40 hover:text-white transition uppercase tracking-widest">
               Actualizar
@@ -236,7 +347,7 @@ export default function AdminPanel() {
               Bandeja limpia
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+            <div className="grid grid-cols-1 gap-3">
               {bandejaEntrada.map((item: any) => {
                 const isTrial = item.tipoEntrada === 'trial';
                 
@@ -295,54 +406,49 @@ export default function AdminPanel() {
           )}
         </div>
 
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-1.5">
-                <CalendarDays size={14}/> Agenda de Trials
-              </h3>
-              <span className="text-[9px] font-bold text-emerald-400/80 bg-emerald-400/10 px-2 py-0.5 rounded-md">
-                {activeTrials.length} Activos
-              </span>
-            </div>
-
-            {loading ? (
-              <div className="py-8 flex justify-center">
-                <Loader2 className="animate-spin text-emerald-400" size={20} />
-              </div>
-            ) : activeTrials.length === 0 ? (
-              <div className="card p-6 text-center bg-white/[0.01] text-white/20 text-[10px] font-bold uppercase tracking-widest border-dashed border border-white/10">
-                No hay trials activos
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-                {activeTrials.map(t => {
-                  const isExpired = t.daysLeft <= 0;
-                  const isUrgent = !isExpired && t.daysLeft <= 3;
-                  const colorClass = isExpired ? 'text-red-400 bg-red-400/10 border-red-400/20' : isUrgent ? 'text-amber-400 bg-amber-400/10 border-amber-400/20' : 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
-                  
-                  return (
-                    <div key={t.id} onClick={() => setSelectedSolicitud(t)} className="card p-3 bg-ink-900 border-white/5 flex items-center justify-between gap-4 cursor-pointer hover:border-white/20 transition-colors shadow-sm">
-                      <div className="min-w-0 flex-1">
-                        <div className="text-xs font-bold text-white uppercase truncate mb-1">{t.nombre_agencia}</div>
-                        <div className="text-[9px] text-white/50 flex flex-col gap-0.5 truncate">
-                          <span><Users size={10} className="inline mr-1 opacity-50"/>{t.contacto_nombre}</span>
-                          <span><Phone size={10} className="inline mr-1 opacity-50"/>{t.telefono}</span>
-                        </div>
-                      </div>
-                      <div className={`shrink-0 flex flex-col items-center justify-center w-14 h-14 rounded-xl border ${colorClass}`}>
-                        <div className="text-xl font-black leading-none mb-0.5">{isExpired ? '0' : t.daysLeft}</div>
-                        <div className="text-[7px] uppercase tracking-widest font-bold opacity-80">{isExpired ? 'Caducado' : 'Días'}</div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-1.5">
+              <CalendarDays size={14}/> Agenda de Trials
+            </h3>
+            <span className="text-[9px] font-bold text-emerald-400/80 bg-emerald-400/10 px-2 py-0.5 rounded-md">
+              {activeTrials.length} Activos
+            </span>
           </div>
 
-
-
+          {loading ? (
+            <div className="py-8 flex justify-center">
+              <Loader2 className="animate-spin text-emerald-400" size={20} />
+            </div>
+          ) : activeTrials.length === 0 ? (
+            <div className="card p-6 text-center bg-white/[0.01] text-white/20 text-[10px] font-bold uppercase tracking-widest border-dashed border border-white/10">
+              No hay trials activos
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3">
+              {activeTrials.map(t => {
+                const isExpired = t.daysLeft <= 0;
+                const isUrgent = !isExpired && t.daysLeft <= 3;
+                const colorClass = isExpired ? 'text-red-400 bg-red-400/10 border-red-400/20' : isUrgent ? 'text-amber-400 bg-amber-400/10 border-amber-400/20' : 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
+                
+                return (
+                  <div key={t.id} onClick={() => setSelectedSolicitud(t)} className="card p-3 bg-ink-900 border-white/5 flex items-center justify-between gap-4 cursor-pointer hover:border-white/20 transition-colors shadow-sm">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-bold text-white uppercase truncate mb-1">{t.nombre_agencia}</div>
+                      <div className="text-[9px] text-white/50 flex flex-col gap-0.5 truncate">
+                        <span><Users size={10} className="inline mr-1 opacity-50"/>{t.contacto_nombre}</span>
+                        <span><Phone size={10} className="inline mr-1 opacity-50"/>{t.telefono}</span>
+                      </div>
+                    </div>
+                    <div className={`shrink-0 flex flex-col items-center justify-center w-14 h-14 rounded-xl border ${colorClass}`}>
+                      <div className="text-xl font-black leading-none mb-0.5">{isExpired ? '0' : t.daysLeft}</div>
+                      <div className="text-[7px] uppercase tracking-widest font-bold opacity-80">{isExpired ? 'Caducado' : 'Días'}</div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -364,7 +470,7 @@ export default function AdminPanel() {
               Historial vacío
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+            <div className="grid grid-cols-1 gap-3">
               {historialMensajes.map(m => (
                 <div key={m.id} onClick={() => setSelectedMensaje(m)} className="card p-4 bg-ink-900 border-white/5 opacity-60 hover:opacity-100 cursor-pointer transition-all shadow-sm">
                   <div className="flex justify-between items-start mb-2">
@@ -444,12 +550,11 @@ export default function AdminPanel() {
       {selectedAgencia && <AgencyDialog agencia={selectedAgencia} onClose={() => setSelectedAgencia(null)} onSave={() => { setSelectedAgencia(null); loadData(); }} onCreated={(res: CreatedResult) => { setSelectedAgencia(null); setResult(res); loadData(); }} />}
       {selectedSolicitud && <SolicitudDialog solicitud={selectedSolicitud} onClose={() => setSelectedSolicitud(null)} onSave={() => { setSelectedSolicitud(null); loadData(); }} />}
       {selectedMensaje && <MensajeDialog mensaje={selectedMensaje} onClose={() => setSelectedMensaje(null)} onSave={() => { setSelectedMensaje(null); loadData(); }} onDelete={() => borrarMensaje(selectedMensaje.id)} />}
-      
+      {selectedTicket && <TicketDialog ticket={selectedTicket} onClose={() => setSelectedTicket(null)} onSave={() => { setSelectedTicket(null); loadData(); }} onDelete={() => borrarTicket(selectedTicket.id)} />}
       {result && <CredentialsDialog result={result} onClose={() => setResult(null)} />}
     </Layout>
   );
 }
-
 
 function AgencyDialog({ agencia, onClose, onSave, onCreated }: any) {
   const isEdit = agencia !== 'new';
@@ -788,6 +893,97 @@ function MensajeDialog({ mensaje, onClose, onSave, onDelete }: any) {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function TicketDialog({ ticket, onClose, onSave, onDelete }: any) {
+  const [formData, setFormData] = useState({ ...ticket });
+  const [submitting, setSubmitting] = useState(false);
+
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault(); setSubmitting(true);
+    await supabase.from('tickets_soporte').update({ estado: formData.estado }).eq('id', ticket.id);
+    setSubmitting(false); onSave();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-lg bg-ink-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-slide-up flex flex-col max-h-[90vh]">
+        <div className="px-6 py-5 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+          <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2"><LifeBuoy size={16} className="text-orange-400"/> Ticket de Soporte</h3>
+          <button onClick={onClose} className="text-white/40 hover:text-white transition-colors p-1"><X size={20}/></button>
+        </div>
+        <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5 block">Agencia</label>
+              <div className="text-sm font-bold text-white bg-ink-950 border border-white/5 px-3 py-2 rounded-lg">{ticket.nombre_agencia}</div>
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5 block">Licencia</label>
+              <div className="text-sm font-mono text-white/60 bg-ink-950 border border-white/5 px-3 py-2 rounded-lg">{ticket.licencia}</div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5 block">Usuario (Agente)</label>
+              <div className="text-sm text-white/80 bg-ink-950 border border-white/5 px-3 py-2 rounded-lg">{ticket.nombre_usuario}</div>
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5 block">Teléfono</label>
+              <div className="text-sm text-white/80 bg-ink-950 border border-white/5 px-3 py-2 rounded-lg">{ticket.telefono}</div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5 block">Email Plataforma</label>
+              <div className="text-xs text-white/80 bg-ink-950 border border-white/5 px-3 py-2 rounded-lg truncate" title={ticket.email_plataforma}>{ticket.email_plataforma}</div>
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5 block">Email Personal</label>
+              <div className="text-xs text-white/80 bg-ink-950 border border-white/5 px-3 py-2 rounded-lg truncate" title={ticket.email_personal}>{ticket.email_personal}</div>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5 block">Motivo</label>
+            <div className="text-sm font-bold text-orange-400 bg-orange-400/10 border border-orange-400/20 px-3 py-2 rounded-lg">{ticket.motivo}</div>
+          </div>
+
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5 block">Mensaje / Detalle del error</label>
+            <div className="text-sm text-white/80 bg-ink-950 border border-white/5 px-4 py-3 rounded-lg leading-relaxed whitespace-pre-wrap">{ticket.mensaje}</div>
+          </div>
+          
+          <form onSubmit={onSubmit} className="pt-4">
+            <label className="flex items-center gap-3 cursor-pointer group p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+               <input 
+                 type="checkbox" 
+                 checked={formData.estado === 'completado'} 
+                 onChange={e => setFormData({...formData, estado: e.target.checked ? 'completado' : 'pendiente'})} 
+                 className="w-5 h-5 rounded border-white/20 bg-ink-950 text-orange-500 focus:ring-orange-500" 
+               />
+               <div>
+                 <span className="text-sm font-medium text-white/90 group-hover:text-white transition-colors block">Tarea completada</span>
+                 <span className="text-[10px] text-white/40 block">El ticket se moverá al historial.</span>
+               </div>
+            </label>
+
+            <div className="flex gap-3 pt-6 border-t border-white/5 mt-6">
+              <button type="button" onClick={() => { onDelete(); onClose(); }} className="px-6 py-3.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2">
+                <Trash2 size={16}/> Borrar
+              </button>
+              <button type="submit" className="flex-1 py-3.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-orange-500/20" disabled={submitting}>
+                {submitting ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Guardar Estado'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

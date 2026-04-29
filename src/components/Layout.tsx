@@ -7,27 +7,12 @@ import { Logo } from './Logo';
 import { 
   LayoutDashboard, Users, KanbanSquare, Building2, 
   Calendar, LineChart, Sparkles, UserCircle, LogOut, 
-  Menu, X, FileText, TrendingUp, LifeBuoy, Rss, Lock,
-  CheckCircle2, Loader2, ChevronDown, ChevronUp, RefreshCw
+  Menu, X, FileText, TrendingUp, LifeBuoy, Rss, Lock, Send, CheckCircle2, Loader2, MessageSquare
 } from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
   title?: string;
-}
-
-interface Ticket {
-  id: string;
-  nombre_agencia: string;
-  licencia: string;
-  nombre_usuario: string;
-  email_plataforma: string;
-  email_personal: string;
-  telefono: string;
-  motivo: string;
-  mensaje: string;
-  estado: string;
-  created_at: string;
 }
 
 export function Layout({ children, title }: LayoutProps) {
@@ -37,14 +22,8 @@ export function Layout({ children, title }: LayoutProps) {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [planAgencia, setPlanAgencia] = useState<'estandar' | 'premium'>('premium');
 
-  // SOPORTE (usuarios normales)
+  // ESTADO DEL POP-UP DE SOPORTE
   const [showSupportModal, setShowSupportModal] = useState(false);
-
-  // TICKETS PANEL (admin en sidebar)
-  const [showTicketsPanel, setShowTicketsPanel] = useState(false);
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [ticketsLoading, setTicketsLoading] = useState(false);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
   useEffect(() => {
     if (perfil?.agencia_id) {
@@ -55,46 +34,6 @@ export function Layout({ children, title }: LayoutProps) {
     }
   }, [perfil?.agencia_id]);
 
-  const isAdmin = perfil?.rol === 'admin';
-
-  const loadTickets = async () => {
-    setTicketsLoading(true);
-    const { data } = await supabase
-      .from('tickets_soporte')
-      .select('*')
-      .order('created_at', { ascending: false });
-    setTickets(data || []);
-    setTicketsLoading(false);
-  };
-
-  useEffect(() => {
-    if (isAdmin && showTicketsPanel) {
-      loadTickets();
-    }
-  }, [isAdmin, showTicketsPanel]);
-
-  const markCompleted = async (id: string) => {
-    await supabase.from('tickets_soporte').update({ estado: 'completado' }).eq('id', id);
-    setTickets(prev => prev.map(t => t.id === id ? { ...t, estado: 'completado' } : t));
-    if (selectedTicket?.id === id) setSelectedTicket(prev => prev ? { ...prev, estado: 'completado' } : null);
-  };
-
-  const markPending = async (id: string) => {
-    await supabase.from('tickets_soporte').update({ estado: 'pendiente' }).eq('id', id);
-    setTickets(prev => prev.map(t => t.id === id ? { ...t, estado: 'pendiente' } : t));
-    if (selectedTicket?.id === id) setSelectedTicket(prev => prev ? { ...prev, estado: 'pendiente' } : null);
-  };
-
-  const deleteTicket = async (id: string) => {
-    if (!confirm('¿Borrar este ticket permanentemente?')) return;
-    await supabase.from('tickets_soporte').delete().eq('id', id);
-    setTickets(prev => prev.filter(t => t.id !== id));
-    if (selectedTicket?.id === id) setSelectedTicket(null);
-  };
-
-  const pendingTickets = tickets.filter(t => t.estado === 'pendiente');
-  const completedTickets = tickets.filter(t => t.estado === 'completado');
-
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -104,6 +43,7 @@ export function Layout({ children, title }: LayoutProps) {
       setLocation('/login');
     }
   };
+
 
   const NavItem = ({ href, icon: Icon, label, premium = false }: { href: string, icon: any, label: string, premium?: boolean }) => {
     const active = location === href;
@@ -141,6 +81,8 @@ export function Layout({ children, title }: LayoutProps) {
     );
   };
 
+  const isAdmin = perfil?.rol === 'admin';
+
   return (
     <div className="min-h-screen bg-ink-950 flex font-sans selection:bg-brand-500/30 overflow-x-hidden w-full">
       <button className="lg:hidden fixed top-3 left-3 z-50 h-10 w-10 rounded-xl bg-ink-900 border border-white/10 flex items-center justify-center text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
@@ -159,177 +101,7 @@ export function Layout({ children, title }: LayoutProps) {
           
           <div className="flex flex-col flex-1 gap-0.5">
             {isAdmin ? (
-              <>
-                <NavItem href="/admin" icon={LayoutDashboard} label="Panel Admin" />
-
-                {/* BOTÓN TICKETS DE SOPORTE - SOLO ADMIN */}
-                <button
-                  onClick={() => setShowTicketsPanel(prev => !prev)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
-                    showTicketsPanel
-                      ? 'bg-orange-500/10 text-orange-400'
-                      : 'text-white/50 hover:bg-white/5 hover:text-white'
-                  }`}
-                >
-                  <LifeBuoy size={16} className={showTicketsPanel ? 'text-orange-400' : 'text-white/40'} />
-                  <span className="font-medium text-[13px] flex-1 text-left">Tickets de Soporte</span>
-                  {pendingTickets.length > 0 && !showTicketsPanel && (
-                    <span className="text-[9px] font-bold bg-orange-500 text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                      {pendingTickets.length}
-                    </span>
-                  )}
-                  {showTicketsPanel ? <ChevronUp size={13} className="text-orange-400/60" /> : <ChevronDown size={13} className="text-white/30" />}
-                </button>
-
-                {/* PANEL EXPANDIBLE DE TICKETS */}
-                {showTicketsPanel && (
-                  <div className="mt-1 mb-2 mx-1 bg-ink-950/60 border border-white/5 rounded-xl overflow-hidden">
-                    {/* Header del panel */}
-                    <div className="flex items-center justify-between px-3 py-2 border-b border-white/5">
-                      <span className="text-[9px] uppercase tracking-widest text-white/30 font-bold">
-                        {pendingTickets.length} pendientes · {completedTickets.length} resueltos
-                      </span>
-                      <button
-                        onClick={loadTickets}
-                        disabled={ticketsLoading}
-                        className="text-white/30 hover:text-white transition-colors"
-                        title="Actualizar"
-                      >
-                        <RefreshCw size={11} className={ticketsLoading ? 'animate-spin' : ''} />
-                      </button>
-                    </div>
-
-                    {ticketsLoading ? (
-                      <div className="py-6 flex justify-center">
-                        <Loader2 size={18} className="animate-spin text-orange-400/60" />
-                      </div>
-                    ) : tickets.length === 0 ? (
-                      <div className="py-5 text-center text-[10px] text-white/20 font-bold uppercase tracking-widest">
-                        Sin tickets
-                      </div>
-                    ) : (
-                      <div className="max-h-[50vh] overflow-y-auto custom-scrollbar">
-                        {/* PENDIENTES */}
-                        {pendingTickets.length > 0 && (
-                          <div>
-                            <div className="px-3 py-1.5 text-[8px] uppercase tracking-widest text-orange-400/60 font-bold bg-orange-500/5">
-                              Pendientes
-                            </div>
-                            {pendingTickets.map(t => (
-                              <div
-                                key={t.id}
-                                className="border-b border-white/[0.04] last:border-0"
-                              >
-                                {/* Fila del ticket */}
-                                <button
-                                  onClick={() => setSelectedTicket(selectedTicket?.id === t.id ? null : t)}
-                                  className="w-full text-left px-3 py-2.5 hover:bg-white/[0.03] transition-colors"
-                                >
-                                  <div className="flex items-start justify-between gap-2">
-                                    <div className="flex-1 min-w-0">
-                                      <div className="text-[11px] font-bold text-white truncate">{t.nombre_usuario}</div>
-                                      <div className="text-[10px] text-orange-400/70 truncate">{t.motivo}</div>
-                                      <div className="text-[9px] text-white/30">{t.nombre_agencia}</div>
-                                    </div>
-                                    <div className="text-[8px] text-white/25 whitespace-nowrap mt-0.5">
-                                      {new Date(t.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}
-                                    </div>
-                                  </div>
-                                </button>
-
-                                {/* Detalle expandido */}
-                                {selectedTicket?.id === t.id && (
-                                  <div className="px-3 pb-3 bg-white/[0.02]">
-                                    <div className="space-y-1 mb-3 text-[10px] text-white/50 border-t border-white/5 pt-2">
-                                      <div><span className="text-white/25">Email CRM:</span> {t.email_plataforma}</div>
-                                      <div><span className="text-white/25">Email personal:</span> {t.email_personal}</div>
-                                      <div><span className="text-white/25">Teléfono:</span> {t.telefono}</div>
-                                      {t.licencia && t.licencia !== 'N/A' && (
-                                        <div><span className="text-white/25">Licencia:</span> {t.licencia}</div>
-                                      )}
-                                    </div>
-                                    <div className="text-[10px] text-white/60 italic bg-white/[0.03] rounded-lg p-2 mb-3 leading-relaxed">
-                                      "{t.mensaje}"
-                                    </div>
-                                    <div className="flex gap-1.5">
-                                      <button
-                                        onClick={() => markCompleted(t.id)}
-                                        className="flex-1 py-1.5 text-[9px] font-bold uppercase tracking-wide text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-lg hover:bg-emerald-400/20 transition-all flex items-center justify-center gap-1"
-                                      >
-                                        <CheckCircle2 size={10} /> Completado
-                                      </button>
-                                      <button
-                                        onClick={() => deleteTicket(t.id)}
-                                        className="px-2 py-1.5 text-[9px] font-bold text-white/25 bg-white/5 border border-white/5 rounded-lg hover:text-red-400 hover:border-red-400/20 transition-all"
-                                      >
-                                        ✕
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* COMPLETADOS */}
-                        {completedTickets.length > 0 && (
-                          <div>
-                            <div className="px-3 py-1.5 text-[8px] uppercase tracking-widest text-emerald-400/40 font-bold bg-emerald-500/[0.04]">
-                              Completados
-                            </div>
-                            {completedTickets.map(t => (
-                              <div
-                                key={t.id}
-                                className="border-b border-white/[0.04] last:border-0 opacity-60 hover:opacity-100 transition-opacity"
-                              >
-                                <button
-                                  onClick={() => setSelectedTicket(selectedTicket?.id === t.id ? null : t)}
-                                  className="w-full text-left px-3 py-2 hover:bg-white/[0.02] transition-colors"
-                                >
-                                  <div className="flex items-start justify-between gap-2">
-                                    <div className="flex-1 min-w-0">
-                                      <div className="text-[11px] font-bold text-white/50 truncate">{t.nombre_usuario}</div>
-                                      <div className="text-[10px] text-emerald-400/50 truncate">{t.motivo}</div>
-                                    </div>
-                                    <CheckCircle2 size={11} className="text-emerald-400/40 mt-0.5 shrink-0" />
-                                  </div>
-                                </button>
-
-                                {selectedTicket?.id === t.id && (
-                                  <div className="px-3 pb-3 bg-white/[0.01]">
-                                    <div className="space-y-1 mb-2 text-[10px] text-white/40 border-t border-white/5 pt-2">
-                                      <div><span className="text-white/20">Email:</span> {t.email_personal}</div>
-                                      <div><span className="text-white/20">Tel:</span> {t.telefono}</div>
-                                    </div>
-                                    <div className="text-[10px] text-white/40 italic bg-white/[0.02] rounded-lg p-2 mb-2 leading-relaxed">
-                                      "{t.mensaje}"
-                                    </div>
-                                    <div className="flex gap-1.5">
-                                      <button
-                                        onClick={() => markPending(t.id)}
-                                        className="flex-1 py-1 text-[9px] font-bold uppercase tracking-wide text-white/30 bg-white/5 border border-white/5 rounded-lg hover:text-orange-400 hover:border-orange-400/20 transition-all"
-                                      >
-                                        Reabrir
-                                      </button>
-                                      <button
-                                        onClick={() => deleteTicket(t.id)}
-                                        className="px-2 py-1 text-[9px] font-bold text-white/20 bg-white/5 border border-white/5 rounded-lg hover:text-red-400 hover:border-red-400/20 transition-all"
-                                      >
-                                        ✕
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
+              <NavItem href="/admin" icon={LayoutDashboard} label="Panel Admin" />
             ) : (
               <>
                 <NavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" />
@@ -348,6 +120,7 @@ export function Layout({ children, title }: LayoutProps) {
             <div className="mt-auto pt-4 border-t border-white/5 mt-4 space-y-0.5">
               <NavItem href="/perfil" icon={UserCircle} label="Perfil" />
               
+              {/* AQUÍ ESTÁ LA MAGIA: EL BOTÓN DE SOPORTE QUE ABRE EL POP-UP */}
               {!isAdmin && (
                 <button 
                   onClick={() => { setShowSupportModal(true); setIsMobileMenuOpen(false); }}
@@ -423,7 +196,7 @@ export function Layout({ children, title }: LayoutProps) {
         </div>
       )}
 
-      {/* POP-UP DE SOPORTE TÉCNICO (usuarios normales) */}
+      {/* POP-UP DE SOPORTE TÉCNICO */}
       {showSupportModal && <SupportModal onClose={() => setShowSupportModal(false)} />}
 
     </div>
