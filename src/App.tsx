@@ -22,7 +22,7 @@ import PublicProfile from './pages/PublicProfile';
 import FichaPropiedad from './pages/FichaPropiedad';
 import CatalogoPublico from './pages/CatalogoPublico';
 import Tutorial from './pages/Tutorial';
-import Soporte from './pages/Soporte';
+import TicketsAdmin from './pages/TicketsAdmin';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 function PlanGuard({ children, premium = false }: { children: React.ReactNode, premium?: boolean }) {
@@ -80,8 +80,8 @@ export default function App() {
       <Route path="/p/:id" component={FichaPropiedad} /> 
       <Route path="/a/:agencia_id" component={CatalogoPublico} />
       <Route path="/tutorial" component={Tutorial} /> 
-      <Route path="/soporte" component={Soporte} /> 
       
+      <Route path="/admin/tickets"><ProtectedRoute requireAdmin><TicketsAdmin /></ProtectedRoute></Route>
       <Route path="/admin"><ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute></Route>
       
       <Route path="/dashboard"><ProtectedRoute><PlanGuard><Dashboard /></PlanGuard></ProtectedRoute></Route>

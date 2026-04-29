@@ -1,5 +1,4 @@
 import { ReactNode, useState, useEffect } from 'react';
-import { SupportModal } from './SupportModal';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -22,8 +21,12 @@ export function Layout({ children, title }: LayoutProps) {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [planAgencia, setPlanAgencia] = useState<'estandar' | 'premium'>('premium');
 
-  // ESTADO DEL POP-UP DE SOPORTE
+  // ESTADOS DEL POP-UP DE SOPORTE
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [supportLoading, setSupportLoading] = useState(false);
+  const [supportSuccess, setSupportSuccess] = useState(false);
+  const [supportError, setSupportError] = useState('');
+  const [supportData, setSupportData] = useState({ motivo: '', mensaje: '' });
 
   useEffect(() => {
     if (perfil?.agencia_id) {
@@ -44,6 +47,38 @@ export function Layout({ children, title }: LayoutProps) {
     }
   };
 
+  const handleSupportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSupportError('');
+    setSupportLoading(true);
+
+    const ticketPayload = {
+      nombre_agencia: perfil?.agencia_id || 'Desconocida',
+      licencia: 'N/A',
+      nombre_usuario: perfil?.nombre || 'Agente',
+      email_plataforma: perfil?.email || '',
+      email_personal: perfil?.email || '',
+      telefono: 'No especificado',
+      motivo: supportData.motivo,
+      mensaje: supportData.mensaje,
+      estado: 'pendiente'
+    };
+    
+    const { error } = await supabase.from('tickets_soporte').insert([ticketPayload]);
+
+    if (error) {
+      setSupportError('Hubo un error al enviar el ticket. Inténtalo de nuevo.');
+      setSupportLoading(false);
+    } else {
+      setSupportSuccess(true);
+      setSupportLoading(false);
+      setTimeout(() => {
+        setSupportSuccess(false);
+        setShowSupportModal(false);
+        setSupportData({ motivo: '', mensaje: '' });
+      }, 3000);
+    }
+  };
 
   const NavItem = ({ href, icon: Icon, label, premium = false }: { href: string, icon: any, label: string, premium?: boolean }) => {
     const active = location === href;
@@ -83,6 +118,18 @@ export function Layout({ children, title }: LayoutProps) {
 
   const isAdmin = perfil?.rol === 'admin';
 
+  const motivosSoporte = [
+    "Error en Sincronización con Portales",
+    "Fallo en IA Predictor de Valor",
+    "Problema con Informe CMA / Dossier",
+    "Error en el Pipeline Kanban",
+    "Incidencia en la Agenda",
+    "Problemas de visualización",
+    "Error de Acceso / Sesión",
+    "Duda de uso general",
+    "Otro problema técnico"
+  ];
+
   return (
     <div className="min-h-screen bg-ink-950 flex font-sans selection:bg-brand-500/30 overflow-x-hidden w-full">
       <button className="lg:hidden fixed top-3 left-3 z-50 h-10 w-10 rounded-xl bg-ink-900 border border-white/10 flex items-center justify-center text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
@@ -101,7 +148,10 @@ export function Layout({ children, title }: LayoutProps) {
           
           <div className="flex flex-col flex-1 gap-0.5">
             {isAdmin ? (
-              <NavItem href="/admin" icon={LayoutDashboard} label="Panel Admin" />
+              <>
+                <NavItem href="/admin" icon={LayoutDashboard} label="Panel Admin" />
+                <NavItem href="/admin/tickets" icon={LifeBuoy} label="Tickets Soporte" />
+              </>
             ) : (
               <>
                 <NavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" />
@@ -120,7 +170,6 @@ export function Layout({ children, title }: LayoutProps) {
             <div className="mt-auto pt-4 border-t border-white/5 mt-4 space-y-0.5">
               <NavItem href="/perfil" icon={UserCircle} label="Perfil" />
               
-              {/* AQUÍ ESTÁ LA MAGIA: EL BOTÓN DE SOPORTE QUE ABRE EL POP-UP */}
               {!isAdmin && (
                 <button 
                   onClick={() => { setShowSupportModal(true); setIsMobileMenuOpen(false); }}
@@ -167,7 +216,6 @@ export function Layout({ children, title }: LayoutProps) {
 
       {isMobileMenuOpen && <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />}
 
-      {/* POP-UP DE UPGRADE PREMIUM */}
       {showUpgradeModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="relative w-full max-w-sm bg-ink-900 border border-white/10 rounded-[2rem] p-8 text-center shadow-2xl animate-slide-up">
@@ -196,9 +244,69 @@ export function Layout({ children, title }: LayoutProps) {
         </div>
       )}
 
-      {/* POP-UP DE SOPORTE TÉCNICO */}
-      {showSupportModal && <SupportModal onClose={() => setShowSupportModal(false)} />}
+      {showSupportModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md bg-ink-900 border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-2xl animate-slide-up">
+            <button onClick={() => setShowSupportModal(false)} className="absolute top-6 right-6 text-white/40 hover:text-white transition-colors">
+              <X size={24} />
+            </button>
+            
+            {supportSuccess ? (
+              <div className="text-center py-8">
+                <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
+                  <CheckCircle2 size={48} className="text-emerald-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">Ticket Enviado</h3>
+                <p className="text-white/50 text-sm leading-relaxed">
+                  Hemos recibido tu solicitud. Nuestro equipo técnico revisará tu caso y te contactaremos a la brevedad.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-12 h-12 bg-brand-500/10 rounded-xl flex items-center justify-center border border-brand-500/20">
+                    <LifeBuoy className="text-brand-400" size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Soporte Técnico</h3>
+                    <p className="text-[10px] text-white/40 uppercase tracking-widest">Crear Ticket Rápido</p>
+                  </div>
+                </div>
 
+                {supportError && (
+                  <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center font-medium animate-shake">
+                    {supportError}
+                  </div>
+                )}
+
+                <form onSubmit={handleSupportSubmit} className="space-y-5">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest font-bold text-white/50 mb-2 ml-1">¿En qué podemos ayudarte?</label>
+                    <select required className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 outline-none transition-all cursor-pointer"
+                      value={supportData.motivo} onChange={e => setSupportData({...supportData, motivo: e.target.value})}>
+                      <option value="" disabled>Selecciona un motivo...</option>
+                      {motivosSoporte.map((m, i) => <option key={i} value={m} className="bg-ink-900">{m}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-white/50 mb-2 ml-1">
+                      <MessageSquare size={12}/> Descripción del Problema
+                    </label>
+                    <textarea required rows={5} className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-500 outline-none transition-all resize-none leading-relaxed" 
+                      placeholder="Detalla el problema que estás experimentando..." 
+                      value={supportData.mensaje} onChange={e => setSupportData({...supportData, mensaje: e.target.value})} />
+                  </div>
+
+                  <button type="submit" disabled={supportLoading} className="w-full py-4 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold uppercase tracking-[0.2em] text-xs transition-all shadow-xl shadow-brand-500/20 flex items-center justify-center gap-3 mt-6">
+                    {supportLoading ? <Loader2 className="animate-spin" size={18} /> : <><Send size={16} /> Enviar Ticket</>}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
