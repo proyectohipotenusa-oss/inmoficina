@@ -1,4 +1,5 @@
-import { ReactNode, useState, useEffect } from 'react';
+// v2
+   import { ReactNode, useState, useEffect } from 'react';
 import { SupportModal } from './SupportModal';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '../context/AuthContext';
