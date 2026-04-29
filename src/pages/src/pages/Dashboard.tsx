@@ -6,13 +6,13 @@ import { supabase } from '../lib/supabase';
 import { 
   Users, Building2, Euro, ArrowUpRight, ChevronRight, 
   KanbanSquare, Flame, CheckCircle2, Calendar, Clock,
-  Home, Phone, Mail, PenTool, Circle, StickyNote, AlertCircle
+  Home, Phone, Mail, PenTool, Circle, StickyNote
 } from 'lucide-react';
 import { formatEUR } from '../lib/format';
 
 interface LeadDash { id: string; estado: string; ultimo_contacto: string; created_at: string; nombre: string; }
 interface PropDash { id: string; transaccion: string; }
-interface TareaDash { id: string; tipo: string; titulo: string; hora: string; fecha: string; completada: boolean; }
+interface TareaDash { id: string; tipo: string; titulo: string; hora: string; completada: boolean; }
 
 const TIPO_ICONO: Record<string, any> = {
   'Visita': Home, 'Llamada': Phone, 'Correo': Mail, 'Reunión': Users, 'Firma': PenTool, 'Otro': Circle
@@ -26,7 +26,6 @@ export default function Dashboard() {
   const [leads, setLeads] = useState<LeadDash[]>([]);
   const [propiedades, setPropiedades] = useState<PropDash[]>([]);
   const [tareasHoy, setTareasHoy] = useState<TareaDash[]>([]);
-  const [tareasAtrasadas, setTareasAtrasadas] = useState<TareaDash[]>([]);
   const [ventasMes, setVentasMes] = useState(0);
   const [cantidadVentasMes, setCantidadVentasMes] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -46,40 +45,23 @@ export default function Dashboard() {
     if (!perfil?.agencia_id) return;
     const fetchData = async () => {
       setLoading(true);
-      const hoyObj = new Date();
-      const hoyISO = hoyObj.toISOString().split('T')[0];
+      const hoyISO = new Date().toISOString().split('T')[0];
 
       const [resLeads, resProps, resVentas, resTareas] = await Promise.all([
         supabase.from('leads').select('id, estado, ultimo_contacto, created_at, nombre').eq('agencia_id', perfil.agencia_id),
         supabase.from('propiedades').select('id, transaccion').eq('agencia_id', perfil.agencia_id),
         supabase.from('ventas').select('importe, fecha').eq('agencia_id', perfil.agencia_id),
-        supabase.from('tareas').select('id, tipo, titulo, hora, fecha, completada').eq('agencia_id', perfil.agencia_id).eq('completada', false).lte('fecha', hoyISO)
+        supabase.from('tareas').select('id, tipo, titulo, hora, completada').eq('agencia_id', perfil.agencia_id).eq('fecha', hoyISO).order('hora', { ascending: true })
       ]);
 
       setLeads((resLeads.data as LeadDash[]) || []);
       setPropiedades((resProps.data as PropDash[]) || []);
-
-      if (resTareas.data) {
-        const tHoy = resTareas.data.filter(t => t.fecha === hoyISO).sort((a, b) => a.hora.localeCompare(b.hora));
-        setTareasHoy(tHoy as TareaDash[]);
-
-        // Tareas atrasadas: fechas anteriores a hoy, o de hoy pero cuya hora ya ha pasado (con 1 hora de margen)
-        const tAtrasadas = resTareas.data.filter(t => {
-          if (t.fecha < hoyISO) return true;
-          if (t.fecha === hoyISO && t.hora) {
-             const [h, m] = t.hora.split(':');
-             const taskTime = new Date();
-             taskTime.setHours(parseInt(h), parseInt(m), 0);
-             return (hoyObj.getTime() - taskTime.getTime()) > (60 * 60 * 1000); // Pasó más de 1 hora
-          }
-          return false;
-        }).sort((a, b) => a.fecha.localeCompare(b.fecha));
-        setTareasAtrasadas(tAtrasadas as TareaDash[]);
-      }
+      setTareasHoy((resTareas.data as TareaDash[]) || []);
 
       if (resVentas.data) {
-        const curMonth = hoyObj.getMonth() + 1; 
-        const curYear = hoyObj.getFullYear();
+        const hoy = new Date();
+        const curMonth = hoy.getMonth() + 1; 
+        const curYear = hoy.getFullYear();
         const ventasDelMes = resVentas.data.filter(v => {
           if (!v.fecha) return false;
           const [vYear, vMonth] = v.fecha.split('-');
@@ -168,9 +150,13 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center"><Calendar size={16} className="text-brand-400" /></div>
-              <h3 className="text-sm font-semibold text-white">Agenda de hoy</h3>
+              <h3 className="text-sm font-semibold text-white">Agenda</h3>
             </div>
             <button onClick={() => setLocation('/agenda')} className="flex items-center gap-1 text-[11px] text-white/40 hover:text-white transition px-3 py-1.5 rounded-full border border-white/10 hover:bg-white/5">Ver Agenda <ChevronRight size={12} /></button>
+          </div>
+          
+          <div className={`inline-flex px-2 py-1 rounded-md text-[10px] font-bold mb-6 ${tareasHoy.length > 0 ? 'bg-amber-500/10 border border-amber-500/20 text-amber-400' : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'}`}>
+            {tareasHoy.length} {tareasHoy.length === 1 ? 'tarea' : 'tareas'} hoy
           </div>
 
           <div className="space-y-4">
@@ -180,13 +166,13 @@ export default function Dashboard() {
                 No tienes tareas pendientes para hoy.
               </div>
             ) : (
-              tareasHoy.slice(0, 4).map(t => {
+              tareasHoy.slice(0, 3).map(t => {
                 const Icono = TIPO_ICONO[t.tipo] || Circle;
                 return (
                   <div key={t.id} className="flex items-start gap-3 group cursor-pointer" onClick={() => setLocation('/agenda')}>
                     <div className="mt-1 h-2 w-2 rounded-full bg-brand-500 shrink-0 group-hover:scale-125 transition-transform" />
                     <div className="min-w-0 flex-1">
-                      <div className={`text-[13px] font-medium truncate text-white/80`}>
+                      <div className={`text-[13px] font-medium truncate ${t.completada ? 'text-white/30 line-through' : 'text-white/80'}`}>
                         {t.titulo}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
@@ -202,10 +188,10 @@ export default function Dashboard() {
             )}
           </div>
           
-          {tareasHoy.length > 4 && (
+          {tareasHoy.length > 3 && (
             <div className="mt-6 pt-4 border-t border-white/5 text-center">
               <button onClick={() => setLocation('/agenda')} className="text-[11px] text-brand-400 font-bold hover:text-brand-300 transition">
-                + ver {tareasHoy.length - 4} más
+                + ver {tareasHoy.length - 3} más
               </button>
             </div>
           )}
@@ -219,45 +205,24 @@ export default function Dashboard() {
               <div className="h-8 w-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center"><Flame size={16} className="text-red-400" /></div>
               <h3 className="text-sm font-bold text-white">Atención Urgente</h3>
             </div>
-            <div className="flex gap-2">
-              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${leadsFrios.length > 0 ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 'bg-white/5 text-white/30'}`}>{leadsFrios.length} Leads Fríos</span>
-              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${tareasAtrasadas.length > 0 ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-white/5 text-white/30'}`}>{tareasAtrasadas.length} Tareas</span>
-            </div>
+            <button onClick={() => setLocation('/pipeline')} className="flex items-center gap-1 text-[11px] text-white/40 hover:text-white transition px-3 py-1.5 rounded-full border border-white/10 hover:bg-white/5">Ir a Pipeline <ChevronRight size={12} /></button>
           </div>
           
-          {leadsFrios.length === 0 && tareasAtrasadas.length === 0 ? (
+          {leadsFrios.length === 0 ? (
             <div className="flex flex-col items-center justify-center text-center h-24 text-white/40 text-[12px]">
               <div className="font-bold text-white/80 mb-1">¡Todo bajo control!</div>
-              Ningún cliente requiere atención ni tienes tareas caducadas.
+              Ningún cliente requiere atención inmediata.
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              
-              {/* RENDERIZAR TAREAS ATRASADAS */}
-              {tareasAtrasadas.slice(0, 3).map(t => {
-                const isToday = t.fecha === new Date().toISOString().split('T')[0];
-                return (
-                  <div key={t.id} className="flex flex-col justify-between p-3 rounded-xl bg-red-500/5 border border-red-500/20 hover:border-red-500/50 transition cursor-pointer group" onClick={() => setLocation('/agenda')}>
-                    <div className="min-w-0 mb-2">
-                      <div className="text-[13px] font-bold text-red-100 truncate">{t.titulo}</div>
-                      <div className="text-[10px] text-red-400/80">{t.tipo}</div>
-                    </div>
-                    <div className="text-[10px] font-bold text-red-400 flex items-center gap-1 w-fit bg-red-500/10 px-2 py-1 rounded-md">
-                      <AlertCircle size={12}/> {isToday ? `Se pasó la hora (${t.hora})` : 'Atrasada'}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* RENDERIZAR LEADS FRÍOS */}
               {leadsFrios.slice(0, 3).map(l => (
-                <div key={l.id} className="flex flex-col justify-between p-3 rounded-xl bg-orange-500/5 border border-orange-500/20 hover:border-orange-500/50 transition cursor-pointer group" onClick={() => setLocation('/pipeline')}>
-                  <div className="min-w-0 mb-2">
-                    <div className="text-[13px] font-bold text-orange-100 truncate">{l.nombre}</div>
-                    <div className="text-[10px] text-orange-400/80 capitalize">{l.estado}</div>
+                <div key={l.id} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-red-500/30 transition cursor-pointer group" onClick={() => setLocation('/pipeline')}>
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-bold text-white truncate">{l.nombre}</div>
+                    <div className="text-[10px] text-white/40 capitalize">{l.estado}</div>
                   </div>
-                  <div className="text-[10px] font-bold text-orange-400 flex items-center gap-1 w-fit bg-orange-500/10 px-2 py-1 rounded-md">
-                    <Flame size={12}/> Lleva +3 días
+                  <div className="text-[10px] font-bold text-red-400 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded-md">
+                    <Flame size={12}/> +3 días
                   </div>
                 </div>
               ))}
