@@ -130,7 +130,7 @@ function LeadDialog({ lead, onClose, onSaved }: { lead?: any, onClose: () => voi
   };
 
   const onDelete = async () => {
-    if (!lead || !confirm('¿Eliminar Lead?')) return;
+    if (!lead || !confirm('¿Eliminar lead?')) return;
     setSubmitting(true); await supabase.from('leads').delete().eq('id', lead.id);
     onSaved(); onClose();
   };
