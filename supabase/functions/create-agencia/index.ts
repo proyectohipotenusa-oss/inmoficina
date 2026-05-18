@@ -33,6 +33,18 @@ function normalizeSlug(raw: string) {
     .slice(0, 40);
 }
 
+// Limpia todo lo creado si algo falla a mitad del proceso
+async function rollback(
+  admin: ReturnType<typeof createClient>,
+  agenciaSlug: string,
+  authUserIds: string[]
+) {
+  await admin.from("agencias").delete().eq("id", agenciaSlug);
+  for (const uid of authUserIds) {
+    await admin.auth.admin.deleteUser(uid);
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -101,17 +113,20 @@ Deno.serve(async (req: Request) => {
       return json({ error: `Ya existe una agencia con id "${slug}"` }, 409);
     }
 
+    // Crear agencia
     const { error: insErr } = await admin
       .from("agencias")
       .insert({ id: slug, nombre, licencia });
     if (insErr) return json({ error: insErr.message }, 500);
 
     const users: Array<{ email: string; password: string; user_id: string }> = [];
+    const createdAuthIds: string[] = []; // <- rastreamos para rollback
 
     for (let i = 1; i <= 3; i++) {
       const email = `${slug}-${i}@inmoficina.es`;
       const password = genPassword(12);
 
+      // 1. Crear usuario en auth
       const { data: created, error: createErr } = await admin.auth.admin.createUser({
         email,
         password,
@@ -123,7 +138,7 @@ Deno.serve(async (req: Request) => {
       });
 
       if (createErr || !created?.user) {
-        await admin.from("agencias").delete().eq("id", slug);
+        await rollback(admin, slug, createdAuthIds);
         return json(
           { error: `Error creando usuario ${email}: ${createErr?.message || "desconocido"}` },
           500,
@@ -131,7 +146,9 @@ Deno.serve(async (req: Request) => {
       }
 
       const uid = created.user.id;
+      createdAuthIds.push(uid); // registrar para posible rollback
 
+      // 2. Crear perfil
       const { error: upErr } = await admin
         .from("perfiles")
         .upsert(
@@ -146,7 +163,12 @@ Deno.serve(async (req: Request) => {
         );
 
       if (upErr) {
-        return json({ error: `Error creando perfil para ${email}: ${upErr.message}` }, 500);
+        // Rollback completo: agencia + todos los auth users creados hasta ahora
+        await rollback(admin, slug, createdAuthIds);
+        return json(
+          { error: `Error creando perfil para ${email}: ${upErr.message}` },
+          500,
+        );
       }
 
       users.push({ email, password, user_id: uid });
